@@ -5,6 +5,7 @@ import StudentMessage from "../../components/StudentMessage";
 import { fetchAuthSession } from "aws-amplify/auth";
 import { useNavigate } from "react-router-dom";
 import { fetchUserAttributes } from "aws-amplify/auth";
+
 const TypingIndicator = () => (
   <div className="flex items-center ml-28 mb-4">
     <div className="flex space-x-1">
@@ -37,7 +38,7 @@ function titleCase(str) {
     .join(" ");
 }
 
-const StudentChat = ({ course, module, setModule, setCourse }) => {
+const UserChat = ({ admin, course, module, setModule, setCourse }) => {
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
   const [sessions, setSessions] = useState([]);
@@ -718,4 +719,4 @@ const StudentChat = ({ course, module, setModule, setCourse }) => {
   );
 };
 
-export default StudentChat;
+export default UserChat;

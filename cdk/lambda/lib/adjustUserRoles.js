@@ -50,8 +50,8 @@ exports.handler = async (event) => {
         `;
         console.log('DB roles updated to include admin');
       }
-    } else if (cognitoRoles.some(role => ['instructor', 'student'].includes(role))) {
-      const cognitoNonAdminRole = cognitoRoles.find(role => ['instructor', 'student'].includes(role));
+    } else if (cognitoRoles.some(role => ['user'].includes(role))) {
+      const cognitoNonAdminRole = cognitoRoles.find(role => ['user'].includes(role));
       
       if (dbRoles.includes('admin')) {
         // If DB has admin but Cognito is not admin, update DB role to match Cognito

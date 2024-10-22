@@ -34,7 +34,7 @@ exports.handler = async (event) => {
     const dbRoles = dbUser[0]?.roles || [];
 
     // Determine the new Cognito group based on the roles
-    const newGroupName = dbRoles.length > 0 ? dbRoles[0] : "student";
+    const newGroupName = dbRoles.length > 0 ? dbRoles[0] : "user";
 
     // Add the user to the new group without removing existing groups
     const addUserToGroupCommand = new AdminAddUserToGroupCommand({

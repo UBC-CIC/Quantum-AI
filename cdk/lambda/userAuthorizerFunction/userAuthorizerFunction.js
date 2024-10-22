@@ -32,7 +32,7 @@ async function initializeConnection() {
         jwtVerifier = CognitoJwtVerifier.create({
             userPoolId: credentials.VITE_COGNITO_USER_POOL_ID,
             tokenUse: "id",
-            groups: ['student', 'instructor', 'admin'],
+            groups: ['user', 'admin'],
             clientId: credentials.VITE_COGNITO_USER_POOL_CLIENT_ID,
         });
     } catch (error) {

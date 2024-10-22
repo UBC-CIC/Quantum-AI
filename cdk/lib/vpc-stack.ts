@@ -11,7 +11,7 @@ export class VpcStack extends Stack {
     const natGatewayProvider = ec2.NatProvider.gateway();
 
     // VPC for application
-    this.vpc = new ec2.Vpc(this, "aila-Vpc", {
+    this.vpc = new ec2.Vpc(this, "quantumAI-Vpc", {
       //cidr: "10.0.0.0/16",
       ipAddresses: ec2.IpAddresses.cidr('10.0.0.0/16'),
       natGatewayProvider: natGatewayProvider,
@@ -33,7 +33,7 @@ export class VpcStack extends Stack {
       ]
     });
 
-    this.vpc.addFlowLog("aila-vpcFlowLog");
+    this.vpc.addFlowLog("quantumAI-vpcFlowLog");
 
     // Get default security group for VPC
     const defaultSecurityGroup = ec2.SecurityGroup.fromSecurityGroupId(

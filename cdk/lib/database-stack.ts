@@ -24,16 +24,16 @@ export class DatabaseStack extends Stack {
         /**
          * 
          * Retrive a secrete from Secret Manager
-         * aws secretsmanager create-secret --name AILASecrets --secret-string '{\"DB_Username\":\"DB-USERNAME\"}' --profile <your-profile-name>
+         * aws secretsmanager create-secret --name QuantumAISecrets --secret-string '{\"DB_Username\":\"DB-USERNAME\"}' --profile <your-profile-name>
          */
-        const secret = secretmanager.Secret.fromSecretNameV2(this, "ImportedSecrets", "AILASecrets");
+        const secret = secretmanager.Secret.fromSecretNameV2(this, "ImportedSecrets", "QuantumAISecrets");
         /**
          * 
          * Create Empty Secret Manager
          * Secrets will be populate at initalization of data
          */
-        this.secretPathAdminName = "AILA/credentials/rdsDbCredential"; // Name in the Secret Manager to store DB credentials        
-        const secretPathUserName = "AILA/userCredentials/rdsDbCredential";
+        this.secretPathAdminName = "QuantumAI/credentials/rdsDbCredential"; // Name in the Secret Manager to store DB credentials        
+        const secretPathUserName = "QuantumAI/userCredentials/rdsDbCredential";
         this.secretPathUser = new secretsmanager.Secret(this, secretPathUserName, {
             secretName: secretPathUserName,
             description: "Secrets for clients to connect to RDS",
@@ -44,7 +44,7 @@ export class DatabaseStack extends Stack {
             }
         })
 
-        const secretPathTableCreator = "AILA/userCredentials/TableCreator";
+        const secretPathTableCreator = "QuantumAI/userCredentials/TableCreator";
         this.secretPathTableCreator= new secretsmanager.Secret(this, secretPathTableCreator, {
             secretName: secretPathTableCreator,
             description: "Secrets for TableCreator to connect to RDS",
@@ -68,7 +68,7 @@ export class DatabaseStack extends Stack {
          * 
          * Create an RDS with Postgres database in an isolated subnet
          */
-        this.dbInstance = new rds.DatabaseInstance(this, "AILA2", {
+        this.dbInstance = new rds.DatabaseInstance(this, "QuantumAI2", {
             vpc: vpcStack.vpc,
             vpcSubnets: {
                 subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
@@ -91,7 +91,7 @@ export class DatabaseStack extends Stack {
             backupRetention: Duration.days(7),
             deleteAutomatedBackups: true,
             deletionProtection: true,/// To be changed
-            databaseName: "aila",
+            databaseName: "QuantumAI",
             publiclyAccessible: false,
             cloudwatchLogsRetention: logs.RetentionDays.INFINITE,
             storageEncrypted: true, // storage encryption at rest

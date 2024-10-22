@@ -18,12 +18,6 @@ export class AmplifyStack extends cdk.Stack {
   ) {
     super(scope, id, props);
 
-    // Define the GitHub repository name as a parameter
-    const githubRepoName = new cdk.CfnParameter(this, "githubRepoName", {
-      type: "String",
-      description: "The name of the GitHub repository",
-    }).valueAsString;
-
     const amplifyYaml = yaml.parse(` 
       version: 1
       applications:
@@ -52,14 +46,14 @@ export class AmplifyStack extends cdk.Stack {
 
     const username = cdk.aws_ssm.StringParameter.valueForStringParameter(
       this,
-      "aila-owner-name"
+      "quantumAI-owner-name"
     );
 
     const amplifyApp = new App(this, "amplifyApp", {
-      appName: "aila-amplify",
+      appName: "quantumAI-amplify",
       sourceCodeProvider: new GitHubSourceCodeProvider({
         owner: username,
-        repository: githubRepoName,
+        repository: "Quantum-AI",
         oauthToken: cdk.SecretValue.secretsManager(
           "github-personal-access-token",
           {

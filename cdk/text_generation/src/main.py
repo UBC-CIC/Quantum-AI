@@ -3,11 +3,9 @@ import json
 import boto3
 import logging
 import psycopg2
-import boto3
 from langchain_community.embeddings import BedrockEmbeddings
-
 from helpers.vectorstore import get_vectorstore_retriever
-from helpers.chat import get_bedrock_llm, get_initial_student_query, get_student_query, create_dynamodb_history_table, get_response, update_session_name
+from helpers.chat import get_bedrock_llm, get_initial_user_query, get_user_query, create_dynamodb_history_table, get_response, update_session_name
 
 # Set up basic logging
 logging.basicConfig(level=logging.INFO)
@@ -17,22 +15,19 @@ BEDROCK_LLM_ID = "meta.llama3-70b-instruct-v1:0"
 EMBEDDING_MODEL_ID = "amazon.titan-embed-text-v2:0"
 TABLE_NAME = "API-Gateway-Test-Table-Name"
 
-
 DB_SECRET_NAME = os.environ["SM_DB_CREDENTIALS"]
 REGION = os.environ["REGION"]
 
 def get_secret():
-    # secretsmanager client to get db credentials
     sm_client = boto3.client("secretsmanager")
     response = sm_client.get_secret_value(SecretId=DB_SECRET_NAME)["SecretString"]
     secret = json.loads(response)
     return secret
 
-## GETTING AMAZON TITAN EMBEDDINGS MODEL
 bedrock_runtime = boto3.client(
-        service_name="bedrock-runtime",
-        region_name=REGION,
-    )
+    service_name="bedrock-runtime",
+    region_name=REGION,
+)
 
 embeddings = BedrockEmbeddings(
     model_id=EMBEDDING_MODEL_ID, 
@@ -42,11 +37,11 @@ embeddings = BedrockEmbeddings(
 
 create_dynamodb_history_table(TABLE_NAME)
 
-def get_module_name(module_id):
+def get_topic_name(topic_id):
     connection = None
     cur = None
     try:
-        logger.info(f"Fetching module name for module_id: {module_id}")
+        logger.info(f"Fetching topic name for topic_id: {topic_id}")
         db_secret = get_secret()
 
         connection_params = {
@@ -64,27 +59,27 @@ def get_module_name(module_id):
         logger.info("Connected to RDS instance!")
 
         cur.execute("""
-            SELECT module_name 
-            FROM "Course_Modules" 
-            WHERE module_id = %s;
-        """, (module_id,))
+            SELECT topic_name 
+            FROM "Topics" 
+            WHERE topic_id = %s;
+        """, (topic_id,))
         
         result = cur.fetchone()
         logger.info(f"Query result: {result}")
-        module_name = result[0] if result else None
+        topic_name = result[0] if result else None
         
         cur.close()
         connection.close()
         
-        if module_name:
-            logger.info(f"Module name for module_id {module_id} found: {module_name}")
+        if topic_name:
+            logger.info(f"Topic name for topic_id {topic_id} found: {topic_name}")
         else:
-            logger.warning(f"No module name found for module_id {module_id}")
+            logger.warning(f"No topic name found for topic_id {topic_id}")
         
-        return module_name
+        return topic_name
 
     except Exception as e:
-        logger.error(f"Error fetching module name: {e}")
+        logger.error(f"Error fetching topic name: {e}")
         if connection:
             connection.rollback()
         return None
@@ -95,11 +90,11 @@ def get_module_name(module_id):
             connection.close()
         logger.info("Connection closed.")
 
-def get_system_prompt(course_id):
+def get_system_prompt(topic_id):
     connection = None
     cur = None
     try:
-        logger.info(f"Fetching system prompt for course_id: {course_id}")
+        logger.info(f"Fetching system prompt for topic_id: {topic_id}")
         db_secret = get_secret()
 
         connection_params = {
@@ -118,9 +113,9 @@ def get_system_prompt(course_id):
 
         cur.execute("""
             SELECT system_prompt 
-            FROM "Courses" 
-            WHERE course_id = %s;
-        """, (course_id,))
+            FROM "Topics" 
+            WHERE topic_id = %s;
+        """, (topic_id,))
         
         result = cur.fetchone()
         logger.info(f"Query result: {result}")
@@ -130,9 +125,9 @@ def get_system_prompt(course_id):
         connection.close()
         
         if system_prompt:
-            logger.info(f"System prompt for course_id {course_id} found: {system_prompt}")
+            logger.info(f"System prompt for topic_id {topic_id} found: {system_prompt}")
         else:
-            logger.warning(f"No system prompt found for course_id {course_id}")
+            logger.warning(f"No system prompt found for topic_id {topic_id}")
         
         return system_prompt
 
@@ -153,13 +148,12 @@ def handler(event, context):
 
     query_params = event.get("queryStringParameters", {})
 
-    course_id = query_params.get("course_id", "")
+    topic_id = query_params.get("topic_id", "")
     session_id = query_params.get("session_id", "")
-    module_id = query_params.get("module_id", "")
     session_name = query_params.get("session_name", "New Chat")
 
-    if not course_id:
-        logger.error("Missing required parameter: course_id")
+    if not topic_id:
+        logger.error("Missing required parameter: topic_id")
         return {
             'statusCode': 400,
             "headers": {
@@ -168,7 +162,7 @@ def handler(event, context):
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Methods": "*",
             },
-            'body': json.dumps('Missing required parameter: course_id')
+            'body': json.dumps('Missing required parameter: topic_id')
         }
 
     if not session_id:
@@ -184,23 +178,10 @@ def handler(event, context):
             'body': json.dumps('Missing required parameter: session_id')
         }
 
-    if not module_id:
-        logger.error("Missing required parameter: module_id")
-        return {
-            'statusCode': 400,
-            "headers": {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Headers": "*",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "*",
-            },
-            'body': json.dumps('Missing required parameter: module_id')
-        }
-    
-    system_prompt = get_system_prompt(course_id)
+    system_prompt = get_system_prompt(topic_id)
 
     if system_prompt is None:
-        logger.error(f"Error fetching system prompt for course_id: {course_id}")
+        logger.error(f"Error fetching system prompt for topic_id: {topic_id}")
         return {
             'statusCode': 400,
             "headers": {
@@ -211,14 +192,14 @@ def handler(event, context):
             },
             'body': json.dumps('Error fetching system prompt')
         }
-    
-    topic = get_module_name(module_id)
+
+    topic = get_topic_name(topic_id)
 
     if topic is None:
-        logger.error(f"Invalid module_id: {module_id}")
+        logger.error(f"Invalid topic_id: {topic_id}")
         return {
             'statusCode': 400,
-            'body': json.dumps('Invalid module_id')
+            'body': json.dumps('Invalid topic_id')
         }
     
     body = {} if event.get("body") is None else json.loads(event.get("body"))
@@ -226,10 +207,10 @@ def handler(event, context):
     
     if not question:
         logger.info(f"Start of conversation. Creating conversation history table in DynamoDB.")
-        student_query = get_initial_student_query(topic)
+        user_query = get_initial_user_query(topic)
     else:
-        logger.info(f"Processing student question: {question}")
-        student_query = get_student_query(question)
+        logger.info(f"Processing user question: {question}")
+        user_query = get_user_query(question)
     
     try:
         logger.info("Creating Bedrock LLM instance.")
@@ -251,7 +232,7 @@ def handler(event, context):
         logger.info("Retrieving vectorstore config.")
         db_secret = get_secret()
         vectorstore_config_dict = {
-            'collection_name': course_id,
+            'collection_name': topic_id,
             'dbname': db_secret["dbname"],
             'user': db_secret["username"],
             'password': db_secret["password"],
@@ -273,7 +254,6 @@ def handler(event, context):
     
     try:
         logger.info("Creating history-aware retriever.")
-
         history_aware_retriever = get_vectorstore_retriever(
             llm=llm,
             vectorstore_config_dict=vectorstore_config_dict,
@@ -295,13 +275,12 @@ def handler(event, context):
     try:
         logger.info("Generating response from the LLM.")
         response = get_response(
-            query=student_query,
-            topic=topic,
+            query=user_query,
             llm=llm,
             history_aware_retriever=history_aware_retriever,
             table_name=TABLE_NAME,
             session_id=session_id,
-            course_system_prompt=system_prompt
+            topic_system_prompt=system_prompt
         )
     except Exception as e:
         logger.error(f"Error getting response: {e}")
@@ -317,13 +296,13 @@ def handler(event, context):
         }
     
     try:
-        logger.info("Updating session name if this is the first exchange between the LLM and student")
+        logger.info("Updating session name if this is the first exchange between the LLM and user.")
         potential_session_name = update_session_name(TABLE_NAME, session_id, BEDROCK_LLM_ID)
         if potential_session_name:
-            logger.info("This is the first exchange between the LLM and student. Updating session name.")
+            logger.info("This is the first exchange between the LLM and user. Updating session name.")
             session_name = potential_session_name
         else:
-            logger.info("Not the first exchange between the LLM and student. Session name remains the same.")
+            logger.info("Not the first exchange between the LLM and user. Session name remains the same.")
     except Exception as e:
         logger.error(f"Error updating session name: {e}")
         session_name = "New Chat"
@@ -332,14 +311,13 @@ def handler(event, context):
     return {
         "statusCode": 200,
         "headers": {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Headers": "*",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "*",
-            },
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "*",
+        },
         "body": json.dumps({
             "session_name": session_name,
             "llm_output": response.get("llm_output", "LLM failed to create response"),
-            "llm_verdict": response.get("llm_verdict", "LLM failed to create verdict")
         })
     }

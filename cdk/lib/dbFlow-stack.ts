@@ -34,7 +34,7 @@ export class DBFlowStack extends Stack {
               "secretsmanager:PutSecretValue"
             ],
             resources: [
-              `arn:aws:secretsmanager:${this.region}:${this.account}:secret:AILA/*`,
+              `arn:aws:secretsmanager:${this.region}:${this.account}:secret:QuantumAI/*`,
             ],
           })
         );
@@ -68,8 +68,8 @@ export class DBFlowStack extends Stack {
           iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonS3FullAccess")
         );
         // Create an initilizer for the RDS instance, only invoke during deployment
-        const initializerLambda = new triggers.TriggerFunction(this, "aila-triggerLambda", {
-            functionName: "aila-initializerFunction",
+        const initializerLambda = new triggers.TriggerFunction(this, "quantumAI-triggerLambda", {
+            functionName: "quantumAI-initializerFunction",
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: "initializer.handler",
             timeout: Duration.seconds(300),

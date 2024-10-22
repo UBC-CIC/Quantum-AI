@@ -129,7 +129,7 @@ def lambda_handler(event, context):
 
         history = response['Item']['History']['L']
         
-        # There must be 2 messages in the history, 1 from AI and 1 from student
+        # There must be 2 messages in the history, 1 from AI and 1 from user
         if len(history) < 2:
             logger.info("Not enough messages to delete.")
             return {

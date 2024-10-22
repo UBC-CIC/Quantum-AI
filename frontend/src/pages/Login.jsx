@@ -25,7 +25,7 @@ import {
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 // login assets
-import loginframe from "../assets/loginframe.png";
+import logo from "../assets/logo.png";
 import PageContainer from "./Container";
 // cognito verifier
 import { CognitoJwtVerifier } from "aws-jwt-verify";
@@ -440,66 +440,83 @@ export const Login = () => {
   return (
     <ThemeProvider theme={theme}>
       <PageContainer>
-        <Grid container component="main" sx={{ height: "100vh" }}>
-          <CssBaseline />
+      <Grid container component="main" sx={{ height: "100vh", backgroundColor: "#2E8797" }}>
+        <CssBaseline />
+        <Grid
+          container
+          justifyContent="center"
+          alignItems="center"
+          sx={{ height: "100vh" }}
+        >
           <Grid
             item
-            xs={false}
-            sm={3}
-            md={5}
+            xs={12}
+            sm={10}
+            md={7}
+            component={Paper}
+            elevation={6}
+            square
             sx={{
-              background: `linear-gradient(189deg, #d5e1ff, #dcbfe3)`,
               display: "flex",
+              flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
+              backgroundColor: "#fff",
+              borderRadius: 4,
+              padding: 4,
+              minHeight: "80%"
             }}
           >
-            <Typography
-              variant="h4"
-              sx={{ color: "black", fontWeight: "bold", textAlign: "center" }}
-            >
-              Welcome to
-              <br />
-              AI Learning Assistant 👋
-            </Typography>
-          </Grid>
-          {/* existing user sign in */}
-          {!loading &&
-            !newUserPassword &&
-            !newSignUp &&
-            !signUpConfirmation &&
-            !forgotPassword && (
-              <Grid
-                item
-                xs={12}
-                sm={9}
-                md={7}
-                component={Paper}
-                square
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  height: "100%",
-                }}
+            <Box sx={{ display: "flex", alignItems: "center", textAlign: "left", paddingBottom: 1 }}>
+              <img src={logo} alt="Logo" style={{ height: "100px", marginRight: "10px" }} />
+              <Typography
+                variant="h1"
+                sx={{ color: "#2E8797", fontWeight: "bold", textAlign: "center", mb: 2 }}
               >
+                Quantum AI
+              </Typography>
+            </Box>
+            
+            <Box
+              sx={{
+                width: "90%",
+                height: "2px",
+                backgroundColor: "black",
+                marginTop: "10px",
+                marginBottom: "25px",
+              }}
+            />
+            {!loading &&
+              !newUserPassword &&
+              !newSignUp &&
+              !signUpConfirmation &&
+              !forgotPassword && (
                 <Box
                   sx={{
-                    my: 8,
-                    mx: 4,
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
+                    width: "100%",
                   }}
                 >
-                  <Typography component="h1" variant="h5">
-                    Sign in
-                  </Typography>
+                  <Box sx={{ width: "80%", textAlign: "left" }}>
+                    <Typography component="h1" variant="h5">
+                      Sign in
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      width: "80%", // Faint line, not full width
+                      height: "1px",
+                      backgroundColor: "#e0e0e0",
+                      margin: "12px 0",
+                    }}
+                  />
                   <Box
                     component="form"
                     noValidate
                     onSubmit={handleSignIn}
-                    sx={{ mt: 1 }}
+                    sx={{ mt: 1, width: "80%" }}
                   >
                     <TextField
                       margin="normal"
@@ -531,8 +548,7 @@ export const Login = () => {
                       type="submit"
                       fullWidth
                       variant="contained"
-                      color="primary"
-                      sx={{ mt: 3, mb: 2 }}
+                      sx={{ mt: 3, mb: 2, backgroundColor: "#2E8797", "&:hover": { backgroundColor: "#1b5f6e" } }} // Updated button color
                     >
                       Sign In
                     </Button>
@@ -541,6 +557,7 @@ export const Login = () => {
                         <Link
                           href="#"
                           variant="body2"
+                          sx={{ color: "#2E8797" }}
                           onClick={() => setForgotPassword(true)}
                         >
                           Forgot password?
@@ -550,32 +567,40 @@ export const Login = () => {
                         <Link
                           href="#"
                           variant="body2"
+                          sx={{ color: "#2E8797" }}
                           onClick={() => setNewSignUp(true)}
                         >
-                          {"Create your account"}
+                          Create your account
                         </Link>
                       </Grid>
                     </Grid>
                   </Box>
                 </Box>
-              </Grid>
-            )}
+              )}
           {newSignUp && (
-            <Grid item xs={12} sm={8} md={5} component={Paper} square>
               <Box
                 sx={{
-                  my: 8,
                   mx: 4,
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
                 }}
               >
-                <Typography component="h1" variant="h5" paddingBottom={3}>
-                  Create your account
-                </Typography>
+                <Box sx={{ width: "90%", textAlign: "left" }}>
+                  <Typography component="h1" variant="h5" paddingBottom={1}>
+                    Create your account
+                  </Typography>
+                </Box>
 
-                <Box sx={{ mt: 1 }}>
+                <Box
+                    sx={{
+                      width: "90%", // Faint line, not full width
+                      height: "1px",
+                      backgroundColor: "#e0e0e0",
+                      mb: "20px",
+                    }}
+                />
+                <Box sx={{ mt: 1, width: "90%" }}>
                   <Grid container spacing={2}>
                     <Grid item xs={12} sm={6}>
                       <TextField
@@ -646,24 +671,13 @@ export const Login = () => {
                       />
                     </Grid>
                   </Grid>
-                  <Typography
-                    variant="body2"
-                    color="textSecondary"
-                    align="center"
-                    paddingBottom={2}
-                    marginTop={2}
-                  >
-                    Providing personal information is optional and entirely at
-                    your discretion. You can use this app without sharing any
-                    personal details beyond those necessary for account setup.
-                  </Typography>
-
+        
                   <Button
                     fullWidth
                     variant="contained"
                     color="primary"
                     onClick={handleSignUp}
-                    sx={{ mt: 3, mb: 2 }}
+                    sx={{ mt: 3, mb: 2, backgroundColor: "#2E8797", "&:hover": { backgroundColor: "#1b5f6e" } }} // Updated button color
                   >
                     Sign Up
                   </Button>
@@ -672,6 +686,7 @@ export const Login = () => {
                       <Link
                         href="#"
                         variant="body2"
+                        sx={{ color: "#2E8797" }}
                         onClick={() => setNewSignUp(false)}
                       >
                         Already have an account? {"Sign in"}
@@ -680,7 +695,6 @@ export const Login = () => {
                   </Grid>
                 </Box>
               </Box>
-            </Grid>
           )}
           {/* new user change password  */}
           {!loading && newUserPassword && (
@@ -790,22 +804,32 @@ export const Login = () => {
           )}
           {/* forgot password?  */}
           {!loading && forgotPassword && (
-            <Grid item xs={12} sm={8} md={5} component={Paper} square>
-              <Box
-                sx={{
-                  my: 10,
-                  mx: 10,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "100%",
-                  paddingRight: 15,
-                }}
-              >
-                <Typography fullWidthvariant="h5" sx={{ mb: 3 }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                width: "100%",
+                "& > *": {
+                  width: "80%",  // Apply 80% width to all direct children
+                },
+              }}
+            >
+              <Box sx={{ width: "80%", textAlign: "left" }}>
+                <Typography component="h1" variant="h5" paddingBottom={1}>
                   Reset Password
                 </Typography>
+              </Box>
+
+              <Box
+                  sx={{
+                    width: "80%", // Faint line, not full width
+                    height: "1px",
+                    backgroundColor: "#e0e0e0",
+                    mb: "20px",
+                  }}
+              />
+                          
                 {step === "requestReset" && (
                   <>
                     <Grid item xs={12} md={12}>
@@ -823,7 +847,7 @@ export const Login = () => {
                       variant="contained"
                       color="primary"
                       onClick={() => handleResetPassword(username)}
-                      sx={{ mt: 2 }}
+                      sx={{ mt: 2, backgroundColor: "#2E8797", "&:hover": { backgroundColor: "#1b5f6e" } }} // Updated button color
                     >
                       Send Reset Code
                     </Button>
@@ -893,20 +917,22 @@ export const Login = () => {
                     {error}
                   </Typography>
                 )}
-                <Grid container sx={{ mt: 4 }}>
+                <Grid container sx={{ mt: 2 }}>
                   <Grid item xs>
                     <Link
                       href="#"
                       variant="body2"
+                      sx={{ color: "#2E8797" }}
                       onClick={() => setForgotPassword(false)}
                     >
                       Remember your Password? {"Sign in"}
                     </Link>
                   </Grid>
                 </Grid>
-              </Box>
-            </Grid>
+            </Box>
           )}
+          </Grid>
+          </Grid>
         </Grid>
       </PageContainer>
       <ToastContainer

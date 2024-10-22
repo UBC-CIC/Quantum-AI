@@ -16,7 +16,7 @@ import { useEffect, useState, createContext } from "react";
 // pages
 import Login from "./pages/Login";
 import StudentHomepage from "./pages/student/StudentHomepage";
-import StudentChat from "./pages/student/StudentChat";
+import UserChat from "./pages/student/UserChat";
 import AdminHomepage from "./pages/admin/AdminHomepage";
 import InstructorHomepage from "./pages/instructor/InstructorHomepage";
 import CourseView from "./pages/student/CourseView";
@@ -67,19 +67,10 @@ function App() {
   }, []);
 
   const getHomePage = () => {
-    if (
-      userGroup &&
-      (userGroup.includes("admin") || userGroup.includes("techadmin"))
-    ) {
-      return <AdminHomepage />;
-    } else if (userGroup && userGroup.includes("instructor")) {
-      if (isInstructorAsStudent) {
-        return <StudentHomepage setCourse={setCourse} />;
-      } else {
-        return <InstructorHomepage />;
-      }
-    } else if (userGroup && userGroup.includes("student")) {
-      return <StudentHomepage setCourse={setCourse} />;
+    if (userGroup && userGroup.includes("admin")) {
+      return <UserChat admin={true} />;
+    } else if (userGroup && userGroup.includes("user")) {
+      return <UserChat />;
     } else {
       return <Login />;
     }
@@ -95,7 +86,7 @@ function App() {
             path="/"
             element={user ? <Navigate to="/home" /> : <Login />}
           />
-          <Route
+          {/* <Route
             path="/student_chat/*"
             element={
               <StudentChat
@@ -105,7 +96,7 @@ function App() {
                 setCourse={setCourse}
               />
             }
-          />
+          /> */}
           <Route
             path="/student_course/*"
             element={
