@@ -32,134 +32,134 @@ exports.handler = async (event) => {
   try {
     const pathData = event.httpMethod + " " + event.resource;
     switch (pathData) {
-      case "GET /admin/instructors":
-        if (
-          event.queryStringParameters != null &&
-          event.queryStringParameters.instructor_email
-        ) {
-          const { instructor_email } = event.queryStringParameters;
+      // case "GET /admin/instructors":
+      //   if (
+      //     event.queryStringParameters != null &&
+      //     event.queryStringParameters.instructor_email
+      //   ) {
+      //     const { instructor_email } = event.queryStringParameters;
 
-          // SQL query to fetch all users who are instructors
-          const instructors = await sqlConnectionTableCreator`
-                SELECT user_email, first_name, last_name
-                FROM "Users"
-                WHERE roles @> ARRAY['instructor']::varchar[]
-                ORDER BY last_name ASC;
-              `;
+      //     // SQL query to fetch all users who are instructors
+      //     const instructors = await sqlConnectionTableCreator`
+      //           SELECT user_email, first_name, last_name
+      //           FROM "Users"
+      //           WHERE roles @> ARRAY['instructor']::varchar[]
+      //           ORDER BY last_name ASC;
+      //         `;
 
-          response.body = JSON.stringify(instructors);
+      //     response.body = JSON.stringify(instructors);
 
-          // // Insert into User Engagement Log
-          // await sqlConnectionTableCreator`
-          //       INSERT INTO "User_Engagement_Log" (log_id, user_email, course_id, module_id, enrolment_id, timestamp, engagement_type)
-          //       VALUES (uuid_generate_v4(), ${instructor_email}, null, null, null, CURRENT_TIMESTAMP, 'admin_viewed_instructors')
-          //     `;
-        } else {
-          response.statusCode = 400;
-          response.body = "instructor_email is required";
-        }
-        break;
-      case "GET /admin/courses":
-        try {
-          // Query all courses from Courses table
-          const courses = await sqlConnectionTableCreator`
-                    SELECT *
-                    FROM "Courses"
-                    ORDER BY course_department ASC, course_number ASC;
-                `;
+      //     // // Insert into User Engagement Log
+      //     // await sqlConnectionTableCreator`
+      //     //       INSERT INTO "User_Engagement_Log" (log_id, user_email, course_id, module_id, enrolment_id, timestamp, engagement_type)
+      //     //       VALUES (uuid_generate_v4(), ${instructor_email}, null, null, null, CURRENT_TIMESTAMP, 'admin_viewed_instructors')
+      //     //     `;
+      //   } else {
+      //     response.statusCode = 400;
+      //     response.body = "instructor_email is required";
+      //   }
+      //   break;
+      // case "GET /admin/courses":
+      //   try {
+      //     // Query all courses from Courses table
+      //     const courses = await sqlConnectionTableCreator`
+      //               SELECT *
+      //               FROM "Courses"
+      //               ORDER BY course_department ASC, course_number ASC;
+      //           `;
 
-          response.body = JSON.stringify(courses);
-        } catch (err) {
-          response.statusCode = 500;
-          response.body = JSON.stringify({ error: "Internal server error" });
-        }
-        break;
-      case "POST /admin/enroll_instructor":
-        if (
-          event.queryStringParameters != null &&
-          event.queryStringParameters.course_id &&
-          event.queryStringParameters.instructor_email
-        ) {
-          try {
-            const { course_id, instructor_email } = event.queryStringParameters;
+      //     response.body = JSON.stringify(courses);
+      //   } catch (err) {
+      //     response.statusCode = 500;
+      //     response.body = JSON.stringify({ error: "Internal server error" });
+      //   }
+      //   break;
+      // case "POST /admin/enroll_instructor":
+      //   if (
+      //     event.queryStringParameters != null &&
+      //     event.queryStringParameters.course_id &&
+      //     event.queryStringParameters.instructor_email
+      //   ) {
+      //     try {
+      //       const { course_id, instructor_email } = event.queryStringParameters;
 
-            // Retrieve user_id from Users table
-            const userResult = await sqlConnectionTableCreator`
-                SELECT user_id
-                FROM "Users"
-                WHERE user_email = ${instructor_email};
-              `;
+      //       // Retrieve user_id from Users table
+      //       const userResult = await sqlConnectionTableCreator`
+      //           SELECT user_id
+      //           FROM "Users"
+      //           WHERE user_email = ${instructor_email};
+      //         `;
 
-            const user_id = userResult[0]?.user_id;
+      //       const user_id = userResult[0]?.user_id;
 
-            if (!user_id) {
-              response.statusCode = 400;
-              response.body = JSON.stringify({
-                error: "Instructor email not found",
-              });
-              break;
-            }
+      //       if (!user_id) {
+      //         response.statusCode = 400;
+      //         response.body = JSON.stringify({
+      //           error: "Instructor email not found",
+      //         });
+      //         break;
+      //       }
 
-            // Insert enrollment into Enrolments table with current timestamp
-            const enrollment = await sqlConnectionTableCreator`
-                INSERT INTO "Enrolments" (enrolment_id, course_id, user_id, enrolment_type, time_enroled)
-                VALUES (uuid_generate_v4(), ${course_id}, ${user_id}, 'instructor', CURRENT_TIMESTAMP)
-                ON CONFLICT (course_id, user_id) 
-                DO UPDATE SET 
-                    enrolment_id = EXCLUDED.enrolment_id,
-                    enrolment_type = EXCLUDED.enrolment_type,
-                    time_enroled = EXCLUDED.time_enroled
-                RETURNING enrolment_id;
-              `;
+      //       // Insert enrollment into Enrolments table with current timestamp
+      //       const enrollment = await sqlConnectionTableCreator`
+      //           INSERT INTO "Enrolments" (enrolment_id, course_id, user_id, enrolment_type, time_enroled)
+      //           VALUES (uuid_generate_v4(), ${course_id}, ${user_id}, 'instructor', CURRENT_TIMESTAMP)
+      //           ON CONFLICT (course_id, user_id) 
+      //           DO UPDATE SET 
+      //               enrolment_id = EXCLUDED.enrolment_id,
+      //               enrolment_type = EXCLUDED.enrolment_type,
+      //               time_enroled = EXCLUDED.time_enroled
+      //           RETURNING enrolment_id;
+      //         `;
 
-            const enrolment_id = enrollment[0]?.enrolment_id;
-            console.log(enrolment_id);
+      //       const enrolment_id = enrollment[0]?.enrolment_id;
+      //       console.log(enrolment_id);
 
-            if (enrolment_id) {
-              // Retrieve all module IDs for the course
-              const modulesResult = await sqlConnectionTableCreator`
-                  SELECT module_id
-                  FROM "Course_Modules"
-                  WHERE concept_id IN (
-                      SELECT concept_id
-                      FROM "Course_Concepts"
-                      WHERE course_id = ${course_id}
-                  );
-                `;
-              console.log(modulesResult);
+      //       if (enrolment_id) {
+      //         // Retrieve all module IDs for the course
+      //         const modulesResult = await sqlConnectionTableCreator`
+      //             SELECT module_id
+      //             FROM "Course_Modules"
+      //             WHERE concept_id IN (
+      //                 SELECT concept_id
+      //                 FROM "Course_Concepts"
+      //                 WHERE course_id = ${course_id}
+      //             );
+      //           `;
+      //         console.log(modulesResult);
 
-              // Insert a record into Student_Modules for each module
-              const studentModuleInsertions = modulesResult.map((module) => {
-                return sqlConnectionTableCreator`
-                    INSERT INTO "Student_Modules" (student_module_id, course_module_id, enrolment_id, module_score, last_accessed, module_context_embedding)
-                    VALUES (uuid_generate_v4(), ${module.module_id}, ${enrolment_id}, 0, CURRENT_TIMESTAMP, NULL);
-                  `;
-              });
+      //         // Insert a record into Student_Modules for each module
+      //         const studentModuleInsertions = modulesResult.map((module) => {
+      //           return sqlConnectionTableCreator`
+      //               INSERT INTO "Student_Modules" (student_module_id, course_module_id, enrolment_id, module_score, last_accessed, module_context_embedding)
+      //               VALUES (uuid_generate_v4(), ${module.module_id}, ${enrolment_id}, 0, CURRENT_TIMESTAMP, NULL);
+      //             `;
+      //         });
 
-              // Execute all insertions
-              await Promise.all(studentModuleInsertions);
-              console.log(studentModuleInsertions);
-            }
+      //         // Execute all insertions
+      //         await Promise.all(studentModuleInsertions);
+      //         console.log(studentModuleInsertions);
+      //       }
 
-            response.body = JSON.stringify({
-              message: "Instructor enrolled and modules created successfully.",
-            });
+      //       response.body = JSON.stringify({
+      //         message: "Instructor enrolled and modules created successfully.",
+      //       });
 
-            // Optionally insert into User Engagement Log (uncomment if needed)
-            // await sqlConnectionTableCreator`
-            //   INSERT INTO "User_Engagement_Log" (log_id, user_id, course_id, module_id, enrolment_id, timestamp, engagement_type)
-            //   VALUES (uuid_generate_v4(), ${user_id}, ${course_id}, null, ${enrolment_id}, CURRENT_TIMESTAMP, 'enrollment_created');
-            // `;
-          } catch (err) {
-            response.statusCode = 500;
-            console.log(err);
-            response.body = JSON.stringify({ error: "Internal server error" });
-          }
-        } else {
-          response.statusCode = 400;
-          response.body = "course_id and instructor_email are required";
-        }
-        break;
+      //       // Optionally insert into User Engagement Log (uncomment if needed)
+      //       // await sqlConnectionTableCreator`
+      //       //   INSERT INTO "User_Engagement_Log" (log_id, user_id, course_id, module_id, enrolment_id, timestamp, engagement_type)
+      //       //   VALUES (uuid_generate_v4(), ${user_id}, ${course_id}, null, ${enrolment_id}, CURRENT_TIMESTAMP, 'enrollment_created');
+      //       // `;
+      //     } catch (err) {
+      //       response.statusCode = 500;
+      //       console.log(err);
+      //       response.body = JSON.stringify({ error: "Internal server error" });
+      //     }
+      //   } else {
+      //     response.statusCode = 400;
+      //     response.body = "course_id and instructor_email are required";
+      //   }
+      //   break;
       case "POST /admin/create_course":
         if (
           event.queryStringParameters != null &&

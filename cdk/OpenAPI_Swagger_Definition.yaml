@@ -892,8 +892,8 @@ paths:
           description: Too Many Requests
         "500":
           description: Internal Server Error
-      # security:
-      #   - userAuthorizer: []
+      security:
+        - userAuthorizer: []
       x-amazon-apigateway-integration:
         uri:
           Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${userFunction.Arn}/invocations"
@@ -987,8 +987,8 @@ paths:
           description: Too Many Requests
         "500":
           description: Internal Server Error
-      # security:
-      #   - userAuthorizer: []
+      security:
+        - userAuthorizer: []
       x-amazon-apigateway-integration:
         uri:
           Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${userFunction.Arn}/invocations"
@@ -1416,12 +1416,12 @@ paths:
       summary: Generate a presigned URL for uploading files
       operationId: admin_generate_presigned_url_GET_2
       parameters:
-        # - in: query
-        #   name: course_id
-        #   required: true
-        #   description: ID of the course
-        #   schema:
-        #     type: string
+        - in: query
+          name: topic_id
+          required: true
+          description: ID of the topic
+          schema:
+            type: string
         # - in: query
         #   name: module_id
         #   required: true
@@ -1504,12 +1504,12 @@ paths:
       summary: Get a list of all the document files
       operationId: admin_get_all_files_GET
       parameters:
-        # - in: query
-        #   name: course_id
-        #   required: true
-        #   description: ID of the course
-        #   schema:
-        #     type: string
+        - in: query
+          name: topic_id
+          required: true
+          description: ID of the topic
+          schema:
+            type: string
         # - in: query
         #   name: module_id
         #   required: true
@@ -1639,12 +1639,12 @@ paths:
       summary: Delete certain file
       operationId: admin_delete_file_DELETE
       parameters:
-        # - in: query
-        #   name: course_id
-        #   required: true
-        #   description: ID of the course
-        #   schema:
-        #     type: string
+        - in: query
+          name: topic_id
+          required: true
+          description: ID of the topic
+          schema:
+            type: string
         # - in: query
         #   name: module_id
         #   required: true
@@ -1787,12 +1787,12 @@ paths:
       summary: Update the metadata of a file
       operationId: admin_update_metadata_PUT
       parameters:
-        # - in: query
-        #   name: module_id
-        #   required: true
-        #   description: ID of the module containing the file
-        #   schema:
-        #     type: string
+        - in: query
+          name: topic_id
+          required: true
+          description: ID of the topic containing the file
+          schema:
+            type: string
         - in: query
           name: filename
           required: true
