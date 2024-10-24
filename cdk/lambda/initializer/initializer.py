@@ -66,7 +66,6 @@ def handler(event, context):
                 "document_id" uuid PRIMARY KEY DEFAULT (uuid_generate_v4()),
                 "topic_id" uuid,
                 "filetype" varchar,
-                "s3_bucket_reference" varchar,
                 "filepath" varchar,
                 "filename" varchar,
                 "time_uploaded" timestamp,
@@ -76,8 +75,7 @@ def handler(event, context):
             CREATE TABLE IF NOT EXISTS "Topics" (
                 "topic_id" uuid PRIMARY KEY DEFAULT (uuid_generate_v4()),
                 "topic_name" varchar,
-                "system_prompt" text,
-                "topic_context_embedding" float[]
+                "system_prompt" text
             );
 
             CREATE TABLE IF NOT EXISTS "Sessions" (
@@ -85,7 +83,6 @@ def handler(event, context):
                 "user_id" uuid,
                 "topic_id" uuid,
                 "session_name" varchar,
-                "session_context_embeddings" float[],
                 "last_accessed" timestamp
             );
 
@@ -103,7 +100,6 @@ def handler(event, context):
                 "topic_id" uuid,
                 "timestamp" timestamp,
                 "engagement_type" varchar,
-                "engagement_details" text
             );
 
             ALTER TABLE "User_Engagement_Log" ADD FOREIGN KEY ("user_id") REFERENCES "Users" ("user_id") ON DELETE CASCADE ON UPDATE CASCADE;

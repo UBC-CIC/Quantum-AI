@@ -11,13 +11,11 @@ BUCKET = os.environ["BUCKET"]
 @logger.inject_lambda_context
 def lambda_handler(event, context):
     query_params = event.get("queryStringParameters", {})
-    course_id = query_params.get("course_id", "")
-    module_id = query_params.get("module_id", "")
+    topic_id = query_params.get("topic_id", "")
 
-    if not course_id or not module_id:
+    if not topic_id:
         logger.error("Missing required parameters", extra={
-            "course_id": course_id,
-            "module_id": module_id
+            "topic_id": topic_id
         })
         return {
             'statusCode': 400,
@@ -31,7 +29,7 @@ def lambda_handler(event, context):
         }
 
     try:
-        module_prefix = f"{course_id}/{module_id}/"
+        module_prefix = f"{topic_id}/"
 
         objects_to_delete = []
         continuation_token = None

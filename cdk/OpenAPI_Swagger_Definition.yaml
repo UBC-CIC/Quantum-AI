@@ -151,126 +151,6 @@ paths:
         passthroughBehavior: "when_no_match"
         httpMethod: "POST"
         type: "aws_proxy"
-  /user/delete_last_message:
-    options:
-      summary: CORS support
-      description: |
-        Enable CORS by returning correct headers
-      responses:
-        200:
-          $ref: "#/components/responses/Success"
-      x-amazon-apigateway-integration:
-        type: mock
-        requestTemplates:
-          application/json: |
-            {
-              "statusCode" : 200
-            }
-        responses:
-          default:
-            statusCode: "200"
-            responseParameters:
-              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-              method.response.header.Access-Control-Allow-Methods: "'*'"
-              method.response.header.Access-Control-Allow-Origin: "'*'"
-            responseTemplates:
-              application/json: |
-                {}
-    delete:
-      tags:
-        - User
-      summary: Delete last exchange between user and AI in certain conversation in DynamoDB table
-      operationId: user_delete_last_conversation_DELETE
-      parameters:
-        - in: query
-          name: session_id
-          required: true
-          description: ID of the session since multiple sessions can exist within a table
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Last exchange with user and AI deleted succesfully
-        "400":
-          description: Bad Request
-        "401":
-          description: Unauthorized
-        "429":
-          description: Too Many Requests
-        "500":
-          description: Internal Server Error
-      security:
-        - userAuthorizer: []
-      x-amazon-apigateway-integration:
-        uri:
-          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteLastMessage.Arn}/invocations"
-        passthroughBehavior: "when_no_match"
-        httpMethod: "POST"
-        type: "aws_proxy"
-  /user/update_session_name:
-    options:
-      summary: CORS support
-      description: |
-        Enable CORS by returning correct headers
-      responses:
-        200:
-          $ref: "#/components/responses/Success"
-      x-amazon-apigateway-integration:
-        type: mock
-        requestTemplates:
-          application/json: |
-            {
-              "statusCode" : 200
-            }
-        responses:
-          default:
-            statusCode: "200"
-            responseParameters:
-              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-              method.response.header.Access-Control-Allow-Methods: "'*'"
-              method.response.header.Access-Control-Allow-Origin: "'*'"
-            responseTemplates:
-              application/json: |
-                {}
-    put:
-      tags:
-        - User
-      summary: Update session name
-      operationId: user_update_session_name_PUT
-      parameters:
-        - in: query
-          name: session_id
-          required: true
-          description: ID of the session to update
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                session_name:
-                  type: string
-                  description: New name for the session
-      responses:
-        "200":
-          description: Session name updated successfully
-        "400":
-          description: Bad Request
-        "404":
-          description: Session not found
-        "500":
-          description: Internal Server Error
-      security:
-        - userAuthorizer: []
-      x-amazon-apigateway-integration:
-        uri:
-          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${userFunction.Arn}/invocations"
-        passthroughBehavior: "when_no_match"
-        httpMethod: "POST"
-        type: "aws_proxy"
   /user/create_user:
     options:
       summary: CORS support
@@ -493,7 +373,7 @@ paths:
         - User
       summary: Get all topics
       operationId: user_get_topics_GET
-      parameters:
+      # parameters:
         # - in: query
         #   name: email
         #   required: true
@@ -519,136 +399,6 @@ paths:
         passthroughBehavior: "when_no_match"
         httpMethod: "POST"
         type: "aws_proxy"
-  # /user/course_page:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   get:
-  #     tags:
-  #       - User
-  #     summary: Get course page details for a user
-  #     operationId: user_get_course_page_GET
-  #     parameters:
-  #       - in: query
-  #         name: email
-  #         required: true
-  #         description: Email of the user
-  #         schema:
-  #           type: string
-  #       - in: query
-  #         name: course_id
-  #         required: true
-  #         description: ID of the course
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "200":
-  #         description: Course page details
-  #       "400":
-  #         description: Invalid value
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - userAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${userFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /user/module:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   get:
-  #     tags:
-  #       - User
-  #     summary: Get sessions for a module accessed by a user
-  #     operationId: user_get_module_sessions_GET
-  #     parameters:
-  #       - in: query
-  #         name: email
-  #         required: true
-  #         description: Email of the user
-  #         schema:
-  #           type: string
-  #       - in: query
-  #         name: course_id
-  #         required: true
-  #         description: ID of the course
-  #         schema:
-  #           type: string
-  #       - in: query
-  #         name: module_id
-  #         required: true
-  #         description: ID of the module
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "200":
-  #         description: Sessions for the module
-  #       "400":
-  #         description: Invalid value
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - userAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${userFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
   /user/create_session:
     options:
       summary: CORS support
@@ -713,6 +463,70 @@ paths:
           description: Unauthorized
         "429":
           description: Too Many Requests
+        "500":
+          description: Internal Server Error
+      security:
+        - userAuthorizer: []
+      x-amazon-apigateway-integration:
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${userFunction.Arn}/invocations"
+        passthroughBehavior: "when_no_match"
+        httpMethod: "POST"
+        type: "aws_proxy"
+  /user/update_session_name:
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+              method.response.header.Access-Control-Allow-Methods: "'*'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            responseTemplates:
+              application/json: |
+                {}
+    put:
+      tags:
+        - User
+      summary: Update session name
+      operationId: user_update_session_name_PUT
+      parameters:
+        - in: query
+          name: session_id
+          required: true
+          description: ID of the session to update
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                session_name:
+                  type: string
+                  description: New name for the session
+      responses:
+        "200":
+          description: Session name updated successfully
+        "400":
+          description: Bad Request
+        "404":
+          description: Session not found
         "500":
           description: Internal Server Error
       security:
@@ -900,6 +714,62 @@ paths:
         passthroughBehavior: "when_no_match"
         httpMethod: "POST"
         type: "aws_proxy"
+  /user/delete_last_message:
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+              method.response.header.Access-Control-Allow-Methods: "'*'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            responseTemplates:
+              application/json: |
+                {}
+    delete:
+      tags:
+        - User
+      summary: Delete last exchange between user and AI in certain conversation in DynamoDB table
+      operationId: user_delete_last_conversation_DELETE
+      parameters:
+        - in: query
+          name: session_id
+          required: true
+          description: ID of the session since multiple sessions can exist within a table
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Last exchange with user and AI deleted succesfully
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "429":
+          description: Too Many Requests
+        "500":
+          description: Internal Server Error
+      security:
+        - userAuthorizer: []
+      x-amazon-apigateway-integration:
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteLastMessage.Arn}/invocations"
+        passthroughBehavior: "when_no_match"
+        httpMethod: "POST"
+        type: "aws_proxy"
   /user/create_ai_message:
     options:
       summary: CORS support
@@ -995,89 +865,6 @@ paths:
         passthroughBehavior: "when_no_match"
         httpMethod: "POST"
         type: "aws_proxy"
-  # /user/enroll_user:
-  #   options:
-  #     summary: CORS support
-  #     description: Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   post:
-  #     tags:
-  #       - User
-  #     summary: Enroll a user in a course
-  #     operationId: admin_enroll_user_POST
-  #     parameters:
-  #       - in: query
-  #         name: user_email
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: Email of the user to enroll
-  #       - in: query
-  #         name: course_access_code
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: Access code of the course
-  #     responses:
-  #       "200":
-  #         description: User enrolled successfully
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 message:
-  #                   type: string
-  #                   example: "User enrolled successfully."
-  #       "400":
-  #         description: Bad Request
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 error:
-  #                   type: string
-  #                   example: "user_email and course_access_code query parameters are required"
-  #       "404":
-  #         description: Not Found
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 error:
-  #                   type: string
-  #                   example: "Invalid course access code or course not available."
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - userAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${userFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
   /user/get_messages:
     options:
       summary: CORS support
@@ -1165,226 +952,9 @@ paths:
         passthroughBehavior: "when_no_match"
         httpMethod: "POST"
         type: "aws_proxy"
-  # /user/update_module_score:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   post:
-  #     tags:
-  #       - User
-  #     summary: Update module score based on LLM verdict
-  #     operationId: user_update_module_score_POST
-  #     parameters:
-  #       - in: query
-  #         name: module_id
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: ID of the course module
-  #       - in: query
-  #         name: user_email
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: Email of the user
-  #       - in: query
-  #         name: course_id
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: ID of the course
-  #       - in: query
-  #         name: llm_verdict
-  #         required: true
-  #         schema:
-  #           type: boolean
-  #         description: LLM verdict to determine the module score
-  #     responses:
-  #       "200":
-  #         description: Module score updated successfully
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 message:
-  #                   type: string
-  #                   example: "Module score updated successfully."
-  #       "400":
-  #         description: Bad Request
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 error:
-  #                   type: string
-  #                   example: "Invalid query parameters."
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - userAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${userFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
- 
-  # /instructor/course_messages:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   get:
-  #     summary: Retrieve course messages and competency status for a specific user
-  #     description: |
-  #       This endpoint returns all messages for a specific user in a course. It includes user_id, module_name, session, message content, competency status (complete/incomplete), and message timestamp, ordered by user_id, module_name, session, and timestamp.
-  #     parameters:
-  #       - name: instructor_email
-  #         in: query
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: The email of the instructor.
-  #       - name: course_id
-  #         in: query
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: The course ID.
-  #     responses:
-  #       "200":
-  #         description: Presigned URL generated successfully
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 presignedurl:
-  #                   type: string
-  #                   description: Presigned URL to upload document file to S3 Bucket
-  #       "400":
-  #         description: Bad Request
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /instructor/user_course:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   get:
-  #     tags:
-  #       - Instructor
-  #     summary: Generate a presigned URL for uploading files
-  #     operationId: instructor_generate_presigned_url_GET
-  #     parameters:
-  #       - in: query
-  #         name: email
-  #         required: true
-  #         description: email of the instructor
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "200":
-  #         description: Presigned URL generated successfully
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 presignedurl:
-  #                   type: string
-  #                   description: Presigned URL to upload document file to S3 Bucket
-  #       "400":
-  #         description: Bad Request
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
+
+  # ADMIN ENDPOINTS
+
   /admin/generate_presigned_url:
     options:
       summary: CORS support
@@ -1469,7 +1039,7 @@ paths:
         - adminAuthorizer: []
       x-amazon-apigateway-integration:
         uri:
-          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${adminFunction.Arn}/invocations"
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GeneratePreSignedURLFunc.Arn}/invocations"
         passthroughBehavior: "when_no_match"
         httpMethod: "POST"
         type: "aws_proxy"
@@ -1497,17 +1067,16 @@ paths:
             responseTemplates:
               application/json: |
                 {}
-
     get:
       tags:
         - Admin
-      summary: Get a list of all the document files
+      summary: Get a list of all the document files for a specific topic
       operationId: admin_get_all_files_GET
       parameters:
         - in: query
           name: topic_id
           required: true
-          description: ID of the topic
+          description: ID of the course
           schema:
             type: string
         # - in: query
@@ -1524,7 +1093,7 @@ paths:
         #     type: string
       responses:
         "200":
-          description: Recieved all the files successfully
+          description: Recieved all the files for the topic successfully
           content:
             application/json:
               schema:
@@ -1532,7 +1101,7 @@ paths:
                 properties:
                   files:
                     type: array
-                    description: A list of file names 
+                    description: A list of file names in the specified topic directory
                     items:
                       type: string
                       description: Name of the file
@@ -1548,66 +1117,137 @@ paths:
         - adminAuthorizer: []
       x-amazon-apigateway-integration:
         uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetFilesFunction.Arn}/invocations"
+        passthroughBehavior: "when_no_match"
+        httpMethod: "POST"
+        type: "aws_proxy"
+  /admin/update_metadata:
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+              method.response.header.Access-Control-Allow-Methods: "'*'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            responseTemplates:
+              application/json: |
+                {}
+    put:
+      tags:
+        - Admin
+      summary: Update the metadata of a file in a topic
+      operationId: admin_update_metadata_PUT
+      parameters:
+        - in: query
+          name: topic_id
+          required: true
+          description: ID of the topic containing the file
+          schema:
+            type: string
+        - in: query
+          name: filename
+          required: true
+          description: Name of the file to update
+          schema:
+            type: string
+        - in: query
+          name: filetype
+          required: true
+          description: Type of the file to update
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metadata:
+                  type: string
+                  description: New metadata content for the file
+      responses:
+        "200":
+          description: Metadata updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  document_id:
+                    type: string
+                    description: UUID of the file
+                  topic_id:
+                    type: string
+                    description: UUID of the topic
+                  filetype:
+                    type: string
+                    description: Type of the file
+                  filepath:
+                    type: string
+                    description: File path
+                  filename:
+                    type: string
+                    description: Name of the file
+                  time_uploaded:
+                    type: string
+                    format: date-time
+                    description: Time when the file was uploaded
+                  metadata:
+                    type: string
+                    description: Updated metadata content
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message
+        "404":
+          description: File not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message
+      security:
+        - adminAuthorizer: []
+      x-amazon-apigateway-integration:
+        uri:
           Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${adminFunction.Arn}/invocations"
         passthroughBehavior: "when_no_match"
         httpMethod: "POST"
         type: "aws_proxy"
-  # /instructor/courses:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   get:
-  #     tags:
-  #       - Instructor
-  #     summary: Get courses where the instructor is enrolled
-  #     operationId: instructor_get_courses_GET
-  #     parameters:
-  #       - in: query
-  #         name: email
-  #         required: true
-  #         description: Email of the instructor
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "200":
-  #         description: Courses retrieved successfully
-  #       "400":
-  #         description: Bad Request
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
   /admin/delete_file:
     options:
       summary: CORS support
@@ -1684,79 +1324,77 @@ paths:
         - adminAuthorizer: []
       x-amazon-apigateway-integration:
         uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteFileFunc.Arn}/invocations"
+        passthroughBehavior: "when_no_match"
+        httpMethod: "POST"
+        type: "aws_proxy"
+  /admin/create_topic:
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+              method.response.header.Access-Control-Allow-Methods: "'*'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            responseTemplates:
+              application/json: |
+                {}
+    post:
+      tags:
+        - Admin
+      summary: Create a new topic
+      operationId: admin_create_topic_POST
+      parameters:
+        - in: query
+          name: topic_name
+          required: true
+          schema:
+            type: string
+          description: Name of the topic
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                system_prompt:
+                  type: string
+                  description: System prompt for the course
+      responses:
+        "200":
+          description: Concept created successfully
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "429":
+          description: Too Many Requests
+        "500":
+          description: Internal Server Error
+      security:
+        - adminAuthorizer: []
+      x-amazon-apigateway-integration:
+        uri:
           Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${adminFunction.Arn}/invocations"
         passthroughBehavior: "when_no_match"
         httpMethod: "POST"
         type: "aws_proxy"
-  # /instructor/delete_module_s3:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   delete:
-  #     tags:
-  #       - Instructor
-  #     summary: Delete certain file
-  #     operationId: instructor_delete_module_s3_DELETE
-  #     parameters:
-  #       - in: query
-  #         name: course_id
-  #         required: true
-  #         description: ID of the course
-  #         schema:
-  #           type: string
-  #       - in: query
-  #         name: module_id
-  #         required: true
-  #         description: ID of the module
-  #         schema:
-  #           type: string
-  #       - in: query
-  #         name: module_name
-  #         required: true
-  #         description: Name of the module
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "200":
-  #         description: File deleted successfully
-  #       "400":
-  #         description: Bad Request
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteModuleFunc.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  /admin/update_metadata:
+  /admin/edit_topic:
     options:
       summary: CORS support
       description: |
@@ -1784,25 +1422,19 @@ paths:
     put:
       tags:
         - Admin
-      summary: Update the metadata of a file
-      operationId: admin_update_metadata_PUT
+      summary: Edit an existing topic
+      operationId: admin_edit_topic_PUT
       parameters:
         - in: query
           name: topic_id
           required: true
-          description: ID of the topic containing the file
+          description: ID of the topic to be edited
           schema:
             type: string
         - in: query
-          name: filename
+          name: topic_name
           required: true
-          description: Name of the file to update
-          schema:
-            type: string
-        - in: query
-          name: filetype
-          required: true
-          description: Type of the file to update
+          description: Name of the topic to be edited
           schema:
             type: string
       requestBody:
@@ -1812,72 +1444,20 @@ paths:
             schema:
               type: object
               properties:
-                metadata:
+                system_prompt:
                   type: string
-                  description: New metadata content for the file
+                  description: System prompt for the course
       responses:
         "200":
-          description: Metadata updated successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  file_id:
-                    type: string
-                    description: UUID of the file
-                  # module_id:
-                  #   type: string
-                  #   description: UUID of the module
-                  filetype:
-                    type: string
-                    description: Type of the file
-                  s3_bucket_reference:
-                    type: string
-                    description: Reference to the S3 bucket
-                  filepath:
-                    type: string
-                    description: File path
-                  filename:
-                    type: string
-                    description: Name of the file
-                  time_uploaded:
-                    type: string
-                    format: date-time
-                    description: Time when the file was uploaded
-                  metadata:
-                    type: string
-                    description: Updated metadata content
+          description: Concept updated successfully
         "400":
           description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: Error message
-        "404":
-          description: File not found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: Error message
+        "401":
+          description: Unauthorized
+        "429":
+          description: Too Many Requests
         "500":
           description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    description: Error message
       security:
         - adminAuthorizer: []
       x-amazon-apigateway-integration:
@@ -1886,2076 +1466,186 @@ paths:
         passthroughBehavior: "when_no_match"
         httpMethod: "POST"
         type: "aws_proxy"
-  # /instructor/delete_concept:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   delete:
-  #     tags:
-  #       - Instructor
-  #     summary: Delete a concept
-  #     operationId: instructor_delete_concept_DELETE
-  #     parameters:
-  #       - in: query
-  #         name: concept_id
-  #         required: true
-  #         description: The ID of the concept to delete
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "200":
-  #         description: Concept deleted successfully
-  #       "400":
-  #         description: Bad Request
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /instructor/view_concepts:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   get:
-  #     tags:
-  #       - Instructor
-  #     summary: Get all concepts for a given course
-  #     operationId: instructor_view_concepts_GET
-  #     parameters:
-  #       - in: query
-  #         name: course_id
-  #         required: true
-  #         description: The ID of the course to retrieve concepts from
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "200":
-  #         description: Concepts retrieved successfully
-  #       "400":
-  #         description: Bad Request
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /instructor/view_modules:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   get:
-  #     tags:
-  #       - Instructor
-  #     summary: Get all modules in a given course
-  #     operationId: instructor_view_modules_GET
-  #     parameters:
-  #       - in: query
-  #         name: course_id
-  #         required: true
-  #         description: The ID of the course to retrieve modules from
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "200":
-  #         description: Modules retrieved successfully
-  #       "400":
-  #         description: Bad Request
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /instructor/analytics:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   get:
-  #     tags:
-  #       - Instructor
-  #     summary: Get analytics data for a specific course
-  #     operationId: instructor_get_analytics_GET
-  #     parameters:
-  #       - in: query
-  #         name: course_id
-  #         required: true
-  #         description: ID of the course for which analytics are requested
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "200":
-  #         description: Analytics data retrieved successfully
-  #       "400":
-  #         description: Bad Request
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /instructor/create_concept:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   post:
-  #     tags:
-  #       - Instructor
-  #     summary: Create a new concept for a course
-  #     operationId: instructor_create_concept_POST
-  #     parameters:
-  #       - in: query
-  #         name: course_id
-  #         required: true
-  #         description: ID of the course where the concept will be created
-  #         schema:
-  #           type: string
-  #       - in: query
-  #         name: concept_number
-  #         required: true
-  #         description: "Number of the concept within the course"
-  #         schema:
-  #           type: integer
-  #     requestBody:
-  #       required: true
-  #       content:
-  #         application/json:
-  #           schema:
-  #             type: object
-  #             properties:
-  #               concept_name:
-  #                 type: string
-  #                 description: Name of the new concept
-  #     responses:
-  #       "200":
-  #         description: Concept created successfully
-  #       "400":
-  #         description: Bad Request
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /instructor/edit_concept:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   put:
-  #     tags:
-  #       - Instructor
-  #     summary: Edit an existing concept in a course
-  #     operationId: instructor_edit_concept_PUT
-  #     parameters:
-  #       - in: query
-  #         name: concept_id
-  #         required: true
-  #         description: ID of the concept to be edited
-  #         schema:
-  #           type: string
-  #       - in: query
-  #         name: concept_number
-  #         required: true
-  #         description: Email of the instructor editing the concept
-  #         schema:
-  #           type: integer
-  #     requestBody:
-  #       required: true
-  #       content:
-  #         application/json:
-  #           schema:
-  #             type: object
-  #             properties:
-  #               concept_name:
-  #                 type: string
-  #                 description: New name for the concept
-  #     responses:
-  #       "200":
-  #         description: Concept updated successfully
-  #       "400":
-  #         description: Bad Request
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /instructor/reorder_module:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   put:
-  #     tags:
-  #       - Instructor
-  #     summary: Reorder and edit an existing module
-  #     operationId: instructor_reorder_module_PUT
-  #     parameters:
-  #       - in: query
-  #         name: module_id
-  #         required: true
-  #         description: ID of the module to be reordered or edited
-  #         schema:
-  #           type: string
-  #       - in: query
-  #         name: module_number
-  #         required: true
-  #         description: New number for the module
-  #         schema:
-  #           type: integer
-  #       - in: query
-  #         name: instructor_email
-  #         required: true
-  #         description: Email of the instructor making the change
-  #         schema:
-  #           type: string
-  #     requestBody:
-  #       required: true
-  #       content:
-  #         application/json:
-  #           schema:
-  #             type: object
-  #             properties:
-  #               module_name:
-  #                 type: string
-  #                 description: New name for the module
-  #     responses:
-  #       "200":
-  #         description: Module updated successfully
-  #       "400":
-  #         description: Bad Request
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /instructor/create_module:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   post:
-  #     tags:
-  #       - Instructor
-  #     summary: Create a new module within a course
-  #     operationId: instructor_create_module_POST
-  #     parameters:
-  #       - in: query
-  #         name: course_id
-  #         required: true
-  #         description: ID of the course where the module will be created
-  #         schema:
-  #           type: string
-  #       - in: query
-  #         name: concept_id
-  #         required: true
-  #         description: ID of the concept associated with the module
-  #         schema:
-  #           type: string
-  #       - in: query
-  #         name: module_name
-  #         required: true
-  #         description: Name of the new module
-  #         schema:
-  #           type: string
-  #       - in: query
-  #         name: module_number
-  #         required: true
-  #         description: Number of the new module
-  #         schema:
-  #           type: integer
-  #       - in: query
-  #         name: instructor_email
-  #         required: true
-  #         description: Email of the instructor creating the module
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "200":
-  #         description: Module created successfully
-  #       "400":
-  #         description: Bad Request
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     requestBody:
-  #       required: false
-  #       content: {}
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /instructor/edit_module:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   put:
-  #     tags:
-  #       - Instructor
-  #     summary: Update details of a module within a course
-  #     operationId: instructor_edit_module_PUT
-  #     parameters:
-  #       - in: query
-  #         name: module_id
-  #         required: true
-  #         description: ID of the module to be updated
-  #         schema:
-  #           type: string
-  #       - in: query
-  #         name: instructor_email
-  #         required: true
-  #         description: Email of the instructor updating the module
-  #         schema:
-  #           type: string
-  #       - in: query
-  #         name: concept_id
-  #         required: true
-  #         description: ID of the concept to which the module will be reassigned
-  #         schema:
-  #           type: string
-  #     requestBody:
-  #       required: true
-  #       content:
-  #         application/json:
-  #           schema:
-  #             type: object
-  #             properties:
-  #               module_name:
-  #                 type: string
-  #             required:
-  #               - module_name
-  #     responses:
-  #       "200":
-  #         description: Module updated successfully
-  #       "400":
-  #         description: Bad Request
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /instructor/previous_prompts:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   get:
-  #     tags:
-  #       - Instructor
-  #     summary: Retrieve all previous prompts for a specific course and instructor
-  #     operationId: instructor_get_previous_prompts
-  #     parameters:
-  #       - in: query
-  #         name: course_id
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: ID of the course
-  #       - in: query
-  #         name: instructor_email
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: Email of the instructor
-  #     responses:
-  #       "200":
-  #         description: Successfully retrieved previous prompts
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: array
-  #               items:
-  #                 type: object
-  #                 properties:
-  #                   timestamp:
-  #                     type: string
-  #                     format: date-time
-  #                     description: Timestamp of when the prompt was updated
-  #                   previous_prompt:
-  #                     type: string
-  #                     description: Previous system prompt
-  #       "400":
-  #         description: Bad Request - Missing query parameters
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /instructor/user_modules_messages:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   get:
-  #     tags:
-  #       - Instructor
-  #     summary: Retrieve all conversations for a user for a specific module in a course
-  #     operationId: instructor_user_modules_messages_GET
-  #     parameters:
-  #       - in: query
-  #         name: course_id
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: ID of the course
-  #       - in: query
-  #         name: user_email
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: Email of the user
-  #     responses:
-  #       "200":
-  #         description: Successfully retrieved user messages
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 messages:
-  #                   type: array
-  #                   description: A list of user messages for the specified module
-  #                   items:
-  #                     type: object
-  #                     properties:
-  #                       timestamp:
-  #                         type: string
-  #                         format: date-time
-  #                         description: Timestamp of the message
-  #                       message:
-  #                         type: string
-  #                         description: Content of the message
-  #       "400":
-  #         description: Bad Request - Missing query parameters
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /instructor/prompt:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   put:
-  #     tags:
-  #       - Instructor
-  #     summary: Update system prompt for a course
-  #     operationId: instructor_update_prompt_PUT
-  #     parameters:
-  #       - in: query
-  #         name: course_id
-  #         required: true
-  #         description: ID of the course to update the prompt
-  #         schema:
-  #           type: string
-  #       - in: query
-  #         name: instructor_email
-  #         required: true
-  #         description: Email of the instructor updating the prompt
-  #         schema:
-  #           type: string
-  #     requestBody:
-  #       required: true
-  #       content:
-  #         application/json:
-  #           schema:
-  #             type: object
-  #             properties:
-  #               prompt:
-  #                 type: string
-  #             required:
-  #               - prompt
-  #     responses:
-  #       "200":
-  #         description: System prompt updated successfully
-  #       "400":
-  #         description: Bad Request
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /instructor/view_users:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   get:
-  #     tags:
-  #       - Instructor
-  #     summary: View users enrolled in a course
-  #     operationId: instructor_view_users_GET
-  #     parameters:
-  #       - in: query
-  #         name: course_id
-  #         required: true
-  #         description: ID of the course to view enrolled users
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "200":
-  #         description: Users retrieved successfully
-  #       "400":
-  #         description: Bad Request
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /instructor/delete_user:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   delete:
-  #     tags:
-  #       - Instructor
-  #     summary: Delete a user from a course
-  #     operationId: instructor_delete_user_DELETE
-  #     parameters:
-  #       - in: query
-  #         name: course_id
-  #         required: true
-  #         description: ID of the course from which the user will be deleted
-  #         schema:
-  #           type: string
-  #       - in: query
-  #         name: user_email
-  #         required: true
-  #         description: Email of the user to be deleted
-  #         schema:
-  #           type: string
-  #       - in: query
-  #         name: instructor_email
-  #         required: true
-  #         description: Email of the instructor performing the deletion
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "200":
-  #         description: User deleted successfully
-  #       "400":
-  #         description: Bad Request
-  #       "401":
-  #         description: Unauthorized
-  #       "404":
-  #         description: User not found in the course
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /instructor/delete_module:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   delete:
-  #     tags:
-  #       - Instructor
-  #     summary: Delete a module
-  #     operationId: instructor_delete_module_DELETE
-  #     parameters:
-  #       - in: query
-  #         name: module_id
-  #         required: true
-  #         description: The ID of the module to delete
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "200":
-  #         description: Module deleted successfully
-  #       "400":
-  #         description: Bad Request
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /instructor/get_prompt:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   get:
-  #     tags:
-  #       - Instructor
-  #     summary: Get the system prompt for a course
-  #     operationId: instructor_get_prompt_GET
-  #     parameters:
-  #       - in: query
-  #         name: course_id
-  #         required: true
-  #         description: The ID of the course
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "200":
-  #         description: Prompt retrieved successfully
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 system_prompt:
-  #                   type: string
-  #                   description: The system prompt set for the course
-  #       "400":
-  #         description: Bad Request
-  #       "404":
-  #         description: Course not found
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /instructor/generate_access_code:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   put:
-  #     tags:
-  #       - Instructor
-  #     summary: Generate a new access code for a course
-  #     operationId: instructor_generate_access_code_PUT
-  #     parameters:
-  #       - in: query
-  #         name: course_id
-  #         required: true
-  #         description: The ID of the course
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "200":
-  #         description: Access code generated successfully
-  #       "400":
-  #         description: Bad Request
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /instructor/get_access_code:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   get:
-  #     tags:
-  #       - Instructor
-  #     summary: Get the access code for a course
-  #     operationId: instructor_get_access_code_GET
-  #     parameters:
-  #       - in: query
-  #         name: course_id
-  #         required: true
-  #         description: The ID of the course
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "200":
-  #         description: Access code retrieved successfully
-  #       "400":
-  #         description: Bad Request
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /instructor/view_user_messages:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   get:
-  #     tags:
-  #       - Instructor
-  #     summary: Get all messages for a specific user in a specific course
-  #     operationId: instructor_view_user_messages_GET
-  #     parameters:
-  #       - in: query
-  #         name: course_id
-  #         required: true
-  #         description: The ID of the course
-  #         schema:
-  #           type: string
-  #       - in: query
-  #         name: user_email
-  #         required: true
-  #         description: The email of the user
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "200":
-  #         description: Messages retrieved successfully
-  #       "400":
-  #         description: Bad Request
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - instructorAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${instructorFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-
-  # /admin/elevate_instructor:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   post:
-  #     tags:
-  #       - Admin
-  #     summary: Elevate a user to instructor role
-  #     operationId: admin_elevate_instructor_POST
-  #     parameters:
-  #       - in: query
-  #         name: email
-  #         required: true
-  #         description: Email of the user to be elevated
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "200":
-  #         description: User role updated to instructor
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 message:
-  #                   type: string
-  #                   example: User role updated to instructor.
-  #       "201":
-  #         description: New user created and elevated to instructor
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 message:
-  #                   type: string
-  #                   example: New user created and elevated to instructor.
-  #       "400":
-  #         description: Bad Request
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 error:
-  #                   type: string
-  #                   example: Email is required
-  #       "500":
-  #         description: Internal Server Error
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 error:
-  #                   type: string
-  #                   example: Internal server error
-  #     security:
-  #       - adminAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${adminFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /admin/instructors:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   get:
-  #     tags:
-  #       - Admin
-  #     summary: Get all instructors
-  #     operationId: admin_get_instructors_GET
-  #     parameters:
-  #       - in: query
-  #         name: instructor_email
-  #         required: true
-  #         description: Email of the admin accessing the list of instructors
-  #         schema:
-  #           type: string
-  #     responses:
-  #       "200":
-  #         description: List of instructors retrieved successfully
-  #       "400":
-  #         description: Bad Request
-  #       "401":
-  #         description: Unauthorized
-  #       "429":
-  #         description: Too Many Requests
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - adminAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${adminFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /admin/courses:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   get:
-  #     tags:
-  #       - Admin
-  #     summary: Get all courses
-  #     operationId: admin_get_courses_GET
-  #     responses:
-  #       "200":
-  #         description: List of courses retrieved successfully
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - adminAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${adminFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /admin/enroll_instructor:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   post:
-  #     tags:
-  #       - Admin
-  #     summary: Enroll an instructor in a course
-  #     operationId: admin_enroll_instructor_POST
-  #     requestBody:
-  #       required: true
-  #       content:
-  #         application/json:
-  #           schema:
-  #             type: object
-  #             properties:
-  #               course_id:
-  #                 type: string
-  #                 description: ID of the course to enroll the instructor in
-  #               instructor_email:
-  #                 type: string
-  #                 description: Email of the instructor to enroll
-  #     responses:
-  #       "200":
-  #         description: Enrollment created successfully
-  #       "400":
-  #         description: Bad Request
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - adminAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${adminFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /admin/create_course:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   post:
-  #     tags:
-  #       - Admin
-  #     summary: Create a new course
-  #     operationId: admin_create_course_POST
-  #     parameters:
-  #       - in: query
-  #         name: course_name
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: Name of the course
-  #       - in: query
-  #         name: course_department
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: Department of the course
-  #       - in: query
-  #         name: course_number
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: Number of the course
-  #       - in: query
-  #         name: course_access_code
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: Access code for the course
-  #       - in: query
-  #         name: course_user_access
-  #         required: true
-  #         schema:
-  #           type: boolean
-  #         description: User access details for the course
-  #     requestBody:
-  #       required: true
-  #       content:
-  #         application/json:
-  #           schema:
-  #             type: object
-  #             properties:
-  #               system_prompt:
-  #                 type: string
-  #                 description: System prompt for the course
-  #     responses:
-  #       "200":
-  #         description: Course created successfully
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 course_id:
-  #                   type: string
-  #                   description: ID of the newly created course
-  #       "400":
-  #         description: Bad Request
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - adminAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${adminFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /admin/courseInstructors:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   get:
-  #     tags:
-  #       - Admin
-  #     summary: Get all instructors for a given course
-  #     operationId: admin_get_course_instructors_GET
-  #     parameters:
-  #       - name: course_id
-  #         in: query
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: ID of the course to find instructors for
-  #     responses:
-  #       "200":
-  #         description: List of instructors
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: array
-  #               items:
-  #                 type: object
-  #                 properties:
-  #                   user_email:
-  #                     type: string
-  #                   first_name:
-  #                     type: string
-  #                   last_name:
-  #                     type: string
-  #       "400":
-  #         description: Bad Request
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - adminAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${adminFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /admin/instructorCourses:
-  #   options:
-  #     summary: CORS support
-  #     description: |
-  #       Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   get:
-  #     tags:
-  #       - Admin
-  #     summary: Get all courses for a given instructor where enrolment type is instructor
-  #     operationId: admin_get_instructor_courses_GET
-  #     parameters:
-  #       - name: instructor_email
-  #         in: query
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: Email of the instructor to find courses for
-  #     responses:
-  #       "200":
-  #         description: List of courses
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: array
-  #               items:
-  #                 type: object
-  #                 properties:
-  #                   course_id:
-  #                     type: string
-  #                   course_name:
-  #                     type: string
-  #                   course_deparment:
-  #                     type: string
-  #                   course_number:
-  #                     type: integer
-  #       "400":
-  #         description: Bad Request
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - adminAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${adminFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /admin/updateCourseAccess:
-  #   options:
-  #     summary: CORS support
-  #     description: Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   post:
-  #     tags:
-  #       - Admin
-  #     summary: update the access of a course
-  #     operationId: admin_re_enroll_instructor_POST
-  #     parameters:
-  #       - in: query
-  #         name: course_id
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: ID of the course
-  #       - in: query
-  #         name: access
-  #         required: true
-  #         schema:
-  #           type: boolean
-  #         description: Email of the instructor
-  #     responses:
-  #       "200":
-  #         description: Instructor re-enrolled successfully
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 enrolment_id:
-  #                   type: string
-  #                 course_id:
-  #                   type: string
-  #                 user_email:
-  #                   type: string
-  #                 enrolment_type:
-  #                   type: string
-  #                 time_enroled:
-  #                   type: string
-  #                   format: date-time
-  #       "400":
-  #         description: Bad Request
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 error:
-  #                   type: string
-  #                   example: "course_id and instructor_email are required"
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - adminAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${adminFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /admin/delete_instructor_enrolments:
-  #   options:
-  #     summary: CORS support
-  #     description: Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   delete:
-  #     tags:
-  #       - Admin
-  #     summary: Delete all enrolments for an instructor
-  #     operationId: admin_delete_instructor_enrolments_DELETE
-  #     parameters:
-  #       - in: query
-  #         name: instructor_email
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: Email of the instructor whose enrolments are to be deleted
-  #     responses:
-  #       "200":
-  #         description: Instructor enrolments deleted successfully
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 message:
-  #                   type: string
-  #                   example: "Instructor enrolments deleted successfully."
-  #       "400":
-  #         description: Bad Request
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 error:
-  #                   type: string
-  #                   example: "instructor_email query parameter is required"
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - adminAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${adminFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /admin/delete_course_instructor_enrolments:
-  #   options:
-  #     summary: CORS support
-  #     description: Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   delete:
-  #     tags:
-  #       - Admin
-  #     summary: Delete all instructor enrolments for a course
-  #     operationId: admin_delete_course_instructor_enrolments_DELETE
-  #     parameters:
-  #       - in: query
-  #         name: course_id
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: ID of the course for which instructor enrolments are to be deleted
-  #     responses:
-  #       "200":
-  #         description: Course instructor enrolments deleted successfully
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 message:
-  #                   type: string
-  #                   example: "Course instructor enrolments deleted successfully."
-  #       "400":
-  #         description: Bad Request
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 error:
-  #                   type: string
-  #                   example: "course_id query parameter is required"
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - adminAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${adminFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /admin/delete_course:
-  #   options:
-  #     summary: CORS support
-  #     description: Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   delete:
-  #     tags:
-  #       - Admin
-  #     summary: Delete a course and all related records
-  #     operationId: admin_delete_course_DELETE
-  #     parameters:
-  #       - in: query
-  #         name: course_id
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: ID of the course to be deleted
-  #     responses:
-  #       "200":
-  #         description: Course and related records deleted successfully
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 message:
-  #                   type: string
-  #                   example: "Course and related records deleted successfully."
-  #       "400":
-  #         description: Bad Request
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 error:
-  #                   type: string
-  #                   example: "course_id query parameter is required"
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - adminAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${adminFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
-  # /admin/lower_instructor:
-  #   options:
-  #     summary: CORS support
-  #     description: Enable CORS by returning correct headers
-  #     responses:
-  #       200:
-  #         $ref: "#/components/responses/Success"
-  #     x-amazon-apigateway-integration:
-  #       type: mock
-  #       requestTemplates:
-  #         application/json: |
-  #           {
-  #             "statusCode" : 200
-  #           }
-  #       responses:
-  #         default:
-  #           statusCode: "200"
-  #           responseParameters:
-  #             method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
-  #             method.response.header.Access-Control-Allow-Methods: "'*'"
-  #             method.response.header.Access-Control-Allow-Origin: "'*'"
-  #           responseTemplates:
-  #             application/json: |
-  #               {}
-  #   post:
-  #     tags:
-  #       - Admin
-  #     summary: Lower an instructor to a user role
-  #     operationId: admin_lower_instructor_POST
-  #     parameters:
-  #       - in: query
-  #         name: email
-  #         required: true
-  #         schema:
-  #           type: string
-  #         description: Email of the user to be lowered from instructor to user
-  #     responses:
-  #       "200":
-  #         description: Instructor role lowered to user
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 message:
-  #                   type: string
-  #                   example: "User role updated to user for example@example.com"
-  #       "400":
-  #         description: Bad Request
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: object
-  #               properties:
-  #                 error:
-  #                   type: string
-  #                   example: "User is not an instructor or email is missing"
-  #       "500":
-  #         description: Internal Server Error
-  #     security:
-  #       - adminAuthorizer: []
-  #     x-amazon-apigateway-integration:
-  #       uri:
-  #         Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${adminFunction.Arn}/invocations"
-  #       passthroughBehavior: "when_no_match"
-  #       httpMethod: "POST"
-  #       type: "aws_proxy"
+  /admin/delete_topic:
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+              method.response.header.Access-Control-Allow-Methods: "'*'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            responseTemplates:
+              application/json: |
+                {}
+    delete:
+      tags:
+        - Admin
+      summary: Delete a topic
+      operationId: admin_delete_topic_DELETE
+      parameters:
+        - in: query
+          name: topic_id
+          required: true
+          description: The ID of the topic to delete
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Module deleted successfully
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "429":
+          description: Too Many Requests
+        "500":
+          description: Internal Server Error
+      security:
+        - adminAuthorizer: []
+      x-amazon-apigateway-integration:
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${adminFunction.Arn}/invocations"
+        passthroughBehavior: "when_no_match"
+        httpMethod: "POST"
+        type: "aws_proxy"
+  /admin/delete_topic_s3:
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+              method.response.header.Access-Control-Allow-Methods: "'*'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            responseTemplates:
+              application/json: |
+                {}
+    delete:
+      tags:
+        - Topic
+      summary: Delete certain topic
+      operationId: admin_delete_topic_s3_DELETE
+      parameters:
+        - in: query
+          name: topic_id
+          required: true
+          description: ID of the topic
+          schema:
+            type: string
+        # - in: query
+        #   name: module_id
+        #   required: true
+        #   description: ID of the module
+        #   schema:
+        #     type: string
+        # - in: query
+        #   name: module_name
+        #   required: true
+        #   description: Name of the module
+        #   schema:
+        #     type: string
+      responses:
+        "200":
+          description: File deleted successfully
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "429":
+          description: Too Many Requests
+        "500":
+          description: Internal Server Error
+      security:
+        - adminAuthorizer: []
+      x-amazon-apigateway-integration:
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteTopicFunc.Arn}/invocations"
+        passthroughBehavior: "when_no_match"
+        httpMethod: "POST"
+        type: "aws_proxy"
+  /admin/analytics:
+    options:
+      summary: CORS support
+      description: |
+        Enable CORS by returning correct headers
+      responses:
+        200:
+          $ref: "#/components/responses/Success"
+      x-amazon-apigateway-integration:
+        type: mock
+        requestTemplates:
+          application/json: |
+            {
+              "statusCode" : 200
+            }
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+              method.response.header.Access-Control-Allow-Methods: "'*'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            responseTemplates:
+              application/json: |
+                {}
+    get:
+      tags:
+        - Admin
+      summary: Get analytics data for a specific topic
+      operationId: admin_get_analytics_GET
+      parameters:
+        - in: query
+          name: topic_id
+          required: true
+          description: ID of the topic for which analytics are requested
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Analytics data retrieved successfully
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "429":
+          description: Too Many Requests
+        "500":
+          description: Internal Server Error
+      security:
+        - adminAuthorizer: []
+      x-amazon-apigateway-integration:
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${adminFunction.Arn}/invocations"
+        passthroughBehavior: "when_no_match"
+        httpMethod: "POST"
+        type: "aws_proxy"
 
 components:
   securitySchemes:

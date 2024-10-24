@@ -107,7 +107,6 @@
 | `file_id`             | The ID of the file                           |
 | `module_id`           | The ID of the associated module              |
 | `filetype`            | The type of the file (e.g., pdf, docx, etc.) |
-| `s3_bucket_reference` | The reference to the S3 bucket               |
 | `filepath`            | The path to the file in the S3 bucket        |
 | `filename`            | The name of the file                         |
 | `time_uploaded`       | The timestamp when the file was uploaded     |

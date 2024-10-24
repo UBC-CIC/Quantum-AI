@@ -17,7 +17,7 @@ import * as cognito from "aws-cdk-lib/aws-cognito";
 import { CfnJson } from "aws-cdk-lib";
 import { VpcStack } from "./vpc-stack";
 import { DatabaseStack } from "./database-stack";
-import { parse, stringify } from "yaml";
+//import { parse, stringify } from "yaml";
 import { Fn } from "aws-cdk-lib";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
 import * as s3 from "aws-cdk-lib/aws-s3";
@@ -843,7 +843,7 @@ export class ApiGatewayStack extends cdk.Stack {
       })
     );
 
-    // Create S3 Bucket to handle documents for each course
+    // Create S3 Bucket to handle documents for each topic
     const dataIngestionBucket = new s3.Bucket(this, "QuantumAIDataIngestionBucket", {
       //bucketName: "quantumAI-data-ingestion-bucket",
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
@@ -911,7 +911,7 @@ export class ApiGatewayStack extends cdk.Stack {
     /**
      *
      * Create Lambda with container image for data ingestion workflow in RAG pipeline
-     * This function will be triggered when a file in uploaded or deleted fro, the S3 Bucket
+     * This function will be triggered when a file in uploaded or deleted from, the S3 Bucket
      */
     const dataIngestLambdaDockerFunc = new lambda.DockerImageFunction(
       this,
@@ -1065,39 +1065,39 @@ export class ApiGatewayStack extends cdk.Stack {
       sourceArn: `arn:aws:execute-api:${this.region}:${this.account}:${this.api.restApiId}/*/*/admin*`,
     });
 
-    // /**
-    //  *
-    //  * Create Lambda function to delete an entire module directory
-    //  */
-    // const deleteModuleFunction = new lambda.Function(this, "DeleteModuleFunc", {
-    //   runtime: lambda.Runtime.PYTHON_3_9,
-    //   code: lambda.Code.fromAsset("lambda/deleteModule"),
-    //   handler: "deleteModule.lambda_handler",
-    //   timeout: Duration.seconds(300),
-    //   memorySize: 128,
-    //   environment: {
-    //     BUCKET: dataIngestionBucket.bucketName,
-    //     REGION: this.region,
-    //   },
-    //   functionName: "DeleteModuleFunc",
-    //   layers: [powertoolsLayer],
-    // });
+    /**
+     *
+     * Create Lambda function to delete an entire module directory
+     */
+    const deleteTopicFunction = new lambda.Function(this, "DeleteTopicFunc", {
+      runtime: lambda.Runtime.PYTHON_3_9,
+      code: lambda.Code.fromAsset("lambda/deleteTopic"),
+      handler: "deleteTopic.lambda_handler",
+      timeout: Duration.seconds(300),
+      memorySize: 128,
+      environment: {
+        BUCKET: dataIngestionBucket.bucketName,
+        REGION: this.region,
+      },
+      functionName: "DeleteTopicFunc",
+      layers: [powertoolsLayer],
+    });
 
-    // // Override the Logical ID of the Lambda Function to get ARN in OpenAPI
-    // const cfnDeleteModuleFunction = deleteModuleFunction.node
-    //   .defaultChild as lambda.CfnFunction;
-    // cfnDeleteModuleFunction.overrideLogicalId("DeleteModuleFunc");
+    // Override the Logical ID of the Lambda Function to get ARN in OpenAPI
+    const cfnDeleteTopicFunction = deleteTopicFunction.node
+      .defaultChild as lambda.CfnFunction;
+    cfnDeleteTopicFunction.overrideLogicalId("DeleteTopicFunc");
 
-    // // Grant the Lambda function the necessary permissions
-    // dataIngestionBucket.grantRead(deleteModuleFunction);
-    // dataIngestionBucket.grantDelete(deleteModuleFunction);
+    // Grant the Lambda function the necessary permissions
+    dataIngestionBucket.grantRead(deleteTopicFunction);
+    dataIngestionBucket.grantDelete(deleteTopicFunction);
 
-    // // Add the permission to the Lambda function's policy to allow API Gateway access
-    // deleteModuleFunction.addPermission("AllowApiGatewayInvoke", {
-    //   principal: new iam.ServicePrincipal("apigateway.amazonaws.com"),
-    //   action: "lambda:InvokeFunction",
-    //   sourceArn: `arn:aws:execute-api:${this.region}:${this.account}:${this.api.restApiId}/*/*/instructor*`,
-    // });
+    // Add the permission to the Lambda function's policy to allow API Gateway access
+    deleteTopicFunction.addPermission("AllowApiGatewayInvoke", {
+      principal: new iam.ServicePrincipal("apigateway.amazonaws.com"),
+      action: "lambda:InvokeFunction",
+      sourceArn: `arn:aws:execute-api:${this.region}:${this.account}:${this.api.restApiId}/*/*/admin*`,
+    });
 
     /**
      *

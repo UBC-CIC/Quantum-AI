@@ -68,7 +68,7 @@ export class DatabaseStack extends Stack {
          * 
          * Create an RDS with Postgres database in an isolated subnet
          */
-        this.dbInstance = new rds.DatabaseInstance(this, "QuantumAI2", {
+        this.dbInstance = new rds.DatabaseInstance(this, "QuantumAI", {
             vpc: vpcStack.vpc,
             vpcSubnets: {
                 subnetType: ec2.SubnetType.PRIVATE_ISOLATED,

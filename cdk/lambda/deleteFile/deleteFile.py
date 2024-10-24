@@ -93,7 +93,7 @@ def lambda_handler(event, context):
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Methods": "*",
             },
-            'body': json.dumps('Missing required parameters: course_id, module_id, file_name, or file_type')
+            'body': json.dumps('Missing required parameters: topic_id, file_name, or file_type')
         }
 
     try:
