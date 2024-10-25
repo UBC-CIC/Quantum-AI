@@ -9,16 +9,30 @@ logger.setLevel(logging.INFO)
 
 dynamodb_client = boto3.client('dynamodb')
 
-TABLE_NAME = "API-Gateway-Test-Table-Name"
 DB_SECRET_NAME = os.environ["SM_DB_CREDENTIALS"]
 RDS_PROXY_ENDPOINT = os.environ["RDS_PROXY_ENDPOINT"]
 
-def get_secret():
-    # secretsmanager client to get db credentials
-    sm_client = boto3.client("secretsmanager")
-    response = sm_client.get_secret_value(SecretId=DB_SECRET_NAME)["SecretString"]
-    secret = json.loads(response)
-    return secret
+def get_secret(secret_name, expect_json=True):
+    try:
+        # secretsmanager client to get db credentials
+        sm_client = boto3.client("secretsmanager")
+        response = sm_client.get_secret_value(SecretId=secret_name)["SecretString"]
+        
+        if expect_json:
+            return json.loads(response)
+        else:
+            print(response)
+            return response
+
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to decode JSON for secret {secret_name}: {e}")
+        raise ValueError(f"Secret {secret_name} is not properly formatted as JSON.")
+    except Exception as e:
+        logger.error(f"Error fetching secret {secret_name}: {e}")
+        raise
+
+## GET SECRET VALUES FOR CONSTANTS
+TABLE_NAME = get_secret(os.environ["TABLE_NAME_SECRET"], expect_json=False)
 
 def connect_to_db():
     try:

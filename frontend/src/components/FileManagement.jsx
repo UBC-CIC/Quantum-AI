@@ -43,7 +43,8 @@ const FileManagement = ({
   };
 
   const handleDownloadClick = (url) => {
-    window.open(url, "_blank");
+    console.log(url.url)
+    window.open(url.url, "_blank");
   };
 
   const cleanFileName = (fileName) => {

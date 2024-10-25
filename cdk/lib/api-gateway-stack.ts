@@ -764,6 +764,39 @@ export class ApiGatewayStack extends cdk.Stack {
     //   "instructorLambdaAuthorizer"
     // );
 
+    // Create secrets for Bedrock LLM ID, Embedding Model ID, and Table Name
+    const bedrockLLMSecret = new secretsmanager.Secret(
+      this,
+      "BedrockLLMSecret",
+      {
+        secretName: "BedrockLLMSecret",
+        description: "Secret containing the Bedrock LLM ID",
+        secretStringValue: cdk.SecretValue.unsafePlainText(
+          "meta.llama3-70b-instruct-v1:0"
+        ),
+      }
+    );
+
+    const embeddingModelSecret = new secretsmanager.Secret(
+      this,
+      "EmbeddingModelSecret",
+      {
+        secretName: "EmbeddingModelSecret",
+        description: "Secret containing the Embedding Model ID",
+        secretStringValue: cdk.SecretValue.unsafePlainText(
+          "amazon.titan-embed-text-v2:0"
+        ),
+      }
+    );
+
+    const tableNameSecret = new secretsmanager.Secret(this, "TableNameSecret", {
+      secretName: "TableNameSecret",
+      description: "Secret containing the DynamoDB table name",
+      secretStringValue: cdk.SecretValue.unsafePlainText(
+        "DynamoDB-Conversation-Table"
+      ),
+    });
+
     /**
      *
      * Create Lambda with container image for text generation workflow in RAG pipeline
@@ -781,6 +814,9 @@ export class ApiGatewayStack extends cdk.Stack {
           SM_DB_CREDENTIALS: db.secretPathUser.secretName,
           RDS_PROXY_ENDPOINT: db.rdsProxyEndpoint,
           REGION: this.region,
+          BEDROCK_LLM_SECRET: bedrockLLMSecret.secretName,
+          EMBEDDING_MODEL_SECRET: embeddingModelSecret.secretName,
+          TABLE_NAME_SECRET: tableNameSecret.secretName,
         },
       }
     );
@@ -908,6 +944,31 @@ export class ApiGatewayStack extends cdk.Stack {
       sourceArn: `arn:aws:execute-api:${this.region}:${this.account}:${this.api.restApiId}/*/*/admin*`,
     });
 
+    const embeddingStorageBucket = new s3.Bucket(
+      this,
+      "embeddingStorageBucket",
+      {
+        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+        cors: [
+          {
+            allowedHeaders: ["*"],
+            allowedMethods: [
+              s3.HttpMethods.GET,
+              s3.HttpMethods.PUT,
+              s3.HttpMethods.HEAD,
+              s3.HttpMethods.POST,
+              s3.HttpMethods.DELETE,
+            ],
+            allowedOrigins: ["*"],
+          },
+        ],
+        // When deleting the stack, need to empty the Bucket and delete it manually
+        removalPolicy: cdk.RemovalPolicy.RETAIN,
+        enforceSSL: true,
+      }
+    );
+
+
     /**
      *
      * Create Lambda with container image for data ingestion workflow in RAG pipeline
@@ -927,6 +988,7 @@ export class ApiGatewayStack extends cdk.Stack {
           RDS_PROXY_ENDPOINT: db.rdsProxyEndpoint,
           BUCKET: dataIngestionBucket.bucketName,
           REGION: this.region,
+          EMBEDDING_BUCKET_NAME: embeddingStorageBucket.bucketName,
         },
       }
     );
@@ -936,6 +998,35 @@ export class ApiGatewayStack extends cdk.Stack {
       .defaultChild as lambda.CfnFunction;
     cfnDataIngestLambdaDockerFunc.overrideLogicalId(
       "DataIngestLambdaDockerFunc"
+    );
+
+    dataIngestionBucket.grantRead(dataIngestLambdaDockerFunc);
+
+    // Add ListBucket permission explicitly
+    dataIngestLambdaDockerFunc.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["s3:ListBucket"],
+        resources: [dataIngestionBucket.bucketArn], // Access to the specific bucket
+      })
+    );
+
+    dataIngestLambdaDockerFunc.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["s3:ListBucket"],
+        resources: [embeddingStorageBucket.bucketArn], // Access to the specific bucket
+      })
+    );
+
+    dataIngestLambdaDockerFunc.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ["s3:PutObject", "s3:GetObject", "s3:DeleteObject", "s3:HeadObject"],
+        resources: [
+          `arn:aws:s3:::${embeddingStorageBucket.bucketName}/*`,  // Grant access to all objects within this bucket
+        ],
+      })
     );
 
     // Attach the custom Bedrock policy to Lambda function
@@ -968,7 +1059,7 @@ export class ApiGatewayStack extends cdk.Stack {
 
     /**
      *
-     * Create Lambda function that will return all file names for a specified course, concept, and module
+     * Create Lambda function that will return all file names for a specified topic
      */
     const getFilesFunction = new lambda.Function(this, "GetFilesFunction", {
       runtime: lambda.Runtime.PYTHON_3_9,
@@ -1067,7 +1158,7 @@ export class ApiGatewayStack extends cdk.Stack {
 
     /**
      *
-     * Create Lambda function to delete an entire module directory
+     * Create Lambda function to delete an entire topic directory
      */
     const deleteTopicFunction = new lambda.Function(this, "DeleteTopicFunc", {
       runtime: lambda.Runtime.PYTHON_3_9,
@@ -1113,7 +1204,7 @@ export class ApiGatewayStack extends cdk.Stack {
       environment: {
         SM_DB_CREDENTIALS: db.secretPathUser.secretName,
         RDS_PROXY_ENDPOINT: db.rdsProxyEndpoint,
-        TABLE_NAME: "API-Gateway-Test-Table-Name",
+        TABLE_NAME_SECRET: tableNameSecret.secretName,
         REGION: this.region,
       },
       functionName: "DeleteLastMessage",

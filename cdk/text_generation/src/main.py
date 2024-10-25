@@ -3,7 +3,7 @@ import json
 import boto3
 import logging
 import psycopg2
-from langchain_community.embeddings import BedrockEmbeddings
+from langchain_aws import BedrockEmbeddings
 from helpers.vectorstore import get_vectorstore_retriever
 from helpers.chat import get_bedrock_llm, get_initial_user_query, get_user_query, create_dynamodb_history_table, get_response, update_session_name
 
@@ -11,19 +11,34 @@ from helpers.chat import get_bedrock_llm, get_initial_user_query, get_user_query
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
-BEDROCK_LLM_ID = "meta.llama3-70b-instruct-v1:0"
-EMBEDDING_MODEL_ID = "amazon.titan-embed-text-v2:0"
-TABLE_NAME = "API-Gateway-Test-Table-Name"
-
 DB_SECRET_NAME = os.environ["SM_DB_CREDENTIALS"]
 REGION = os.environ["REGION"]
 
-def get_secret():
-    sm_client = boto3.client("secretsmanager")
-    response = sm_client.get_secret_value(SecretId=DB_SECRET_NAME)["SecretString"]
-    secret = json.loads(response)
-    return secret
+def get_secret(secret_name, expect_json=True):
+    try:
+        # secretsmanager client to get db credentials
+        sm_client = boto3.client("secretsmanager")
+        response = sm_client.get_secret_value(SecretId=secret_name)["SecretString"]
+        
+        if expect_json:
+            return json.loads(response)
+        else:
+            print(response)
+            return response
 
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to decode JSON for secret {secret_name}: {e}")
+        raise ValueError(f"Secret {secret_name} is not properly formatted as JSON.")
+    except Exception as e:
+        logger.error(f"Error fetching secret {secret_name}: {e}")
+        raise
+
+## GET SECRET VALUES FOR CONSTANTS
+BEDROCK_LLM_ID = get_secret(os.environ["BEDROCK_LLM_SECRET"], expect_json=False)
+EMBEDDING_MODEL_ID = get_secret(os.environ["EMBEDDING_MODEL_SECRET"], expect_json=False)
+TABLE_NAME = get_secret(os.environ["TABLE_NAME_SECRET"], expect_json=False)
+
+## GETTING AMAZON TITAN EMBEDDINGS MODEL
 bedrock_runtime = boto3.client(
     service_name="bedrock-runtime",
     region_name=REGION,
@@ -42,7 +57,7 @@ def get_topic_name(topic_id):
     cur = None
     try:
         logger.info(f"Fetching topic name for topic_id: {topic_id}")
-        db_secret = get_secret()
+        db_secret = get_secret(DB_SECRET_NAME)
 
         connection_params = {
             'dbname': db_secret["dbname"],
@@ -95,7 +110,7 @@ def get_system_prompt(topic_id):
     cur = None
     try:
         logger.info(f"Fetching system prompt for topic_id: {topic_id}")
-        db_secret = get_secret()
+        db_secret = get_secret(DB_SECRET_NAME)
 
         connection_params = {
             'dbname': db_secret["dbname"],
@@ -230,7 +245,7 @@ def handler(event, context):
     
     try:
         logger.info("Retrieving vectorstore config.")
-        db_secret = get_secret()
+        db_secret = get_secret(DB_SECRET_NAME)
         vectorstore_config_dict = {
             'collection_name': topic_id,
             'dbname': db_secret["dbname"],

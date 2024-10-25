@@ -1076,7 +1076,7 @@ paths:
         - in: query
           name: topic_id
           required: true
-          description: ID of the course
+          description: ID of the topic
           schema:
             type: string
         # - in: query
@@ -1374,10 +1374,10 @@ paths:
               properties:
                 system_prompt:
                   type: string
-                  description: System prompt for the course
+                  description: System prompt for the topic
       responses:
         "200":
-          description: Concept created successfully
+          description: Topic created successfully
         "400":
           description: Bad Request
         "401":
@@ -1446,10 +1446,10 @@ paths:
               properties:
                 system_prompt:
                   type: string
-                  description: System prompt for the course
+                  description: System prompt for the topic
       responses:
         "200":
-          description: Concept updated successfully
+          description: Topic updated successfully
         "400":
           description: Bad Request
         "401":

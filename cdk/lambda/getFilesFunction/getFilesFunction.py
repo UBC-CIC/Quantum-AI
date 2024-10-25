@@ -1,12 +1,20 @@
 import os
 import json
 import boto3
+from botocore.config import Config
 import psycopg2
 from aws_lambda_powertools import Logger
 
 logger = Logger()
 
-s3 = boto3.client('s3')
+REGION = os.environ["REGION"]
+s3 = boto3.client(
+    "s3",
+    endpoint_url=f"https://s3.{REGION}.amazonaws.com",
+    config=Config(
+        s3={"addressing_style": "virtual"}, region_name=REGION, signature_version="s3v4"
+    ),
+)
 BUCKET = os.environ["BUCKET"]
 DB_SECRET_NAME = os.environ["SM_DB_CREDENTIALS"]
 RDS_PROXY_ENDPOINT = os.environ["RDS_PROXY_ENDPOINT"]
@@ -43,7 +51,7 @@ def list_files_in_s3_prefix(bucket, prefix):
     files = []
     continuation_token = None
 
-    # Fetch all objects in the module directory, handling pagination
+    # Fetch all objects in the topic directory, handling pagination
     while True:
         if continuation_token:
             result = s3.list_objects_v2(
@@ -71,7 +79,8 @@ def generate_presigned_url(bucket, key):
         return s3.generate_presigned_url(
             ClientMethod="get_object",
             Params={"Bucket": bucket, "Key": key},
-            ExpiresIn=300
+            ExpiresIn=300,
+            HttpMethod="GET",
         )
     except Exception as e:
         logger.exception(f"Error generating presigned URL for {key}: {e}")
@@ -129,7 +138,7 @@ def lambda_handler(event, context):
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Methods": "*",
             },
-            'body': json.dumps('Missing required parameters: course_id, or module_id')
+            'body': json.dumps('Missing required parameters: topic_id')
         }
 
     try:

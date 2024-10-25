@@ -13,8 +13,8 @@ const env = {
   region: process.env.CDK_DEFAULT_REGION 
 };
 
-const vpcStack = new VpcStack(app, 'VpcStack', { env });
-const dbStack = new DatabaseStack(app, 'DatabaseStack2', vpcStack, { env });
-const apiStack = new ApiGatewayStack(app, 'ApiGatewayStack', dbStack, vpcStack,  { env });
-const dbFlowStack = new DBFlowStack(app, 'DBFlowStack', vpcStack, dbStack, apiStack, { env });
-const amplifyStack = new AmplifyStack(app, 'AmplifyStack',apiStack, { env });
+const vpcStack = new VpcStack(app, 'QuantumAIVpcStack', { env });
+const dbStack = new DatabaseStack(app, 'QuantumAIDatabaseStack', vpcStack, { env });
+const apiStack = new ApiGatewayStack(app, 'QuantumAIApiGatewayStack', dbStack, vpcStack,  { env });
+const dbFlowStack = new DBFlowStack(app, 'QuantumAIDBFlowStack', vpcStack, dbStack, apiStack, { env });
+const amplifyStack = new AmplifyStack(app, 'QuantumAIAmplifyStack',apiStack, { env });

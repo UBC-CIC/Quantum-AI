@@ -25,25 +25,25 @@ def lambda_handler(event, context):
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Methods": "*",
             },
-            'body': json.dumps("Missing required parameters: course_id, or module_id")
+            'body': json.dumps("Missing required parameters: topic_id")
         }
 
     try:
-        module_prefix = f"{topic_id}/"
+        topic_prefix = f"{topic_id}/"
 
         objects_to_delete = []
         continuation_token = None
         
-        # Fetch all objects in the module directory, handling pagination
+        # Fetch all objects in the topic directory, handling pagination
         while True:
             if continuation_token:
                 response = s3.list_objects_v2(
                     Bucket=BUCKET, 
-                    Prefix=module_prefix, 
+                    Prefix=topic_prefix, 
                     ContinuationToken=continuation_token
                 )
             else:
-                response = s3.list_objects_v2(Bucket=BUCKET, Prefix=module_prefix)
+                response = s3.list_objects_v2(Bucket=BUCKET, Prefix=topic_prefix)
 
             if 'Contents' in response:
                 objects_to_delete.extend([{'Key': obj['Key']} for obj in response['Contents']])
@@ -55,7 +55,7 @@ def lambda_handler(event, context):
                 break
 
         if objects_to_delete:
-            # Delete all objects in the module directory
+            # Delete all objects in the topic directory
             delete_response = s3.delete_objects(
                 Bucket=BUCKET,
                 Delete={'Objects': objects_to_delete}
@@ -69,10 +69,10 @@ def lambda_handler(event, context):
                     "Access-Control-Allow-Origin": "*",
                     "Access-Control-Allow-Methods": "*",
                 },
-                'body': json.dumps(f"Deleted module directory: {module_prefix}")
+                'body': json.dumps(f"Deleted topic directory: {topic_prefix}")
             }
         else:
-            logger.info(f"No objects found in module directory: {module_prefix}")
+            logger.info(f"No objects found in topic directory: {topic_prefix}")
             return {
                 'statusCode': 200,
                 "headers": {
@@ -81,11 +81,11 @@ def lambda_handler(event, context):
                     "Access-Control-Allow-Origin": "*",
                     "Access-Control-Allow-Methods": "*",
                 },
-                'body': json.dumps(f"No objects found in module directory: {module_prefix}")
+                'body': json.dumps(f"No objects found in topic directory: {topic_prefix}")
             }
 
     except Exception as e:
-        logger.exception(f"Error deleting module directory: {e}")
+        logger.exception(f"Error deleting topic directory: {e}")
         return {
             'statusCode': 500,
             "headers": {

@@ -45,7 +45,7 @@ exports.handler = async (event) => {
           const { metadata } = JSON.parse(event.body);
 
           try {
-            // Query to find the file with the given module_id and filename
+            // Query to find the file with the given topic_id and filename
             const existingFile = await sqlConnection`
                       SELECT * FROM "Documents"
                       WHERE topic_id = ${topicId}
@@ -125,7 +125,7 @@ exports.handler = async (event) => {
               `;
 
             console.log(newTopic);
-            response.body = JSON.stringify(newCourse[0]);
+            response.body = JSON.stringify(newTopic[0]);
           } catch (err) {
             response.statusCode = 500;
             console.log(err);
@@ -163,7 +163,7 @@ exports.handler = async (event) => {
               response.body = JSON.stringify(result[0]);
             } else {
               response.statusCode = 404;
-              response.body = JSON.stringify({ error: "Concept not found" });
+              response.body = JSON.stringify({ error: "Topic not found" });
             }
           } catch (err) {
             response.statusCode = 500;
@@ -182,7 +182,7 @@ exports.handler = async (event) => {
             event.queryStringParameters != null &&
             event.queryStringParameters.topic_id
           ) {
-            const topicId = event.queryStringParameters.module_id;
+            const topicId = event.queryStringParameters.topic_id;
   
             try {
               // Delete the topic from the Topics table
@@ -228,7 +228,7 @@ exports.handler = async (event) => {
                 `;
     
                 // Query to get the number of topic accesses using User_Engagement_Log, filtering by user role
-                const moduleAccesses = await sqlConnection`
+                const topicAccesses = await sqlConnection`
                     SELECT uel.topic_id, COUNT(uel.log_id) AS access_count
                     FROM "User_Engagement_Log" uel
                     LEFT JOIN "Users" u ON uel.user_id = u.user_id
@@ -241,7 +241,7 @@ exports.handler = async (event) => {
                 // Combine all data into a single response, ensuring all topics are included
                 const analyticsData = messageCreations.map((topic) => {
                     const accesses =
-                        moduleAccesses.find((ma) => ma.topic_id === topic.topic_id) || {};
+                        topicAccesses.find((ma) => ma.topic_id === topic.topic_id) || {};
     
                     return {
                         topic_id: topic.topic_id,
@@ -260,7 +260,7 @@ exports.handler = async (event) => {
               }
             } else {
               response.statusCode = 400;
-              response.body = JSON.stringify({ error: "course_id is required" });
+              response.body = JSON.stringify({ error: "topic_id is required" });
             }
             break;
       default:

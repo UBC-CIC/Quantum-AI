@@ -350,7 +350,7 @@ exports.handler = async (event) => {
         } else {
           response.statusCode = 400;
           response.body = JSON.stringify({
-            error: "session_id, email, course_id, and module_id are required",
+            error: "session_id, email and topic_id are required",
           });
         }
         break;

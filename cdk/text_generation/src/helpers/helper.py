@@ -2,7 +2,7 @@ import logging
 from typing import Optional
 
 import psycopg2
-from langchain_community.embeddings import BedrockEmbeddings
+from langchain_aws import BedrockEmbeddings
 from langchain_postgres import PGVector
 
 # Setup logging

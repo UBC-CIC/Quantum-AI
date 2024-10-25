@@ -112,7 +112,6 @@ You may run the following command to deploy the stacks all at once. Again, repla
 ```
 cdk deploy --all --parameters AmplifyStack:githubRepoName=AI-LEARNING-ASSISTANT --profile <your-profile-name>
 ```
-
 If you have trouble running the above command, try removing all the \ and run it in one line.
 
 ## Post-Deployment

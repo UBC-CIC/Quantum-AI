@@ -3,7 +3,7 @@ import boto3
 from typing import Dict, Optional
 import psycopg2
 
-from langchain_community.embeddings import BedrockEmbeddings
+from langchain_aws import BedrockEmbeddings
 from langchain_postgres import PGVector
 from langchain.indexes import SQLRecordManager
 
@@ -58,18 +58,18 @@ def get_vectorstore(
         logger.error(f"Error initializing vector store: {e}")
         return None
     
-def store_course_data(
+def store_topic_data(
     bucket: str, 
-    course: str, 
+    topic: str, 
     vectorstore_config_dict: Dict[str, str], 
     embeddings: BedrockEmbeddings
 ) -> None:
     """
-    Store course data from an S3 bucket into the vectorstore.
+    Store topic data from an S3 bucket into the vectorstore.
     
     Args:
     bucket (str): The name of the S3 bucket.
-    course (str): The course name/folder in the S3 bucket.
+    topic (str): The topic name/folder in the S3 bucket.
     vectorstore_config_dict (Dict[str, str]): The configuration dictionary for the vectorstore.
     embeddings (BedrockEmbeddings): The embeddings instance.
     """
@@ -82,6 +82,8 @@ def store_course_data(
         host=vectorstore_config_dict['host'],
         port=int(vectorstore_config_dict['port'])
     )
+    
+    print("vector_store",vectorstore)
     
     if vectorstore:
         # define record manager
@@ -98,7 +100,7 @@ def store_course_data(
     # Process all files in the "documents" folder
     process_documents(
         bucket=bucket,
-        course=course,
+        topic=topic,
         vectorstore=vectorstore,
         embeddings=embeddings,
         record_manager=record_manager
