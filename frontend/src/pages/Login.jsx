@@ -27,8 +27,6 @@ import "react-toastify/dist/ReactToastify.css";
 // login assets
 import logo from "../assets/logo.png";
 import PageContainer from "./Container";
-// cognito verifier
-import { CognitoJwtVerifier } from "aws-jwt-verify";
 // MUI theming
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 const { palette } = createTheme();
@@ -59,32 +57,7 @@ export const Login = () => {
   const [confirmationError, setConfirmationError] = useState("");
   const [confirmationCode, setConfirmationCode] = useState("");
   const [step, setStep] = useState("requestReset");
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-
-  const verifyJwtToken = async (token) => {
-    try {
-      const verifier = CognitoJwtVerifier.create({
-        userPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID,
-        tokenUse: "id", // Can be either 'id' or 'access'
-        clientId: import.meta.env.VITE_COGNITO_USER_POOL_CLIENT_ID,
-      });
-      // Verify the token
-      const payload = await verifier.verify(token);
-
-      // Check if 'groups' property is present
-      if (payload["cognito:groups"]) {
-        console.log("Groups:");
-      } else {
-        console.log("No groups found in the token.");
-      }
-
-      return payload;
-    } catch (error) {
-      console.error("Token verification failed:", error);
-      throw new Error("Unauthorized jwt token");
-    }
-  };
 
   // existing user sign in
   const handleSignIn = async (event) => {
@@ -381,7 +354,6 @@ export const Login = () => {
         progress: undefined,
         theme: "colored",
       });
-      setMessage("");
     }
   }
 
@@ -394,13 +366,9 @@ export const Login = () => {
         console.log(
           `Confirmation code was sent to ${codeDeliveryDetails.deliveryMedium}`
         );
-        setMessage(
-          `Confirmation code was sent to ${codeDeliveryDetails.deliveryMedium}`
-        );
         setStep("confirmReset");
         break;
       case "DONE":
-        setMessage("Successfully reset password.");
         setStep("done");
         console.log("Successfully reset password.");
         break;
@@ -416,7 +384,6 @@ export const Login = () => {
         newPassword,
       });
       console.log("username", username);
-      setMessage("Password successfully reset.");
       setStep("done");
       setError("");
     } catch (error) {

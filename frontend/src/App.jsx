@@ -2,8 +2,6 @@ import "./App.css";
 // amplify
 import { Amplify } from "aws-amplify";
 import { fetchAuthSession } from "aws-amplify/auth";
-import { cognitoUserPoolsTokenProvider } from "aws-amplify/auth/cognito";
-import { CookieStorage } from "aws-amplify/utils";
 import "@aws-amplify/ui-react/styles.css";
 // react-router
 import {
