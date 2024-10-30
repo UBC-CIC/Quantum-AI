@@ -21,6 +21,7 @@ import {
   Box,
   Typography,
 } from "@mui/material";
+import 'ldrs/quantum'
 
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -85,7 +86,6 @@ export const Login = () => {
           setLoading(false);
         }
       } else {
-        setNewSignUp(false);
         window.location.reload();
       }
     } catch (error) {
@@ -272,7 +272,7 @@ export const Login = () => {
         const response = await fetch(
           `${
             import.meta.env.VITE_API_ENDPOINT
-          }student/create_user?user_email=${encodeURIComponent(
+          }user/create_user?user_email=${encodeURIComponent(
             username
           )}&username=${encodeURIComponent(
             username
@@ -406,10 +406,26 @@ export const Login = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <PageContainer>
+    <PageContainer>
       <Grid container component="main" sx={{ height: "100vh", backgroundColor: "#2E8797" }}>
         <CssBaseline />
-        <Grid
+        {loading ? (
+          <Grid
+            container
+            justifyContent="center"
+            alignItems="center"
+            sx={{ height: "100vh" }}
+          >
+            <l-quantum size="45" speed="1.75" color="white" />
+          </Grid>
+        ) : (
+          <Grid
+            container
+            justifyContent="center"
+            alignItems="center"
+            sx={{ height: "100vh" }}
+          >
+            <Grid
           container
           justifyContent="center"
           alignItems="center"
@@ -431,14 +447,13 @@ export const Login = () => {
               backgroundColor: "#fff",
               borderRadius: 4,
               padding: 4,
-              minHeight: "80%"
+              minHeight: "50%"
             }}
           >
             <Box sx={{ display: "flex", alignItems: "center", textAlign: "left", paddingBottom: 1 }}>
-              <img src={logo} alt="Logo" style={{ height: "100px", marginRight: "10px" }} />
+              <img src={logo} alt="Logo" style={{ height: "9vh", marginRight: "10px" }} />
               <Typography
-                variant="h1"
-                sx={{ color: "#2E8797", fontWeight: "bold", textAlign: "center", mb: 2 }}
+                sx={{ color: "#2E8797", fontWeight: "bold", textAlign: "center", mb: 2, fontSize: "9vh" }}
               >
                 Quantum AI
               </Typography>
@@ -467,7 +482,7 @@ export const Login = () => {
                   }}
                 >
                   <Box sx={{ width: "80%", textAlign: "left" }}>
-                    <Typography component="h1" variant="h5">
+                    <Typography sx={{ fontSize: "3vh" }}>
                       Sign in
                     </Typography>
                   </Box>
@@ -554,7 +569,7 @@ export const Login = () => {
                 }}
               >
                 <Box sx={{ width: "90%", textAlign: "left" }}>
-                  <Typography component="h1" variant="h5" paddingBottom={1}>
+                  <Typography sx={{ fontSize: "3vh" }} paddingBottom={1}>
                     Create your account
                   </Typography>
                 </Box>
@@ -706,7 +721,7 @@ export const Login = () => {
                     fullWidth
                     variant="contained"
                     color="primary"
-                    sx={{ mt: 3, mb: 2 }}
+                    sx={{ mt: 3, mb: 2, backgroundColor: "#2E8797", "&:hover": { backgroundColor: "#1b5f6e" } }}
                   >
                     Submit New Password
                   </Button>
@@ -751,7 +766,7 @@ export const Login = () => {
                     fullWidth
                     variant="contained"
                     color="primary"
-                    sx={{ mt: 3, mb: 2 }}
+                    sx={{ mt: 3, mb: 2, backgroundColor: "#2E8797", "&:hover": { backgroundColor: "#1b5f6e" } }}
                   >
                     Submit
                   </Button>
@@ -760,7 +775,7 @@ export const Login = () => {
                     fullWidth
                     variant="contained"
                     color="primary"
-                    sx={{ mt: 3, mb: 2 }}
+                    sx={{ mt: 3, mb: 2, backgroundColor: "#2E8797", "&:hover": { backgroundColor: "#1b5f6e" } }}
                     onClick={resendConfirmationCode}
                   >
                     Resend Code
@@ -867,7 +882,7 @@ export const Login = () => {
                         fullWidth
                         variant="contained"
                         color="primary"
-                        sx={{ mt: 3, mb: 2 }}
+                        sx={{ mt: 3, mb: 2, backgroundColor: "#2E8797", "&:hover": { backgroundColor: "#1b5f6e" } }}
                       >
                         Reset Password
                       </Button>
@@ -901,8 +916,10 @@ export const Login = () => {
           </Grid>
           </Grid>
         </Grid>
-      </PageContainer>
-      <ToastContainer
+        )}
+      </Grid>
+    </PageContainer>
+    <ToastContainer
         position="top-center"
         autoClose={5000}
         hideProgressBar={false}

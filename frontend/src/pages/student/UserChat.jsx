@@ -1,14 +1,28 @@
 import { useEffect, useRef, useState } from "react";
 import AIMessage from "../../components/AIMessage";
 import Session from "../../components/Session";
-import StudentMessage from "../../components/StudentMessage";
+import UserMessage from "../../components/UserMessage";
+import UserHeader from "../../components/UserHeader";
 import { fetchAuthSession } from "aws-amplify/auth";
-import { useNavigate } from "react-router-dom";
 import { fetchUserAttributes } from "aws-amplify/auth";
+import { FaChevronDown } from "react-icons/fa";
+import { GoSidebarExpand, GoSidebarCollapse } from "react-icons/go";
+import { IoSend } from "react-icons/io5";
+import logo from "../../assets/logo.png";
+import {
+  Button,
+  CssBaseline,
+  TextField,
+  Link,
+  Paper,
+  Grid,
+  Box,
+  Typography,
+} from "@mui/material";
 
 const TypingIndicator = () => (
-  <div className="flex items-center ml-28 mb-4">
-    <div className="flex space-x-1">
+  <div className="flex items-center ml-20 mb-4">
+    {/* <div className="flex space-x-1">
       <div
         className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
         style={{ animationDelay: "0s" }}
@@ -21,8 +35,10 @@ const TypingIndicator = () => (
         className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
         style={{ animationDelay: "0.4s" }}
       ></div>
-    </div>
-    <span className="ml-2 text-gray-500">AI is typing...</span>
+    </div> */}
+    <l-quantum size="45" speed="1.75" color="#2E8797" />
+
+    <span className="ml-2 text-gray-500">Quantum AI is typing...</span>
   </div>
 );
 
@@ -38,7 +54,8 @@ function titleCase(str) {
     .join(" ");
 }
 
-const UserChat = ({ admin, course, module, setModule, setCourse }) => {
+const UserChat = ({ admin }) => {
+  const [name, setName] = useState("");
   const textareaRef = useRef(null);
   const messagesEndRef = useRef(null);
   const [sessions, setSessions] = useState([]);
@@ -50,19 +67,9 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
   const [newMessage, setNewMessage] = useState(null);
   const [isAItyping, setIsAItyping] = useState(false);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (
-      !loading &&
-      !creatingSession &&
-      !isSubmitting &&
-      !isAItyping &&
-      sessions.length === 0
-    ) {
-      handleNewChat();
-    }
-  }, [sessions, creatingSession]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [topics, setTopics] = useState([]);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -71,6 +78,7 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
   }, [messages]);
 
   useEffect(() => {
+    console.log("New message:", newMessage);
     if (newMessage !== null) {
       if (currentSessionId === session.session_id) {
         setMessages((prevItems) => [...prevItems, newMessage]);
@@ -80,24 +88,53 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
   }, [session, newMessage, currentSessionId]);
 
   useEffect(() => {
-    const fetchModule = async () => {
+    const fetchName = () => {
       setLoading(true);
-      if (!course || !module) {
-        return;
-      }
+
+      fetchAuthSession()
+        .then((session) => {
+          return fetchUserAttributes().then((userAttributes) => {
+            const token = session.tokens.idToken
+            const email = userAttributes.email;
+            return fetch(
+              `${
+                import.meta.env.VITE_API_ENDPOINT
+              }user/get_name?user_email=${encodeURIComponent(email)}`,
+              {
+                method: "GET",
+                headers: {
+                  Authorization: token,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+          });
+        })
+        .then((response) => response.json())
+        .then((data) => {
+          setName(data.name);
+        })
+        .catch((error) => {
+          console.error("Error fetching name:", error);
+        }).finally(() => {
+          setLoading(false);
+        });
+    };
+
+    fetchName();
+  }, []);
+
+  useEffect(() => {
+    const fetchTopics = async () => {
+      setLoading(true);
 
       try {
         const session = await fetchAuthSession();
-        const { email } = await fetchUserAttributes();
         const token = session.tokens.idToken
         const response = await fetch(
           `${
             import.meta.env.VITE_API_ENDPOINT
-          }student/module?email=${encodeURIComponent(
-            email
-          )}&course_id=${encodeURIComponent(
-            course.course_id
-          )}&module_id=${encodeURIComponent(module.module_id)}`,
+          }user/topics`,
           {
             method: "GET",
             headers: {
@@ -108,34 +145,72 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
         );
         if (response.ok) {
           const data = await response.json();
+          setTopics(data);
+        } else {
+          console.error("Failed to fetch topics:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error fetching topics:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTopics();
+  }, []);
+
+  useEffect(() => {
+    const fetchSessions = async () => {
+      setLoading(true);
+
+      try {
+        const session = await fetchAuthSession();
+        const { email } = await fetchUserAttributes();
+        const token = session.tokens.idToken
+        const response = await fetch(
+          `${
+            import.meta.env.VITE_API_ENDPOINT
+          }user/sessions?email=${encodeURIComponent(
+            email
+          )}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: token,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Sessions:", data);
           setSessions(data);
           setSession(data[data.length - 1]);
         } else {
-          console.error("Failed to fetch module:", response.statusText);
+          console.error("Failed to fetch sessions:", response.statusText);
         }
       } catch (error) {
-        console.error("Error fetching module:", error);
+        console.error("Error fetching sessions:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchModule();
-  }, [course, module]);
+    fetchSessions();
+  }, []);
 
-  const getMostRecentStudentMessageIndex = () => {
-    const studentMessages = messages
+  const getMostRecentUserMessageIndex = () => {
+    const userMessages = messages
       .map((message, index) => ({ ...message, index }))
-      .filter((message) => message.student_sent);
-    return studentMessages.length > 0
-      ? studentMessages[studentMessages.length - 1].index
+      .filter((message) => message.user_sent);
+    return userMessages.length > 0
+      ? userMessages[userMessages.length - 1].index
       : -1;
   };
 
-  const hasAiMessageAfter = (messages, recentStudentMessageIndex) => {
+  const hasAiMessageAfter = (messages, recentUserMessageIndex) => {
     return messages
-      .slice(recentStudentMessageIndex + 1)
-      .some((message) => !message.student_sent);
+      .slice(recentUserMessageIndex + 1)
+      .some((message) => !message.user_sent);
   };
 
   async function retrieveKnowledgeBase(message, sessionId) {
@@ -147,11 +222,13 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
         const response = await fetch(
           `${
             import.meta.env.VITE_API_ENDPOINT
-          }student/create_ai_message?session_id=${encodeURIComponent(
+          }user/create_ai_message?session_id=${encodeURIComponent(
             sessionId
-          )}&email=${encodeURIComponent(email)}&course_id=${encodeURIComponent(
-            course.course_id
-          )}&module_id=${encodeURIComponent(module.module_id)}`,
+          )}&email=${encodeURIComponent(
+            email
+          )}&topic_id=${encodeURIComponent(
+            session.topic_id
+          )}`,
           {
             method: "POST",
             headers: {
@@ -217,13 +294,13 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
         userEmail = email;
         const messageUrl = `${
           import.meta.env.VITE_API_ENDPOINT
-        }student/create_message?session_id=${encodeURIComponent(
+        }user/create_message?session_id=${encodeURIComponent(
           newSession.session_id
         )}&email=${encodeURIComponent(
           userEmail
-        )}&course_id=${encodeURIComponent(
-          course.course_id
-        )}&module_id=${encodeURIComponent(module.module_id)}`;
+        )}&topic_id=${encodeURIComponent(
+          newSession.topic_id
+        )}`;
 
         return fetch(messageUrl, {
           method: "POST",
@@ -251,12 +328,10 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
 
         const textGenUrl = `${
           import.meta.env.VITE_API_ENDPOINT
-        }student/text_generation?course_id=${encodeURIComponent(
-          course.course_id
+        }user/text_generation?topic_id=${encodeURIComponent(
+          session.topic_id
         )}&session_id=${encodeURIComponent(
           newSession.session_id
-        )}&module_id=${encodeURIComponent(
-          module.module_id
         )}&session_name=${encodeURIComponent(newSession.session_name)}`;
 
         return fetch(textGenUrl, {
@@ -285,7 +360,7 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
         }));
         const updateSessionName = `${
           import.meta.env.VITE_API_ENDPOINT
-        }student/update_session_name?session_id=${encodeURIComponent(
+        }user/update_session_name?session_id=${encodeURIComponent(
           newSession.session_id
         )}`;
 
@@ -297,15 +372,6 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
           );
         });
 
-        const updateModuleScore = `${
-          import.meta.env.VITE_API_ENDPOINT
-        }student/update_module_score?module_id=${encodeURIComponent(
-          module.module_id
-        )}&student_email=${encodeURIComponent(
-          userEmail
-        )}&course_id=${encodeURIComponent(
-          course.course_id
-        )}&llm_verdict=${encodeURIComponent(textGenData.llm_verdict)}`;
 
         return Promise.all([
           fetch(updateSessionName, {
@@ -317,13 +383,6 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
             body: JSON.stringify({
               session_name: textGenData.session_name,
             }),
-          }),
-          fetch(updateModuleScore, {
-            method: "POST",
-            headers: {
-              Authorization: authToken,
-              "Content-Type": "application/json",
-            },
           }),
           textGenData,
         ]);
@@ -339,6 +398,14 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
         );
       })
       .catch((error) => {
+        const simulatedMessage = {
+          message_id: "00000000-0000-0000-0000-000000000000", // Placeholder UUID
+          session_id: "11111111-1111-1111-1111-111111111111", // Placeholder UUID
+          user_sent: false,
+          message_content: "What can I help you with?",
+          time_sent: new Date().toISOString(), // Current timestamp
+        };
+        setNewMessage(simulatedMessage);
         setIsSubmitting(false);
         setIsAItyping(false);
         console.error("Error:", error);
@@ -356,12 +423,7 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
     }
   };
 
-  const handleBack = () => {
-    sessionStorage.removeItem("module");
-    navigate(-1);
-  };
-
-  const handleNewChat = () => {
+  const handleNewChat = (topic) => {
     let sessionData;
     let userEmail;
     let authToken;
@@ -376,12 +438,10 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
         const session_name = "New chat";
         const url = `${
           import.meta.env.VITE_API_ENDPOINT
-        }student/create_session?email=${encodeURIComponent(
+        }user/create_session?email=${encodeURIComponent(
           userEmail
-        )}&course_id=${encodeURIComponent(
-          course.course_id
-        )}&module_id=${encodeURIComponent(
-          module.module_id
+        )}&topic_id=${encodeURIComponent(
+          topic.topic_id
         )}&session_name=${encodeURIComponent(session_name)}`;
 
         return fetch(url, {
@@ -407,12 +467,10 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
 
         const textGenUrl = `${
           import.meta.env.VITE_API_ENDPOINT
-        }student/text_generation?course_id=${encodeURIComponent(
-          course.course_id
+        }user/text_generation?topic_id=${encodeURIComponent(
+          topic.topic_id
         )}&session_id=${encodeURIComponent(
           sessionData.session_id
-        )}&module_id=${encodeURIComponent(
-          module.module_id
         )}&session_name=${encodeURIComponent("New chat")}`;
 
         return fetch(textGenUrl, {
@@ -439,6 +497,14 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
         return sessionData;
       })
       .catch((error) => {
+        const simulatedMessage = {
+          message_id: "00000000-0000-0000-0000-000000000000", // Placeholder UUID
+          session_id: "11111111-1111-1111-1111-111111111111", // Placeholder UUID
+          user_sent: false,
+          message_content: "Hello, welcome to Quantum AI!",
+          time_sent: new Date().toISOString(), // Current timestamp
+        };
+        setNewMessage(simulatedMessage);
         console.error("Error creating new chat:", error);
         setCreatingSession(false);
         setIsAItyping(false);
@@ -456,12 +522,10 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
       const response = await fetch(
         `${
           import.meta.env.VITE_API_ENDPOINT
-        }student/delete_session?email=${encodeURIComponent(
+        }user/delete_session?email=${encodeURIComponent(
           email
-        )}&course_id=${encodeURIComponent(
-          course.course_id
-        )}&module_id=${encodeURIComponent(
-          module.module_id
+        )}&topic_id=${encodeURIComponent(
+          sessionDelete.topic_id
         )}&session_id=${encodeURIComponent(sessionDelete.session_id)}`,
         {
           method: "DELETE",
@@ -483,10 +547,10 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
           setMessages([]);
         }
       } else {
-        console.error("Failed to create session:", response.statusText);
+        console.error("Failed to delete session:", response.statusText);
       }
     } catch (error) {
-      console.error("Error creating session:", error);
+      console.error("Error deleting session:", error);
     }
   };
 
@@ -499,7 +563,7 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
       const response = await fetch(
         `${
           import.meta.env.VITE_API_ENDPOINT
-        }student/delete_last_message?session_id=${encodeURIComponent(
+        }user/delete_last_message?session_id=${encodeURIComponent(
           session.session_id
         )}`,
         {
@@ -527,6 +591,7 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
       console.error("Error deleting message:", error);
     }
   };
+
   useEffect(() => {
     const handleResize = () => {
       const textarea = textareaRef.current;
@@ -560,19 +625,6 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
       }
     };
   }, [textareaRef.currrent, handleKeyDown]);
-  useEffect(() => {
-    const storedModule = sessionStorage.getItem("module");
-    if (storedModule) {
-      setModule(JSON.parse(storedModule));
-    }
-  }, [setModule]);
-
-  useEffect(() => {
-    const storedCourse = sessionStorage.getItem("course");
-    if (storedCourse) {
-      setCourse(JSON.parse(storedCourse));
-    }
-  }, [setCourse]);
 
   const getMessages = async () => {
     try {
@@ -582,7 +634,7 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
       const response = await fetch(
         `${
           import.meta.env.VITE_API_ENDPOINT
-        }student/get_messages?session_id=${encodeURIComponent(
+        }user/get_messages?session_id=${encodeURIComponent(
           session.session_id
         )}`,
         {
@@ -597,124 +649,229 @@ const UserChat = ({ admin, course, module, setModule, setCourse }) => {
         const data = await response.json();
         setMessages(data);
       } else {
-        console.error("Failed to retreive session:", response.statusText);
+        console.error("Failed to retreive messages:", response.statusText);
         setMessages([]);
       }
     } catch (error) {
-      console.error("Error fetching session:", error);
+      console.error("Error fetching messages:", error);
       setMessages([]);
     }
   };
+
   useEffect(() => {
+    console.log("Session:", session);
     if (session) {
       getMessages();
     }
   }, [session]);
 
-  if (!module) {
-    return <div>Loading...</div>;
-  }
-
   return (
-    <div className="flex flex-row h-screen">
-      <div className="flex flex-col w-1/4 bg-gradient-to-tr from-purple-300 to-cyan-100">
-        <div className="flex flex-row mt-3 mb-3 ml-4">
-          <img
-            onClick={() => handleBack()}
-            className="w-8 h-8 cursor-pointer"
-            src="./ArrowCircleDownRounded.png"
-            alt="back"
-          />
-          <div className="ml-3 pt-0.5 text-black font-roboto font-bold text-lg">
-            {titleCase(module.module_name)}
-          </div>
-        </div>
-        <button
-          onClick={() => {
-            if (!creatingSession) {
-              setCreatingSession(true);
-              handleNewChat();
-            }
-          }}
-          className="border border-black ml-8 mr-8 mt-0 mb-0 bg-transparent pt-1.5 pb-1.5"
-        >
-          <div className="flex flex-row gap-6">
-            <div className="text-md font-roboto text-[#212427]">+</div>
-            <div className="text-md font-roboto font-bold text-[#212427]">
-              New Chat
+    <div className="flex h-screen">
+      {loading ? (
+          <Grid
+            container
+            justifyContent="center"
+            alignItems="center"
+            sx={{ height: "100vh", backgroundColor: "#2E8797" }}
+          >
+            <l-quantum size="45" speed="1.75" color="white" />
+          </Grid>
+        ) : (
+          <>
+          {/* Sidebar */}
+          <div
+            className={`bg-gradient-to-tr from-[#00EEFF] to-[#2E8797] transition-all duration-500 ${
+              isSidebarOpen ? "w-[25%]" : "w-16"
+            } flex-shrink-0`}
+          >
+            {/* Top Section */}
+            <div className="flex items-center justify-between p-4">
+              {isSidebarOpen && (
+                <Typography
+                  sx={{
+                    color: "#000000",
+                    fontWeight: "bold",
+                    fontSize: "4vh",
+                  }}
+                >
+                 {name}
+                </Typography>
+              )}
+
+              <button
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="bg-transparent text-black focus:outline-none"
+                style={{ border: "none", padding: 0 }}
+              >
+                {isSidebarOpen ? (
+                  <GoSidebarExpand size={35} className="ml-2"/>
+                ) : (
+                  <GoSidebarCollapse size={35} />
+                )}
+              </button>
+            </div>
+
+            {/* New Chat Dropdown */}
+            {isSidebarOpen && (
+              <div className="relative mx-4 my-2">
+                <div
+                    className={`bg-transparent border border-black py-2 px-4 w-full font-roboto font-bold flex items-center justify-between text-[#212427] cursor-pointer transition-all duration-300 bg-opacity-80 hover:bg-[#212427] hover:text-white ${isOpen ? 'bg-[#212427] text-white rounded-t' : 'rounded'}`}
+                    onMouseEnter={() => setIsOpen(true)} // Set to true on hover
+                    onMouseLeave={() => setIsOpen(false)} // Set to false when not hovering
+                >
+                    New Chat
+                    <FaChevronDown className="ml-2" />
+                </div>
+                <div className={`absolute left-0 top-full w-full bg-[#212427] bg-opacity-85 text-white overflow-hidden transition-all duration-100 ease-in-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
+                      onMouseEnter={() => setIsOpen(true)} // Set to true on hover
+                      onMouseLeave={() => setIsOpen(false)} // Set to false when not hovering
+                >
+                  {topics.map((topic, index) => (
+                    <div
+                      key={index}
+                      className="px-4 py-2 hover:bg-[#212427] text-left cursor-pointer"
+                      onClick={() => {
+                        if (!creatingSession) {
+                          setCreatingSession(true);
+                          handleNewChat(topic);
+                        }
+                      }}
+                    >
+                      + {topic.topic_name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            
+            )}
+
+            {/* Centered Box */}
+            {isSidebarOpen && (
+              <div className="flex justify-center my-4">
+                <Box
+                  sx={{
+                    width: "90%",
+                    height: "1px",
+                    backgroundColor: "#212427",
+                  }}
+                />
+              </div>
+            )}
+
+            {/* History Header */}
+            {isSidebarOpen && (
+              <Typography
+                sx={{
+                  color: "#212427",
+                  fontWeight: "bold",
+                  fontSize: "3vh",
+                }}
+                className="pl-4 text-left"
+              >
+                History
+              </Typography>
+            )}
+
+            {/* Sessions List */}
+
+            { sessions.length === 0 && isSidebarOpen && (
+              <div className="flex-grow flex items-center justify-center">
+                <Typography
+                  sx={{ color: "#212427", fontSize: "2vh" }}
+                >
+                  No chat history
+                </Typography>
+              </div>
+            ) }
+
+            <div className="overflow-y-auto mt-2 mb-6">
+              {isSidebarOpen &&
+                sessions
+                  .slice()
+                  .reverse()
+                  .map((iSession) => (
+                    <Session
+                      key={iSession.session_id}
+                      text={iSession.session_name}
+                      session={iSession}
+                      setSession={setSession}
+                      deleteSession={handleDeleteSession}
+                      selectedSession={session}
+                      setMessages={setMessages}
+                      setSessions={setSessions}
+                    />
+                  ))}
             </div>
           </div>
-        </button>
-        <div className="my-4">
-          <hr className="border-t border-black" />
-        </div>
-        <div className="font-roboto font-bold ml-8 text-start text-[#212427]">
-          History
-        </div>
-        <div className=" overflow-y-auto mt-2 mb-6">
-          {sessions
-            .slice()
-            .reverse()
-            .map((iSession, index) => (
-              <Session
-                key={iSession.session_id}
-                text={iSession.session_name}
-                session={iSession}
-                setSession={setSession}
-                deleteSession={handleDeleteSession}
-                selectedSession={session}
-                setMessages={setMessages}
-                setSessions={setSessions}
-                sessions={sessions}
-              />
-            ))}
-        </div>
-      </div>
-      <div className="flex flex-col-reverse w-3/4 bg-[#F8F9FD]">
-        <div className="flex items-center justify-between border bg-[#f2f0f0] border-[#8C8C8C] py-2 mb-12 mx-20">
-          <textarea
-            ref={textareaRef}
-            className="text-sm w-full outline-none bg-[#f2f0f0] text-black resize-none max-h-32 ml-2 mr-2"
-            style={{ maxHeight: "8rem" }}
-            maxLength={2096}
-          />
-          <img
-            onClick={handleSubmit}
-            className="cursor-pointer w-3 h-3 mr-4"
-            src="./send.png"
-            alt="send"
-          />
-        </div>
-        <div className="flex-grow overflow-y-auto p-4 h-full">
-          {messages.map((message, index) =>
-            message.student_sent ? (
-              <StudentMessage
-                key={message.message_id}
-                message={message.message_content}
-                isMostRecent={getMostRecentStudentMessageIndex() === index}
-                onDelete={() => handleDeleteMessage(message)}
-                hasAiMessageAfter={hasAiMessageAfter(
-                  messages,
-                  getMostRecentStudentMessageIndex()
-                )}
-              />
-            ) : (
-              <AIMessage
-                key={message.message_id}
-                message={message.message_content}
-              />
-            )
-          )}
-          {isAItyping &&
-            currentSessionId &&
-            session?.session_id &&
-            currentSessionId === session.session_id && <TypingIndicator />}
-          <div ref={messagesEndRef} />
-        </div>
-        <div className="font-roboto font-bold text-2xl text-left mt-6 ml-12 mb-6 text-black">
-          AI Assistant 🌟
-        </div>
-      </div>
+
+          {/* Chat Area */}
+          <div className="flex-grow bg-[#F8F9FD] flex flex-col-reverse">
+              {!session ? (
+                <div className="flex-grow bg-[#F8F9FD] flex items-center justify-center">
+                  <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", paddingBottom: 1, mt: -5 }}>
+                    <Typography
+                      sx={{ color: "#212427", fontWeight: "bold", textAlign: "center", mb: 1, fontSize: "5vh" }}
+                    >
+                      Welcome to Quantum AI
+                    </Typography>
+                    <Typography
+                      sx={{ color: "#212427", textAlign: "center", mb: 5, fontSize: "4vh" }}
+                    >
+                      Click on a previous chat or make a new one to get started
+                    </Typography>
+                    <img src={logo} alt="Logo" style={{ height: "15vh", marginTop: "-2vh" }} />
+                  </Box>
+                </div>
+              ) : (
+                // Keep everything as is when the conditions are not met
+                <div className="flex-grow bg-[#F8F9FD] flex flex-col-reverse">
+                  {/* Input Area */}
+                  <div className="flex rounded items-center justify-between border bg-[#f2f0f0] border-[#8C8C8C] py-1 mb-6 mx-20">
+                    <textarea
+                      ref={textareaRef}
+                      className="text-sm w-full outline-none bg-[#f2f0f0] text-black resize-none max-h-32 mx-2"
+                      style={{ maxHeight: "8rem" }}
+                      placeholder="Enter Message Here..."
+                      maxLength={2096}
+                    />
+                    <IoSend
+                      onClick={handleSubmit}
+                      className="cursor-pointer w-5 h-5 mr-4 text-[#2E8797]"
+                    />
+                  </div>
+                  
+                  {/* Messages */}
+                  <div className="flex-grow overflow-y-auto p-4 h-full">
+                    {messages.map((message, index) =>
+                      message.user_sent ? (
+                        <UserMessage
+                          key={message.message_id}
+                          message={message.message_content}
+                          isMostRecent={getMostRecentUserMessageIndex() === index}
+                          onDelete={() => handleDeleteMessage(message)}
+                          hasAiMessageAfter={hasAiMessageAfter(
+                            messages,
+                            getMostRecentUserMessageIndex()
+                          )}
+                        />
+                      ) : (
+                        <AIMessage key={message.message_id} message={message.message_content} />
+                      )
+                    )}
+                    {isAItyping &&
+                      currentSessionId &&
+                      session?.session_id &&
+                      currentSessionId === session.session_id && <TypingIndicator />}
+                    <div ref={messagesEndRef} />
+                  </div>
+                </div>
+              )}
+            <div className="w-full">
+              <UserHeader admin={admin}/>
+            </div>
+          </div>
+          </>
+        )}
     </div>
   );
 };

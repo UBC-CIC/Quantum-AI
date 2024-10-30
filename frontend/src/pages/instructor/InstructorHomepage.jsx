@@ -27,15 +27,15 @@ import {
 import PageContainer from "../Container";
 import InstructorHeader from "../../components/InstructorHeader";
 import InstructorSidebar from "./InstructorSidebar";
-import InstructorAnalytics from "./InstructorAnalytics";
-import InstructorEditCourse from "./InstructorEditCourse";
+import InstructorAnalytics from "./AdminAnalytics";
+import InstructorEditCourse from "./AdminEditTopic";
 import PromptSettings from "./PromptSettings";
 import ViewStudents from "./ViewStudents";
 import InstructorModules from "./InstructorModules";
-import InstructorNewModule from "./InstructorNewModule";
+import InstructorNewModule from "./AdminNewTopic";
 import StudentDetails from "./StudentDetails";
 import InstructorNewConcept from "./InstructorNewConcept";
-import InstructorConcepts from "./InstructorConcepts";
+import InstructorConcepts from "./AdminManageDocuments";
 import InstructorEditConcept from "./InstructorEditConcept";
 import { UserContext } from "../../App";
 function titleCase(str) {

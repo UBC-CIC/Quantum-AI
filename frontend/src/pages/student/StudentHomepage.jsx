@@ -1,5 +1,5 @@
 import { useEffect, useState, useContext } from "react";
-import StudentHeader from "../../components/StudentHeader";
+import StudentHeader from "../../components/UserHeader";
 import Container from "../Container";
 import { fetchAuthSession } from "aws-amplify/auth";
 

@@ -53,7 +53,7 @@ function titleCase(str) {
     .join(" ");
 }
 
-const InstructorAnalytics = ({ courseName, course_id }) => {
+const AdminAnalytics = ({ courseName, course_id }) => {
   const [value, setValue] = useState(0);
   const [graphData, setGraphData] = useState([]);
   const [data, setData] = useState([]);
@@ -227,4 +227,4 @@ const InstructorAnalytics = ({ courseName, course_id }) => {
   );
 };
 
-export default InstructorAnalytics;
+export default AdminAnalytics;

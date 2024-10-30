@@ -196,6 +196,51 @@ exports.handler = async (event) => {
           response.body = JSON.stringify({ error: "Internal server error" });
       }
       break;
+      case "GET /user/sessions":
+        if (
+          event.queryStringParameters != null &&
+          event.queryStringParameters.email
+        ) {
+          const userEmail = event.queryStringParameters.email;
+
+          try {
+            // Step 1: Get the user ID using the student_email
+            const userResult = await sqlConnection`
+                  SELECT user_id
+                  FROM "Users"
+                  WHERE user_email = ${userEmail}
+                  LIMIT 1;
+              `;
+
+            if (userResult.length === 0) {
+              response.statusCode = 404;
+              response.body = JSON.stringify({
+                error: "User not found.",
+              });
+              break;
+            }
+
+            const userId = userResult[0].user_id;
+
+            // Step 4: Retrieve session data specific to the student's module
+            const data = await sqlConnection`
+                  SELECT "Sessions".*
+                  FROM "Sessions"
+                  WHERE user_id = ${userId}
+                  ORDER BY "Sessions".last_accessed, "Sessions".session_id;
+              `;
+
+            response.body = JSON.stringify(data);
+          } catch (err) {
+            console.error(err);
+            response.statusCode = 500;
+            response.body = JSON.stringify({ error: "Internal server error" });
+          }
+        } else {
+          response.statusCode = 400;
+          response.body = JSON.stringify({ error: "Invalid value" });
+        }
+        break;
       case "POST /user/create_session":
         if (
           event.queryStringParameters != null &&

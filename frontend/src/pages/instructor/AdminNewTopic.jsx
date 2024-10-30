@@ -30,7 +30,7 @@ function titleCase(str) {
 }
 
 
-export const InstructorNewModule = ({ courseId }) => {
+export const AdminNewTopic = ({ courseId }) => {
   const [files, setFiles] = useState([]);
   const [newFiles, setNewFiles] = useState([]);
   const [savedFiles, setSavedFiles] = useState([]);
@@ -320,4 +320,4 @@ export const InstructorNewModule = ({ courseId }) => {
   );
 };
 
-export default InstructorNewModule;
+export default AdminNewTopic;

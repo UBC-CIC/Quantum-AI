@@ -38,7 +38,7 @@ function titleCase(str) {
     .join(" ");
 }
 
-const InstructorEditCourse = () => {
+const AdminEditTopic = () => {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [metadata, setMetadata] = useState({});
@@ -587,4 +587,4 @@ const InstructorEditCourse = () => {
   );
 };
 
-export default InstructorEditCourse;
+export default AdminEditTopic;

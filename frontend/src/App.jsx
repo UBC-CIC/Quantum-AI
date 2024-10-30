@@ -13,11 +13,9 @@ import {
 import { useEffect, useState, createContext } from "react";
 // pages
 import Login from "./pages/Login";
-import StudentHomepage from "./pages/student/StudentHomepage";
 import UserChat from "./pages/student/UserChat";
-import AdminHomepage from "./pages/admin/AdminHomepage";
-import InstructorHomepage from "./pages/instructor/InstructorHomepage";
-import CourseView from "./pages/student/CourseView";
+import AdminManageDocuments from "./pages/instructor/AdminManageDocuments";
+import AdminAnalytics from "./pages/instructor/AdminAnalytics";
 
 export const UserContext = createContext();
 
@@ -42,9 +40,6 @@ Amplify.configure({
 function App() {
   const [user, setUser] = useState(null);
   const [userGroup, setUserGroup] = useState(null);
-  const [course, setCourse] = useState(null);
-  const [module, setModule] = useState(null);
-  const [isInstructorAsStudent, setIsInstructorAsStudent] = useState(false);
 
   useEffect(() => {
     const fetchAuthData = () => {
@@ -66,7 +61,7 @@ function App() {
 
   const getHomePage = () => {
     if (userGroup && userGroup.includes("admin")) {
-      return <UserChat admin={true} />;
+      return <UserChat admin="true" />;
     } else if (userGroup && userGroup.includes("user")) {
       return <UserChat />;
     } else {
@@ -74,42 +69,34 @@ function App() {
     }
   };
 
+  const getDocumentPage = () => {
+    if (userGroup && userGroup.includes("admin")) {
+      return <AdminManageDocuments />;
+    } else {
+      return <Navigate to="/home" />;
+    }
+  };
+
+  const getAnalyticsPage = () => {
+    if (userGroup && userGroup.includes("admin")) {
+      return <AdminAnalytics />;
+    } else {
+      return <Navigate to="/home" />;
+    }
+  }
+
   return (
-    <UserContext.Provider
-      value={{ isInstructorAsStudent, setIsInstructorAsStudent }}
-    >
-      <Router>
-        <Routes>
-          <Route
-            path="/"
-            element={user ? <Navigate to="/home" /> : <Login />}
-          />
-          {/* <Route
-            path="/student_chat/*"
-            element={
-              <StudentChat
-                course={course}
-                module={module}
-                setModule={setModule}
-                setCourse={setCourse}
-              />
-            }
-          /> */}
-          <Route
-            path="/student_course/*"
-            element={
-              <CourseView
-                course={course}
-                setModule={setModule}
-                setCourse={setCourse}
-              />
-            }
-          />
-          <Route path="/home/*" element={getHomePage()} />
-          <Route path="/course/*" element={<InstructorHomepage />} />
-        </Routes>
-      </Router>
-    </UserContext.Provider>
+    <Router>
+      <Routes>
+        <Route
+          path="/"
+          element={user ? <Navigate to="/home" /> : <Login />}
+        />
+        <Route path="/home/*" element={getHomePage()} />
+        <Route path="/manage-documents/*" element={getDocumentPage()} />
+        <Route path="/analytics/*" element={getAnalyticsPage()} />
+      </Routes>
+    </Router>
   );
 }
 

@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from "react";
-import PropTypes from "prop-types";
 import { fetchAuthSession } from "aws-amplify/auth";
 const Session = ({
   text,
@@ -9,12 +8,11 @@ const Session = ({
   selectedSession,
   setMessages,
   setSessions,
-  sessions,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [newSessionName, setNewSessionName] = useState(text);
+  const [deleting, setDeleting] = useState(false);
 
-  const inputRef = useRef(null);
   const sessionRef = useRef(null);
 
   // Handle clicks outside the session component
@@ -52,6 +50,7 @@ const Session = ({
   };
 
   const handleDeleteClick = (event) => {
+    setDeleting(true);
     event.stopPropagation();
     deleteSession(session);
   };
@@ -97,7 +96,7 @@ const Session = ({
         return fetch(
           `${
             import.meta.env.VITE_API_ENDPOINT
-          }student/update_session_name?session_id=${encodeURIComponent(
+          }user/update_session_name?session_id=${encodeURIComponent(
             sessionId
           )}`,
           {
@@ -124,17 +123,18 @@ const Session = ({
     <div
       onClick={handleSessionClick}
       style={{
-        background: isSelected
-          ? "linear-gradient(90deg, rgb(0% 45.098% 90.196%) 0%, rgb(2.083% 43.603% 89.902%) 6.25%, rgb(4.167% 42.108% 89.608%) 12.5%, rgb(6.25% 40.613% 89.314%) 18.75%, rgb(8.333% 39.118% 89.02%) 25%, rgb(10.417% 37.623% 88.725%) 31.25%, rgb(12.5% 36.127% 88.431%) 37.5%, rgb(14.583% 34.632% 88.137%) 43.75%, rgb(16.667% 33.137% 87.843%) 50%, rgb(18.75% 31.642% 87.549%) 56.25%, rgb(20.833% 30.147% 87.255%) 62.5%, rgb(22.917% 28.652% 86.961%) 68.75%, rgb(25% 27.157% 86.667%) 75%, rgb(27.083% 25.662% 86.373%) 81.25%, rgb(29.167% 24.167% 86.078%) 87.5%, rgb(31.25% 22.672% 85.784%) 93.75%, rgb(33.333% 21.176% 85.49%) 100% )"
-          : "#5536DA",
+        background: "#1E1818",
       }}
-      className="cursor-pointer rounded flex flex-row justify-between items-center my-2 mx-8 py-2 px-4"
+      className={`cursor-pointer rounded flex flex-row justify-between items-center my-2 mx-4 py-2 px-4 ${
+        !isSelected ? "opacity-80" : ""
+      }`}
     >
+
       <div
         onDoubleClick={handleDoubleClick}
         className="flex flex-row items-center justify-start gap-6"
       >
-        <img src="/message.png" alt="message" className="w-2 h-2" />
+        <img src="/message.png" alt="message" className="w-3 h-3" />
         {isEditing ? (
           <input
             type="text"
@@ -142,11 +142,11 @@ const Session = ({
             onChange={handleInputChange}
             onBlur={handleInputBlur}
             autoFocus
-            className="text-[#e8e8e8] font-light font-inter text-xs bg-transparent border-none outline-none"
+            className="text-[#212427] pl-1 font-light font-inter bg-white text-xs border-none outline-none"
           />
         ) : (
           <div className="text-[#e8e8e8] font-light font-inter text-xs">
-            {text}
+            {deleting ? "Deleting chat..." : text}
           </div>
         )}
       </div>
@@ -155,7 +155,7 @@ const Session = ({
         className="cursor-pointer w-3 h-3 flex items-center justify-center ml-2"
         style={{ marginLeft: "8px" }}
       >
-        <img src="/delete.png" alt="delete" className="w-3 h-3" />
+        <img src="/delete.png" alt="delete" className="w-3 h-3 transform transition-transform duration-50 hover:scale-125" />
       </div>
     </div>
   );

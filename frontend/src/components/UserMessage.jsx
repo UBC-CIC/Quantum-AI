@@ -4,7 +4,7 @@ import { FaTrashAlt } from "react-icons/fa";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { dracula } from "react-syntax-highlighter/dist/cjs/styles/prism";
 
-const StudentMessage = ({ message, isMostRecent, onDelete, hasAiMessageAfter }) => {
+const UserMessage = ({ message, isMostRecent, onDelete, hasAiMessageAfter }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const renderCodeBlock = (code, language) => {
@@ -28,7 +28,6 @@ const StudentMessage = ({ message, isMostRecent, onDelete, hasAiMessageAfter }) 
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="flex flex-row-reverse items-start">
-        <AccountBoxIcon fontSize="large" style={{ color: "#00FFFF" }} />
         {/* Chat Bubble for Bot Message */}
         <div
           className="ml-4 mr-2 p-4 bg-gray-100 text-black rounded-xl shadow-md text-left"
@@ -58,4 +57,4 @@ const StudentMessage = ({ message, isMostRecent, onDelete, hasAiMessageAfter }) 
   );
 };
 
-export default StudentMessage;
+export default UserMessage;

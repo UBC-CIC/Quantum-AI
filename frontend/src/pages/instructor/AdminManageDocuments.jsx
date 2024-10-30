@@ -35,7 +35,7 @@ function titleCase(str) {
 
 
 
-const InstructorConcepts = ({ courseName, course_id }) => {
+const AdminManageDocuments = ({ courseName, course_id }) => {
   const navigate = useNavigate();
   const [data, setData] = useState([]);
   useEffect(() => {
@@ -277,4 +277,4 @@ const InstructorConcepts = ({ courseName, course_id }) => {
   );
 };
 
-export default InstructorConcepts;
+export default AdminManageDocuments;

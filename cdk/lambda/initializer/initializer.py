@@ -99,7 +99,7 @@ def handler(event, context):
                 "user_id" uuid,
                 "topic_id" uuid,
                 "timestamp" timestamp,
-                "engagement_type" varchar,
+                "engagement_type" varchar
             );
 
             ALTER TABLE "User_Engagement_Log" ADD FOREIGN KEY ("user_id") REFERENCES "Users" ("user_id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -226,12 +226,6 @@ def handler(event, context):
             SELECT * FROM "Users";
         """
         
-        cursor.execute(sql)
-        print(cursor.fetchall())
-        
-        sql = """
-            SELECT * FROM "LLM_Vectors";
-        """
         cursor.execute(sql)
         print(cursor.fetchall())
 

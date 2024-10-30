@@ -1,8 +1,8 @@
 import React from "react";
-import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import PropTypes from "prop-types";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { dracula } from "react-syntax-highlighter/dist/cjs/styles/prism";
+import logo from "../assets/logo.png";
 
 const AIMessage = ({ message }) => {
   const renderCodeBlock = (code, language) => {
@@ -22,7 +22,7 @@ const AIMessage = ({ message }) => {
   return (
     <div className="ml-16 mb-6 mr-16" >
       <div className="flex flex-row flex-start">
-        <AccountBoxIcon fontSize="large" style={{ color: "#5536DA" }} />
+        <img src={logo} alt="logo" className="w-10 h-10" />
         <div className="text-start ml-4 text-black" style={{ maxWidth: "61vw", width: "61vw", wordWrap: "break-word" }}>
           {message.split("```").map((part, index) => {
             if (index % 2 === 1) {
