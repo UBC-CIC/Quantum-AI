@@ -27,7 +27,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 // login assets
 import logo from "../assets/logo.png";
-import PageContainer from "./Container";
+import PageContainer from "./LoginContainer";
 // MUI theming
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 const { palette } = createTheme();
@@ -407,7 +407,7 @@ export const Login = () => {
   return (
     <ThemeProvider theme={theme}>
     <PageContainer>
-      <Grid container component="main" sx={{ height: "100vh", backgroundColor: "#2E8797" }}>
+      <Grid container component="main" sx={{ minHeight: "100vh" }}>
         <CssBaseline />
         {loading ? (
           <Grid
@@ -453,7 +453,7 @@ export const Login = () => {
             <Box sx={{ display: "flex", alignItems: "center", textAlign: "left", paddingBottom: 1 }}>
               <img src={logo} alt="Logo" style={{ height: "9vh", marginRight: "10px" }} />
               <Typography
-                sx={{ color: "#2E8797", fontWeight: "bold", textAlign: "center", mb: 2, fontSize: "9vh" }}
+                sx={{ color: "#2E8797", fontWeight: "bold", textAlign: "center", mb: 1, fontSize: "9vh" }}
               >
                 Quantum AI
               </Typography>
@@ -482,7 +482,7 @@ export const Login = () => {
                   }}
                 >
                   <Box sx={{ width: "80%", textAlign: "left" }}>
-                    <Typography sx={{ fontSize: "3vh" }}>
+                    <Typography sx={{ fontSize: "4vh" }}>
                       Sign in
                     </Typography>
                   </Box>
@@ -569,7 +569,7 @@ export const Login = () => {
                 }}
               >
                 <Box sx={{ width: "90%", textAlign: "left" }}>
-                  <Typography sx={{ fontSize: "3vh" }} paddingBottom={1}>
+                  <Typography sx={{ fontSize: "4vh" }} paddingBottom={1}>
                     Create your account
                   </Typography>
                 </Box>

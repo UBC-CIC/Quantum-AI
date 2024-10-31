@@ -29,7 +29,6 @@ function titleCase(str) {
   }).join(' ');
 }
 
-
 export const AdminNewTopic = ({ courseId }) => {
   const [files, setFiles] = useState([]);
   const [newFiles, setNewFiles] = useState([]);
@@ -39,12 +38,8 @@ export const AdminNewTopic = ({ courseId }) => {
 
   const [isSaving, setIsSaving] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [moduleName, setModuleName] = useState("");
-  const [concept, setConcept] = useState("");
-  const [allConcepts, setAllConcept] = useState([]);
-  const location = useLocation();
-  const { data, course_id } = location.state || {};
-  const [nextModuleNumber, setNextModuleNumber] = useState(data.length + 1);
+  const [topicName, setTopicName] = useState("");
+  const [prompt, setPrompt] = useState("");
 
   const cleanFileName = (fileName) => {
     return fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -66,56 +61,23 @@ export const AdminNewTopic = ({ courseId }) => {
     }
   };
 
-  useEffect(() => {
-    const fetchConcepts = async () => {
-      try {
-        const session = await fetchAuthSession();
-        var token = session.tokens.idToken
-        const response = await fetch(
-          `${
-            import.meta.env.VITE_API_ENDPOINT
-          }instructor/view_concepts?course_id=${encodeURIComponent(course_id)}`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: token,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        if (response.ok) {
-          const conceptData = await response.json();
-          setAllConcept(conceptData);
-        } else {
-          console.error("Failed to fetch courses:", response.statusText);
-        }
-      } catch (error) {
-        console.error("Error fetching courses:", error);
-      }
-    };
-    fetchConcepts();
-  }, [courseId]);
-
   const handleInputChange = (e) => {
-    setModuleName(e.target.value);
+    setTopicName(e.target.value);
   };
 
-  const handleConceptInputChange = (e) => {
-    setConcept(e.target.value);
+  const handlePromptChange = (e) => {
+    setPrompt(e.target.value);
   };
-  const uploadFiles = async (newFiles, token, moduleid) => {
+
+  const uploadFiles = async (newFiles, token, topicId) => {
     const newFilePromises = newFiles.map((file) => {
       const fileType = getFileType(file.name);
       const fileName = cleanFileName(removeFileExtension(file.name));
       return fetch(
         `${
           import.meta.env.VITE_API_ENDPOINT
-        }instructor/generate_presigned_url?course_id=${encodeURIComponent(
-          course_id
-        )}&module_id=${encodeURIComponent(
-          moduleid
-        )}&module_name=${encodeURIComponent(
-          moduleName
+        }admin/generate_presigned_url?topic_id=${encodeURIComponent(
+          topicId
         )}&file_type=${encodeURIComponent(
           fileType
         )}&file_name=${encodeURIComponent(fileName)}`,
@@ -146,8 +108,8 @@ export const AdminNewTopic = ({ courseId }) => {
     if (isSaving) return;
 
     // Validation check
-    if (!moduleName || !concept) {
-      toast.error("Module Name and Concept are required.", {
+    if (!topicName || !prompt) {
+      toast.error("Module Name and Prompt are required.", {
         position: "top-center",
         autoClose: 2000,
         hideProgressBar: false,
@@ -162,34 +124,29 @@ export const AdminNewTopic = ({ courseId }) => {
 
     setIsSaving(true);
 
-    const selectedConcept = allConcepts.find((c) => c.concept_name === concept);
     try {
       const session = await fetchAuthSession();
       const token = session.tokens.idToken
-      const { email } = await fetchUserAttributes();
       const response = await fetch(
         `${
           import.meta.env.VITE_API_ENDPOINT
-        }instructor/create_module?course_id=${encodeURIComponent(
-          course_id
-        )}&concept_id=${encodeURIComponent(
-          selectedConcept.concept_id
-        )}&module_name=${encodeURIComponent(
-          moduleName
-        )}&module_number=${encodeURIComponent(
-          nextModuleNumber
-        )}&instructor_email=${encodeURIComponent(email)}`,
+        }admin/create_topic?topic_name=${encodeURIComponent(
+          topicName
+        )}`,
         {
           method: "POST",
           headers: {
             Authorization: token,
             "Content-Type": "application/json",
           },
+          body: JSON.stringify({
+            system_prompt: prompt,
+          }),
         }
       );
       if (!response.ok) {
-        console.error(`Failed to create module`, response.statusText);
-        toast.error("Module Creation Failed", {
+        console.error(`Failed to create topic`, response.statusText);
+        toast.error("Topic Creation Failed", {
           position: "top-center",
           autoClose: 1000,
           hideProgressBar: false,
@@ -200,8 +157,8 @@ export const AdminNewTopic = ({ courseId }) => {
           theme: "colored",
         });
       } else {
-        const updatedModule = await response.json();
-        await uploadFiles(newFiles, token, updatedModule.module_id);
+        const updatedTopic = await response.json();
+        await uploadFiles(newFiles, token, updatedTopic.topic_id);
 
         setFiles((prevFiles) =>
           prevFiles.filter((file) => !deletedFiles.includes(file.fileName))
@@ -210,7 +167,7 @@ export const AdminNewTopic = ({ courseId }) => {
 
         setDeletedFiles([]);
         setNewFiles([]);
-        toast.success("Module Created Successfully", {
+        toast.success("Topic Created Successfully", {
           position: "top-center",
           autoClose: 1000,
           hideProgressBar: false,
@@ -225,7 +182,6 @@ export const AdminNewTopic = ({ courseId }) => {
       console.error("Error saving changes:", error);
     } finally {
       setIsSaving(false);
-      setNextModuleNumber(nextModuleNumber + 1);
       setTimeout(function () {
         handleBackClick();
       }, 1000);
@@ -235,35 +191,29 @@ export const AdminNewTopic = ({ courseId }) => {
   return (
     <PageContainer>
       <Paper style={{ padding: 25, width: "100%", overflow: "auto" }}>
-        <Typography variant="h6">New Module </Typography>
+        <Typography variant="h4" textAlign="left">New Topic</Typography>
 
         <TextField
-          label="Module Name"
+          label="Topic Name"
           name="name"
-          value={moduleName}
+          value={topicName}
           onChange={handleInputChange}
           fullWidth
           margin="normal"
           inputProps={{ maxLength: 50 }}
         />
-
-        <FormControl fullWidth margin="normal">
-          <InputLabel id="concept-select-label">Concept</InputLabel>
-          <Select
-            labelId="concept-select-label"
-            id="concept-select"
-            value={concept}
-            onChange={handleConceptInputChange}
-            label="Concept"
-            sx={{ textAlign: "left" }}
-          >
-            {allConcepts.map((concept) => (
-              <MenuItem key={concept.concept_id} value={concept.concept_name}>
-                {titleCase(concept.concept_name)}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        
+        <TextField
+          label="Topic Prompt"
+          name="prompt"
+          value={prompt}
+          onChange={handlePromptChange}
+          fullWidth
+          margin="normal"
+          inputProps={{ maxLength: 2000 }}
+          multiline
+          rows={4} // You can adjust the number of rows as needed
+        />
 
         <FileManagement
           newFiles={newFiles}
@@ -297,9 +247,9 @@ export const AdminNewTopic = ({ courseId }) => {
               variant="contained"
               color="primary"
               onClick={handleSave}
-              style={{ width: "30%" }}
+              style={{ width: "40%" }}
             >
-              Save Module
+              Create Topic
             </Button>
           </Grid>
         </Grid>

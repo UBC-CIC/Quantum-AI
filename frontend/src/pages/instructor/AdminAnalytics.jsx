@@ -23,23 +23,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-
-
-function courseTitleCase(str) {
-  if (typeof str !== 'string') {
-    return str;
-  }
-  const words = str.split(' ');
-  return words.map((word, index) => {
-    if (index === 0) {
-      return word.toUpperCase(); // First word entirely in uppercase
-    } else {
-      return word.charAt(0).toUpperCase() + word.slice(1); // Only capitalize first letter, keep the rest unchanged
-    }
-  }).join(' ');
-}
-
-
+import UserHeader from "../../components/UserHeader";
 
 function titleCase(str) {
   if (typeof str !== "string") {
@@ -58,9 +42,11 @@ const AdminAnalytics = ({ courseName, course_id }) => {
   const [graphData, setGraphData] = useState([]);
   const [data, setData] = useState([]);
   const [maxMessages, setMaxMessages] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
+      setLoading(true);
       try {
         const session = await fetchAuthSession();
         const token = session.tokens.idToken
@@ -90,6 +76,7 @@ const AdminAnalytics = ({ courseName, course_id }) => {
       } catch (error) {
         console.error("Error fetching analytics:", error);
       }
+      setLoading(false);
     };
 
     fetchAnalytics();
@@ -107,123 +94,154 @@ const AdminAnalytics = ({ courseName, course_id }) => {
   };
 
   return (
-    <Container sx={{ flexGrow: 1, p: 3, marginTop: 9, overflow: "auto" }}>
-      <Typography
-        color="black"
-        fontStyle="semibold"
-        textAlign="left"
-        variant="h6"
-        gutterBottom
-      >
-        {courseTitleCase(courseName)}
-      </Typography>
-      <Paper>
-        <Box mb={4}>
-          <Typography
-            color="black"
-            textAlign="left"
-            paddingLeft={10}
-            padding={2}
+    <div className="flex h-screen">
+      {loading ? (
+          <Grid
+            container
+            justifyContent="center"
+            alignItems="center"
+            sx={{ height: "100vh", backgroundColor: "#2E8797" }}
           >
-            Message Count
-          </Typography>
-          {graphData.length > 0 ? (
-            <LineChart
-              width={900}
-              height={300}
-              data={graphData}
-              margin={{
-                top: 5,
-                right: 30,
-                left: 20,
-                bottom: 5,
-              }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="module"
-                tick={{ fontSize: 12 }}
-                tickFormatter={(tick) => titleCase(tick)}
-              />
-              <YAxis domain={[0, maxMessages + 3]} />
-              <Tooltip />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="Messages"
-                stroke="#8884d8"
-                activeDot={{ r: 8 }}
-              />
-            </LineChart>
-          ) : (
-            <Typography
-              variant="h6"
-              color="textSecondary"
-              textAlign="center"
-              padding={4}
-            >
-              No data found
-            </Typography>
-          )}
-        </Box>
-      </Paper>
-
-      <Tabs value={value} onChange={handleChange} aria-label="grade tabs">
-        <Tab label="Insights" />
-      </Tabs>
-
-      {value === 0 ? (
-        data.length > 0 ? (
-          <Box mt={2}>
-            {data.map((module, index) => (
-              <Accordion key={index}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography>{titleCase(module.module_name)}</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Box width="100%">
-                    <Grid
-                      container
-                      spacing={1}
-                      alignItems="center"
-                      direction="column"
-                    >
-                      <Grid item width="80%">
-                        <Typography textAlign="right">
-                          Completion Percentage:{" "}
-                          {module.perfect_score_percentage.toFixed(2)}%
-                        </Typography>
-                        <LinearProgress
-                          variant="determinate"
-                          value={module.perfect_score_percentage}
-                        />
-                      </Grid>
-                      <Grid item>
-                        <Typography>Message Count</Typography>
-                        <Typography>{module.message_count}</Typography>
-                      </Grid>
-                      <Grid item>
-                        <Typography>Access Count</Typography>
-                        <Typography>{module.access_count}</Typography>
-                      </Grid>
-                    </Grid>
-                  </Box>
-                </AccordionDetails>
-              </Accordion>
-            ))}
-          </Box>
+            <l-quantum size="45" speed="1.75" color="white" />
+          </Grid>
         ) : (
-          <Typography
-            variant="h6"
-            color="textSecondary"
-            textAlign="center"
-            padding={4}
-          >
-            No insights available
-          </Typography>
-        )
-      ) : null}
-    </Container>
+          <Box
+            component="main"
+            sx={{ flexGrow: 1, px: 2, overflow: "auto", backgroundColor: "#F8F9FD" }}
+          >      
+            <div className="w-full">
+              <UserHeader admin={true}/>
+            </div>
+            <Typography
+              color="black"
+              fontStyle="bold"
+              textAlign="left"
+              variant="h4"
+              gutterBottom
+            >
+              Analytics
+            </Typography>
+            <Paper>
+              <Box mb={4}>
+                <Typography
+                  color="black"
+                  textAlign="left"
+                  paddingLeft={10}
+                  padding={2}
+                >
+                  Message Count
+                </Typography>
+                {graphData.length > 0 ? (
+                  <LineChart
+                    width={900}
+                    height={300}
+                    data={graphData}
+                    margin={{
+                      top: 5,
+                      right: 30,
+                      left: 20,
+                      bottom: 5,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="module"
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(tick) => titleCase(tick)}
+                    />
+                    <YAxis domain={[0, maxMessages + 3]} />
+                    <Tooltip />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="Messages"
+                      stroke="#114153"
+                      activeDot={{ r: 8 }}
+                    />
+                  </LineChart>
+                ) : (
+                  <Typography
+                    variant="h6"
+                    color="textSecondary"
+                    textAlign="center"
+                    padding={4}
+                  >
+                    No data found
+                  </Typography>
+                )}
+              </Box>
+            </Paper>
+
+            <Tabs 
+              value={value} 
+              onChange={handleChange} 
+              aria-label="grade tabs"
+              sx={{
+                "& .MuiTab-root": {
+                  color: "#2E8797", // Default color of the tabs
+                },
+                "& .Mui-selected": {
+                  color: "#2E8797", // Color when a tab is selected
+                },
+              }} 
+            >
+              <Tab label="Insights" />
+            </Tabs>
+
+            {value === 0 ? (
+              data.length > 0 ? (
+                <Box mt={2}>
+                  {data.map((module, index) => (
+                    <Accordion key={index}>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Typography>{titleCase(module.module_name)}</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Box width="100%">
+                          <Grid
+                            container
+                            spacing={1}
+                            alignItems="center"
+                            direction="column"
+                          >
+                            <Grid item width="80%">
+                              <Typography textAlign="right">
+                                Completion Percentage:{" "}
+                                {module.perfect_score_percentage.toFixed(2)}%
+                              </Typography>
+                              <LinearProgress
+                                variant="determinate"
+                                value={module.perfect_score_percentage}
+                              />
+                            </Grid>
+                            <Grid item>
+                              <Typography>Message Count</Typography>
+                              <Typography>{module.message_count}</Typography>
+                            </Grid>
+                            <Grid item>
+                              <Typography>Access Count</Typography>
+                              <Typography>{module.access_count}</Typography>
+                            </Grid>
+                          </Grid>
+                        </Box>
+                      </AccordionDetails>
+                    </Accordion>
+                  ))}
+                </Box>
+              ) : (
+                <Typography
+                  variant="h6"
+                  color="textSecondary"
+                  textAlign="center"
+                  padding={4}
+                >
+                  No insights available
+                </Typography>
+              )
+            ) : null}
+          </Box>
+        )}
+    </div>
   );
 };
 

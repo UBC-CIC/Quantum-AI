@@ -15,6 +15,8 @@ import { useEffect, useState, createContext } from "react";
 import Login from "./pages/Login";
 import UserChat from "./pages/student/UserChat";
 import AdminManageDocuments from "./pages/instructor/AdminManageDocuments";
+import AdminEditTopic from "./pages/instructor/AdminEditTopic";
+import AdminNewTopic from "./pages/instructor/AdminNewTopic";
 import AdminAnalytics from "./pages/instructor/AdminAnalytics";
 
 export const UserContext = createContext();
@@ -77,6 +79,22 @@ function App() {
     }
   };
 
+  const getEditTopicPage = () => {
+    if (userGroup && userGroup.includes("admin")) {
+      return <AdminEditTopic />;
+    } else {
+      return <Navigate to="/home" />;
+    }
+  };
+
+  const getNewTopicPage = () => {
+    if (userGroup && userGroup.includes("admin")) {
+      return <AdminNewTopic />;
+    } else {
+      return <Navigate to="/home" />;
+    }
+  }
+
   const getAnalyticsPage = () => {
     if (userGroup && userGroup.includes("admin")) {
       return <AdminAnalytics />;
@@ -94,6 +112,8 @@ function App() {
         />
         <Route path="/home/*" element={getHomePage()} />
         <Route path="/manage-documents/*" element={getDocumentPage()} />
+        <Route path="/manage-documents/edit/:topicId" element={getEditTopicPage()} />
+        <Route path="/manage-documents/new" element={getNewTopicPage()} />
         <Route path="/analytics/*" element={getAnalyticsPage()} />
       </Routes>
     </Router>

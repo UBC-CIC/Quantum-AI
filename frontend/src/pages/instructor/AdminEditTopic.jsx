@@ -49,11 +49,10 @@ const AdminEditTopic = () => {
   const [deletedFiles, setDeletedFiles] = useState([]);
 
   const location = useLocation();
-  const [module, setModule] = useState(null);
-  const { moduleData, course_id } = location.state || {};
-  const [moduleName, setModuleName] = useState("");
-  const [concept, setConcept] = useState("");
-  const [allConcepts, setAllConcept] = useState([]);
+  const [topic, setTopic] = useState(null);
+  const { topicData } = location.state || {};
+  const [topicName, setTopicName] = useState("");
+  const [prompt, setPrompt] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleBackClick = () => {
@@ -96,15 +95,13 @@ const AdminEditTopic = () => {
   }
   const fetchFiles = async () => {
     try {
-      const { token, email } = await getAuthSessionAndEmail();
+      const { token } = await getAuthSessionAndEmail();
       const response = await fetch(
         `${
           import.meta.env.VITE_API_ENDPOINT
-        }instructor/get_all_files?course_id=${encodeURIComponent(
-          course_id
-        )}&module_id=${encodeURIComponent(
-          module.module_id
-        )}&module_name=${encodeURIComponent(moduleName)}`,
+        }admin/get_all_files?topic_id=${encodeURIComponent(
+          topic.topic_id
+        )}`,
         {
           method: "GET",
           headers: {
@@ -125,45 +122,19 @@ const AdminEditTopic = () => {
     setLoading(false);
   };
 
-  const fetchConcepts = async () => {
-    try {
-      const { token, email } = await getAuthSessionAndEmail();
-      const response = await fetch(
-        `${
-          import.meta.env.VITE_API_ENDPOINT
-        }instructor/view_concepts?course_id=${encodeURIComponent(course_id)}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: token,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      if (response.ok) {
-        const conceptData = await response.json();
-        setAllConcept(conceptData);
-      } else {
-        console.error("Failed to fetch courses:", response.statusText);
-      }
-    } catch (error) {
-      console.error("Error fetching courses:", error);
-    }
-  };
   useEffect(() => {
-    if (moduleData) {
-      setModule(moduleData);
-      setModuleName(moduleData.module_name);
-      setConcept(moduleData.concept_name);
+    if (topicData) {
+      setTopic(topicData);
+      setTopicName(topicData.topic_name);
+      setPrompt(topicData.system_prompt);
     }
-    fetchConcepts();
-  }, [moduleData]);
+  }, [topicData]);
 
   useEffect(() => {
-    if (module) {
+    if (topic) {
       fetchFiles();
     }
-  }, [module]);
+  }, [topic]);
 
   const handleDelete = async () => {
     try {
@@ -172,11 +143,9 @@ const AdminEditTopic = () => {
       const s3Response = await fetch(
         `${
           import.meta.env.VITE_API_ENDPOINT
-        }instructor/delete_module_s3?course_id=${encodeURIComponent(
-          course_id
-        )}&module_id=${encodeURIComponent(
-          module.module_id
-        )}&module_name=${encodeURIComponent(module.module_name)}`,
+        }admin/delete_topic_s3?topic_id=${encodeURIComponent(
+          topic.topic_id
+        )}`,
         {
           method: "DELETE",
           headers: {
@@ -187,13 +156,13 @@ const AdminEditTopic = () => {
       );
 
       if (!s3Response.ok) {
-        throw new Error("Failed to delete module from S3");
+        throw new Error("Failed to delete topic from S3");
       }
-      const moduleResponse = await fetch(
+      const topicResponse = await fetch(
         `${
           import.meta.env.VITE_API_ENDPOINT
-        }instructor/delete_module?module_id=${encodeURIComponent(
-          module.module_id
+        }admin/delete_topic?topic_id=${encodeURIComponent(
+          topic.topic_id
         )}`,
         {
           method: "DELETE",
@@ -219,11 +188,11 @@ const AdminEditTopic = () => {
           handleBackClick();
         }, 1000);
       } else {
-        throw new Error("Failed to delete module");
+        throw new Error("Failed to delete topic");
       }
     } catch (error) {
       console.error(error.message);
-      toast.error("Failed to delete module", {
+      toast.error("Failed to delete topic", {
         position: "top-center",
         autoClose: 1000,
         hideProgressBar: false,
@@ -237,12 +206,13 @@ const AdminEditTopic = () => {
   };
 
   const handleInputChange = (e) => {
-    setModuleName(e.target.value);
+    setTopicName(e.target.value);
   };
 
-  const handleConceptInputChange = (e) => {
-    setConcept(e.target.value);
+  const handlePromptChange = (e) => {
+    setPrompt(e.target.value);
   };
+
   const getFileType = (filename) => {
     // Get the file extension by splitting the filename on '.' and taking the last part
     const parts = filename.split(".");
@@ -255,18 +225,17 @@ const AdminEditTopic = () => {
     }
   };
 
-  const updateModule = async () => {
-    const selectedConcept = allConcepts.find((c) => c.concept_name === concept);
-    const { token, email } = await getAuthSessionAndEmail();
+  const updateTopic = async () => {
+    const { token } = await getAuthSessionAndEmail();
 
-    const editModuleResponse = await fetch(
+    const editTopicResponse = await fetch(
       `${
         import.meta.env.VITE_API_ENDPOINT
-      }instructor/edit_module?module_id=${encodeURIComponent(
-        module.module_id
-      )}&instructor_email=${encodeURIComponent(
-        email
-      )}&concept_id=${encodeURIComponent(selectedConcept.concept_id)}`,
+      }admin/edit_topic?topic_id=${encodeURIComponent(
+        topic.topic_id
+      )}&topic_name=${encodeURIComponent(
+        topicName
+      )}`,
       {
         method: "PUT",
         headers: {
@@ -274,16 +243,16 @@ const AdminEditTopic = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          module_name: moduleName,
+          system_prompt: prompt,
         }),
       }
     );
 
-    if (!editModuleResponse.ok) {
-      throw new Error(editModuleResponse.statusText);
+    if (!editTopicResponse.ok) {
+      throw new Error(editTopicResponse.statusText);
     }
 
-    return editModuleResponse;
+    return editTopicResponse;
   };
 
   const deleteFiles = async (deletedFiles, token) => {
@@ -293,12 +262,8 @@ const AdminEditTopic = () => {
       return fetch(
         `${
           import.meta.env.VITE_API_ENDPOINT
-        }instructor/delete_file?course_id=${encodeURIComponent(
-          course_id
-        )}&module_id=${encodeURIComponent(
-          module.module_id
-        )}&module_name=${encodeURIComponent(
-          moduleName
+        }admin/delete_file?topic_id=${encodeURIComponent(
+          topic.topic_id
         )}&file_type=${encodeURIComponent(
           fileType
         )}&file_name=${encodeURIComponent(fileName)}`,
@@ -312,6 +277,7 @@ const AdminEditTopic = () => {
       );
     });
   };
+
   const cleanFileName = (fileName) => {
     return fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
   };
@@ -327,12 +293,8 @@ const AdminEditTopic = () => {
         const response = await fetch(
           `${
             import.meta.env.VITE_API_ENDPOINT
-          }instructor/generate_presigned_url?course_id=${encodeURIComponent(
-            course_id
-          )}&module_id=${encodeURIComponent(
-            module.module_id
-          )}&module_name=${encodeURIComponent(
-            moduleName
+          }admin/generate_presigned_url?topic_id=${encodeURIComponent(
+            topic.topic_id
           )}&file_type=${encodeURIComponent(
             fileType
           )}&file_name=${encodeURIComponent(fileName)}`,
@@ -380,8 +342,8 @@ const AdminEditTopic = () => {
     if (isSaving) return;
     setIsSaving(true);
 
-    if (!moduleName || !concept) {
-      toast.error("Module Name and Concept are required.", {
+    if (!topicName || !prompt) {
+      toast.error("Topic Name and Prompt are required.", {
         position: "top-center",
         autoClose: 1000,
         hideProgressBar: false,
@@ -394,7 +356,7 @@ const AdminEditTopic = () => {
       return;
     }
     try {
-      await updateModule();
+      await updateTopic();
       const { token } = await getAuthSessionAndEmail();
       await deleteFiles(deletedFiles, token);
       await uploadFiles(newFiles, token);
@@ -409,7 +371,7 @@ const AdminEditTopic = () => {
 
       setDeletedFiles([]);
       setNewFiles([]);
-      toast.success("Module updated successfully", {
+      toast.success("Topic updated successfully", {
         position: "top-center",
         autoClose: 1000,
         hideProgressBar: false,
@@ -420,8 +382,8 @@ const AdminEditTopic = () => {
         theme: "colored",
       });
     } catch (error) {
-      console.error("Error fetching courses:", error);
-      toast.error("Module failed to update", {
+      console.error("Topic failed to update:", error);
+      toast.error("Topic failed to update", {
         position: "top-center",
         autoClose: 1000,
         hideProgressBar: false,
@@ -447,8 +409,8 @@ const AdminEditTopic = () => {
       return fetch(
         `${
           import.meta.env.VITE_API_ENDPOINT
-        }instructor/update_metadata?module_id=${encodeURIComponent(
-          module.module_id
+        }admin/update_metadata?topic_id=${encodeURIComponent(
+          topic.topic_id
         )}&filename=${encodeURIComponent(
           fileName
         )}&filetype=${encodeURIComponent(fileType)}`,
@@ -463,6 +425,7 @@ const AdminEditTopic = () => {
       );
     });
   };
+
   const getAuthSessionAndEmail = async () => {
     const session = await fetchAuthSession();
     const token = session.tokens.idToken
@@ -470,42 +433,44 @@ const AdminEditTopic = () => {
     return { token, email };
   };
 
-  if (!module) return <Typography>Loading...</Typography>;
+  if (!topic) return 
+  <Grid
+    container
+    justifyContent="center"
+    alignItems="center"
+    sx={{ height: "100vh", backgroundColor: "#2E8797" }}
+  >
+    <l-quantum size="45" speed="1.75" color="white" />
+  </Grid>;
 
   return (
     <PageContainer>
       <Paper style={{ padding: 25, width: "100%", overflow: "auto" }}>
-        <Typography variant="h6">
-          Edit Module {titleCase(module.module_name)}{" "}
+        <Typography variant="h4" textAlign="left" sx={{ pb: 2 }}>
+          Edit {titleCase(topic.topic_name)}{" "}
         </Typography>
 
         <TextField
-          label="Module Name"
+          label="Topic Name"
           name="name"
-          value={moduleName}
+          value={topicName}
           onChange={handleInputChange}
           fullWidth
           margin="normal"
           inputProps={{ maxLength: 50 }}
         />
 
-        <FormControl fullWidth margin="normal">
-          <InputLabel id="concept-select-label">Concept</InputLabel>
-          <Select
-            labelId="concept-select-label"
-            id="concept-select"
-            value={concept}
-            onChange={handleConceptInputChange}
-            label="Concept"
-            sx={{ textAlign: "left" }}
-          >
-            {allConcepts.map((concept) => (
-              <MenuItem key={concept.concept_id} value={concept.concept_name}>
-                {titleCase(concept.concept_name)}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        <TextField
+          label="Topic Prompt"
+          name="prompt"
+          value={prompt}
+          onChange={handlePromptChange}
+          fullWidth
+          margin="normal"
+          inputProps={{ maxLength: 2000 }}
+          multiline
+          rows={4} // You can adjust the number of rows as needed
+        />
 
         <FileManagement
           newFiles={newFiles}
@@ -527,7 +492,7 @@ const AdminEditTopic = () => {
                 variant="contained"
                 color="primary"
                 onClick={handleBackClick}
-                sx={{ width: "30%" }}
+                sx={{ width: "30%", maxHeight: "40px" }}
               >
                 Cancel
               </Button>
@@ -535,9 +500,9 @@ const AdminEditTopic = () => {
                 variant="contained"
                 color="error"
                 onClick={handleDeleteConfirmation}
-                sx={{ width: "30%" }}
+                sx={{ width: "40%", maxHeight: "40px" }}
               >
-                Delete Module
+                Delete Topic
               </Button>
             </Box>
           </Grid>
@@ -547,9 +512,9 @@ const AdminEditTopic = () => {
               variant="contained"
               color="primary"
               onClick={handleSave}
-              style={{ width: "30%" }}
+              style={{ width: "40%", maxHeight: "40px" }}
             >
-              Save Module
+              Save Topic
             </Button>
           </Grid>
         </Grid>
@@ -567,10 +532,10 @@ const AdminEditTopic = () => {
         theme="colored"
       />
       <Dialog open={dialogOpen} onClose={handleDialogClose}>
-        <DialogTitle>{"Delete Module"}</DialogTitle>
+        <DialogTitle>{"Delete Topic"}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete this module? This action cannot be
+            Are you sure you want to delete this topic? This action cannot be
             undone.
           </DialogContentText>
         </DialogContent>
