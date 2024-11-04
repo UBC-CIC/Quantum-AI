@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { fetchAuthSession } from "aws-amplify/auth";
 import {
-  Container,
   Typography,
   Box,
   Tabs,
@@ -9,7 +8,6 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  LinearProgress,
   Grid,
   Paper,
 } from "@mui/material";
@@ -37,7 +35,7 @@ function titleCase(str) {
     .join(" ");
 }
 
-const AdminAnalytics = ({ courseName, course_id }) => {
+const AdminAnalytics = () => {
   const [value, setValue] = useState(0);
   const [graphData, setGraphData] = useState([]);
   const [data, setData] = useState([]);
@@ -53,7 +51,7 @@ const AdminAnalytics = ({ courseName, course_id }) => {
         const response = await fetch(
           `${
             import.meta.env.VITE_API_ENDPOINT
-          }instructor/analytics?course_id=${encodeURIComponent(course_id)}`,
+          }admin/analytics`,
           {
             method: "GET",
             headers: {
@@ -65,9 +63,9 @@ const AdminAnalytics = ({ courseName, course_id }) => {
         if (response.ok) {
           const analytics_data = await response.json();
           setData(analytics_data);
-          const graphDataFormatted = analytics_data.map((module) => ({
-            module: module.module_name,
-            Messages: module.message_count,
+          const graphDataFormatted = analytics_data.map((topic) => ({
+            module: topic.topic_name,
+            Messages: topic.message_count,
           }));
           setGraphData(graphDataFormatted);
         } else {
@@ -80,7 +78,7 @@ const AdminAnalytics = ({ courseName, course_id }) => {
     };
 
     fetchAnalytics();
-  }, [course_id]);
+  }, []);
 
   useEffect(() => {
     if (graphData.length > 0) {
@@ -191,10 +189,10 @@ const AdminAnalytics = ({ courseName, course_id }) => {
             {value === 0 ? (
               data.length > 0 ? (
                 <Box mt={2}>
-                  {data.map((module, index) => (
+                  {data.map((topic, index) => (
                     <Accordion key={index}>
                       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                        <Typography>{titleCase(module.module_name)}</Typography>
+                        <Typography>{titleCase(topic.topic_name)}</Typography>
                       </AccordionSummary>
                       <AccordionDetails>
                         <Box width="100%">
@@ -204,23 +202,21 @@ const AdminAnalytics = ({ courseName, course_id }) => {
                             alignItems="center"
                             direction="column"
                           >
-                            <Grid item width="80%">
-                              <Typography textAlign="right">
-                                Completion Percentage:{" "}
-                                {module.perfect_score_percentage.toFixed(2)}%
-                              </Typography>
-                              <LinearProgress
-                                variant="determinate"
-                                value={module.perfect_score_percentage}
-                              />
-                            </Grid>
                             <Grid item>
                               <Typography>Message Count</Typography>
-                              <Typography>{module.message_count}</Typography>
+                              <Typography>{topic.message_count}</Typography>
                             </Grid>
                             <Grid item>
-                              <Typography>Access Count</Typography>
-                              <Typography>{module.access_count}</Typography>
+                              <Typography>Active Sessions</Typography>
+                              <Typography>{topic.sessions_created - topic.sessions_deleted}</Typography>
+                            </Grid>
+                            <Grid item>
+                              <Typography>Sessions Created</Typography>
+                              <Typography>{topic.sessions_created}</Typography>
+                            </Grid>
+                            <Grid item>
+                              <Typography>Sessions Deleted</Typography>
+                              <Typography>{topic.sessions_deleted}</Typography>
                             </Grid>
                           </Grid>
                         </Box>

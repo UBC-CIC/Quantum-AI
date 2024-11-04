@@ -12,10 +12,6 @@ import {
   Typography,
   Grid,
   Box,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Dialog,
   DialogActions,
   DialogContent,
@@ -173,7 +169,7 @@ const AdminEditTopic = () => {
         }
       );
 
-      if (moduleResponse.ok) {
+      if (topicResponse.ok) {
         toast.success("Successfully Deleted", {
           position: "top-center",
           autoClose: 1000,
@@ -471,6 +467,9 @@ const AdminEditTopic = () => {
           multiline
           rows={4} // You can adjust the number of rows as needed
         />
+        {/* <Typography variant="body1" textAlign="left" sx={{ pb: 2 }} >
+          Warning: Modifying the prompt in the text area above can significantly impact the quality and accuracy of the responses.
+        </Typography> */}
 
         <FileManagement
           newFiles={newFiles}

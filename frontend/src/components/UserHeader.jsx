@@ -60,13 +60,13 @@ const UserHeader = ({ admin = false }) => {
               <span className="text-white">Chat</span>
             </div>
             <div
-              onClick={() => handleNavigation("/manage-documents")}
+              onClick={() => handleNavigation("/manage-topics")}
               className={`flex items-center p-2 cursor-pointer ${
-                location.pathname === "/manage-documents" ? "bg-gray-600" : ""
+                location.pathname === "/manage-topics" ? "bg-gray-600" : ""
               } hover:bg-gray-600`}
             >
               <FaFileAlt className="text-white ml-2 mr-2 my-2" size={30} />
-              <span className="text-white">Manage Documents</span>
+              <span className="text-white">Manage Topics</span>
             </div>
             <div
               onClick={() => handleNavigation("/analytics")}

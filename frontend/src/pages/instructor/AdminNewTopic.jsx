@@ -1,9 +1,7 @@
-import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { fetchAuthSession } from "aws-amplify/auth";
-import { fetchUserAttributes } from "aws-amplify/auth";
 
 import {
   TextField,
@@ -11,25 +9,12 @@ import {
   Paper,
   Typography,
   Grid,
-  Box,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  Box
 } from "@mui/material";
 import PageContainer from "../Container";
 import FileManagement from "../../components/FileManagement";
 
-function titleCase(str) {
-  if (typeof str !== 'string') {
-    return str;
-  }
-  return str.toLowerCase().split(' ').map(function(word) {
-    return word.charAt(0).toUpperCase() + word.slice(1);
-  }).join(' ');
-}
-
-export const AdminNewTopic = ({ courseId }) => {
+export const AdminNewTopic = () => {
   const [files, setFiles] = useState([]);
   const [newFiles, setNewFiles] = useState([]);
   const [savedFiles, setSavedFiles] = useState([]);
@@ -37,7 +22,6 @@ export const AdminNewTopic = ({ courseId }) => {
   const [metadata, setMetadata] = useState({});
 
   const [isSaving, setIsSaving] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [topicName, setTopicName] = useState("");
   const [prompt, setPrompt] = useState("");
 
@@ -214,6 +198,9 @@ export const AdminNewTopic = ({ courseId }) => {
           multiline
           rows={4} // You can adjust the number of rows as needed
         />
+        {/* <Typography variant="body1" textAlign="left" sx={{ pb: 2 }} >
+          Warning: Modifying the prompt in the text area above can significantly impact the quality and accuracy of the responses.
+        </Typography> */}
 
         <FileManagement
           newFiles={newFiles}
@@ -223,7 +210,7 @@ export const AdminNewTopic = ({ courseId }) => {
           setDeletedFiles={setDeletedFiles}
           savedFiles={savedFiles}
           setSavedFiles={setSavedFiles}
-          loading={loading}
+          loading={false}
           metadata={metadata}
           setMetadata={setMetadata}
         />

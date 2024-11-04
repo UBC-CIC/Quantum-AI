@@ -206,61 +206,64 @@ exports.handler = async (event) => {
           }
           break;
           case "GET /admin/analytics":
-            if (
-              event.queryStringParameters != null &&
-              event.queryStringParameters.topic_id
-            ) {
-              const topicId = event.queryStringParameters.topic_id;
-    
-              try {
-                // Query to get all topics related to the given topic_id and their message counts, filtering by user role
-                const messageCreations = await sqlConnection`
-                    SELECT t.topic_id, t.topic_name, COUNT(m.message_id) AS message_count
-                    FROM "Topics" t
-                    LEFT JOIN "Sessions" s ON t.topic_id = s.topic_id
-                    LEFT JOIN "Messages" m ON s.session_id = m.session_id
-                    LEFT JOIN "User_Engagement_Log" uel ON t.topic_id = uel.topic_id
-                    LEFT JOIN "Users" u ON uel.user_id = u.user_id
-                    WHERE t.topic_id = ${topicId}
-                    AND 'user' = ANY(u.roles)
-                    GROUP BY t.topic_id, t.topic_name
-                    ORDER BY t.topic_name ASC;
-                `;
-    
-                // Query to get the number of topic accesses using User_Engagement_Log, filtering by user role
-                const topicAccesses = await sqlConnection`
-                    SELECT uel.topic_id, COUNT(uel.log_id) AS access_count
-                    FROM "User_Engagement_Log" uel
-                    LEFT JOIN "Users" u ON uel.user_id = u.user_id
-                    WHERE uel.topic_id = ${topicId}
-                    AND uel.engagement_type = 'topic access'
-                    AND 'user' = ANY(u.roles)
-                    GROUP BY uel.topic_id;
-                `;
-    
-                // Combine all data into a single response, ensuring all topics are included
-                const analyticsData = messageCreations.map((topic) => {
-                    const accesses =
-                        topicAccesses.find((ma) => ma.topic_id === topic.topic_id) || {};
-    
-                    return {
-                        topic_id: topic.topic_id,
-                        topic_name: topic.topic_name,
-                        message_count: topic.message_count || 0,
-                        access_count: accesses.access_count || 0,
-                    };
-                });
-    
-                response.statusCode = 200;
-                response.body = JSON.stringify(analyticsData);
-              } catch (err) {
-                response.statusCode = 500;
-                console.error(err);
-                response.body = JSON.stringify({ error: "Internal server error" });
-              }
-            } else {
-              response.statusCode = 400;
-              response.body = JSON.stringify({ error: "topic_id is required" });
+            try {
+              // Query to get all topics related to the given topic_id and their message counts, filtering by user role
+              const messageCreations = await sqlConnection`
+                  SELECT t.topic_id, t.topic_name, COUNT(m.message_id) AS message_count
+                  FROM "Topics" t
+                  LEFT JOIN "Sessions" s ON t.topic_id = s.topic_id
+                  LEFT JOIN "Messages" m ON s.session_id = m.session_id
+                  LEFT JOIN "User_Engagement_Log" uel ON t.topic_id = uel.topic_id
+                  LEFT JOIN "Users" u ON uel.user_id = u.user_id
+                  AND 'user' = ANY(u.roles)
+                  GROUP BY t.topic_id, t.topic_name
+                  ORDER BY t.topic_name ASC;
+              `;
+
+              // Query to get the number of topic accesses using User_Engagement_Log, filtering by user role
+              const sessionCreations = await sqlConnection`
+                  SELECT t.topic_id, COUNT(uel.log_id) AS session_creation_count
+                  FROM "Topics" t
+                  LEFT JOIN "User_Engagement_Log" uel ON t.topic_id = uel.topic_id
+                  LEFT JOIN "Users" u ON uel.user_id = u.user_id
+                  WHERE uel.engagement_type = 'session creation'
+                  AND 'user' = ANY(u.roles)
+                  GROUP BY t.topic_id
+                  ORDER BY t.topic_id ASC;
+              `;
+
+              const sessionDeletions = await sqlConnection`
+                SELECT t.topic_id, COUNT(uel.log_id) AS session_deletion_count
+                FROM "Topics" t
+                LEFT JOIN "User_Engagement_Log" uel ON t.topic_id = uel.topic_id
+                LEFT JOIN "Users" u ON uel.user_id = u.user_id
+                WHERE uel.engagement_type = 'session deletion'
+                AND 'user' = ANY(u.roles)
+                GROUP BY t.topic_id
+                ORDER BY t.topic_id ASC;
+              `;
+
+
+              // Combine all data into a single response, ensuring all topics are included
+              const analyticsData = messageCreations.map((topic) => {
+                  const sessionsCreated = sessionCreations.find((ma) => ma.topic_id === topic.topic_id) || {};
+                  const sessionsDeleted = sessionDeletions.find((sd) => sd.topic_id === topic.topic_id) || {};
+
+                  return {
+                      topic_id: topic.topic_id,
+                      topic_name: topic.topic_name,
+                      message_count: topic.message_count || 0,
+                      sessions_created: sessionsCreated.session_creation_count || 0,
+                      sessions_deleted: sessionsDeleted.session_deletion_count || 0,
+                  };
+              });
+
+              response.statusCode = 200;
+              response.body = JSON.stringify(analyticsData);
+            } catch (err) {
+              response.statusCode = 500;
+              console.error(err);
+              response.body = JSON.stringify({ error: "Internal server error" });
             }
             break;
       default:

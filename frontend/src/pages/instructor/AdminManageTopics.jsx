@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button, Box, Toolbar, Typography, Paper, Grid } from "@mui/material";
+import { Button, Box, Typography, Paper, Grid } from "@mui/material";
 import { fetchAuthSession } from "aws-amplify/auth";
 import {
   MRT_TableContainer,
   useMaterialReactTable,
 } from "material-react-table";
-import { toast, ToastContainer } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UserHeader from "../../components/UserHeader";
 
@@ -19,7 +19,7 @@ function titleCase(str) {
   }).join(' ');
 }
 
-const AdminManageDocuments = () => {
+const AdminManageTopics = () => {
   const navigate = useNavigate();
   const [topics, setTopics] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -96,13 +96,13 @@ const AdminManageDocuments = () => {
   });
 
   const handleEditClick = (topicData) => {
-    navigate(`/manage-documents/edit/${topicData.topic_id}`, {
+    navigate(`/manage-topics/edit/${topicData.topic_id}`, {
       state: { topicData },
     });
   };
 
   const handleCreateTopicClick = () => {
-    navigate(`/manage-documents/new`);
+    navigate(`/manage-topics/new`);
   };
 
   return (
@@ -130,7 +130,7 @@ const AdminManageDocuments = () => {
               textAlign="left"
               variant="h4"
             >
-              Manage Documents
+              Manage Topics
             </Typography>
             <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
             <Button
@@ -168,4 +168,4 @@ const AdminManageDocuments = () => {
   );
 };
 
-export default AdminManageDocuments;
+export default AdminManageTopics;

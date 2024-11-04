@@ -402,7 +402,7 @@ const UserChat = ({ admin }) => {
           message_id: "00000000-0000-0000-0000-000000000000", // Placeholder UUID
           session_id: "11111111-1111-1111-1111-111111111111", // Placeholder UUID
           user_sent: false,
-          message_content: "What can I help you with?",
+          message_content: "The Stewart Blusson Quantum Matter Institute (Blusson QMI) is the first Global Research Excellence (GREx) Institute at the University of British Columbia. Their investigators are collaborative theorists and experimentalists working together across departments and disciplines to identify, classify and explore quantum materials and phenomena, catalyzing the discovery and design of the quantum technologies of the future.",
           time_sent: new Date().toISOString(), // Current timestamp
         };
         setNewMessage(simulatedMessage);
@@ -536,7 +536,6 @@ const UserChat = ({ admin }) => {
         }
       );
       if (response.ok) {
-        const data = await response.json();
         setSessions((prevSessions) =>
           prevSessions.filter(
             (isession) => isession.session_id !== sessionDelete.session_id
@@ -554,10 +553,9 @@ const UserChat = ({ admin }) => {
     }
   };
 
-  const handleDeleteMessage = async (message) => {
+  const handleDeleteMessage = async () => {
     // remember to set is submitting true/false
     const authSession = await fetchAuthSession();
-    const { email } = await fetchUserAttributes();
     const token = authSession.tokens.idToken
     try {
       const response = await fetch(
@@ -576,7 +574,6 @@ const UserChat = ({ admin }) => {
       );
 
       if (response.ok) {
-        const data = await response.json();
         setMessages((prevMessages) => {
           if (prevMessages.length >= 2) {
             return prevMessages.slice(0, -2);
@@ -629,7 +626,6 @@ const UserChat = ({ admin }) => {
   const getMessages = async () => {
     try {
       const authSession = await fetchAuthSession();
-      const { email } = await fetchUserAttributes();
       const token = authSession.tokens.idToken
       const response = await fetch(
         `${
@@ -848,7 +844,7 @@ const UserChat = ({ admin }) => {
                           key={message.message_id}
                           message={message.message_content}
                           isMostRecent={getMostRecentUserMessageIndex() === index}
-                          onDelete={() => handleDeleteMessage(message)}
+                          onDelete={() => handleDeleteMessage()}
                           hasAiMessageAfter={hasAiMessageAfter(
                             messages,
                             getMostRecentUserMessageIndex()

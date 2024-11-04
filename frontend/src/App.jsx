@@ -14,7 +14,7 @@ import { useEffect, useState, createContext } from "react";
 // pages
 import Login from "./pages/Login";
 import UserChat from "./pages/student/UserChat";
-import AdminManageDocuments from "./pages/instructor/AdminManageDocuments";
+import AdminManageTopics from "./pages/instructor/AdminManageTopics";
 import AdminEditTopic from "./pages/instructor/AdminEditTopic";
 import AdminNewTopic from "./pages/instructor/AdminNewTopic";
 import AdminAnalytics from "./pages/instructor/AdminAnalytics";
@@ -71,9 +71,9 @@ function App() {
     }
   };
 
-  const getDocumentPage = () => {
+  const getManageTopicsPage = () => {
     if (userGroup && userGroup.includes("admin")) {
-      return <AdminManageDocuments />;
+      return <AdminManageTopics />;
     } else {
       return <Navigate to="/home" />;
     }
@@ -111,9 +111,9 @@ function App() {
           element={user ? <Navigate to="/home" /> : <Login />}
         />
         <Route path="/home/*" element={getHomePage()} />
-        <Route path="/manage-documents/*" element={getDocumentPage()} />
-        <Route path="/manage-documents/edit/:topicId" element={getEditTopicPage()} />
-        <Route path="/manage-documents/new" element={getNewTopicPage()} />
+        <Route path="/manage-topics/*" element={getManageTopicsPage()} />
+        <Route path="/manage-topics/edit/:topicId" element={getEditTopicPage()} />
+        <Route path="/manage-topics/new" element={getNewTopicPage()} />
         <Route path="/analytics/*" element={getAnalyticsPage()} />
       </Routes>
     </Router>
