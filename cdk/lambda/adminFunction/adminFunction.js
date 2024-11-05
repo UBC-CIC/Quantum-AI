@@ -46,7 +46,7 @@ exports.handler = async (event) => {
 
           try {
             // Query to find the file with the given topic_id and filename
-            const existingFile = await sqlConnection`
+            const existingFile = await sqlConnectionTableCreator`
                       SELECT * FROM "Documents"
                       WHERE topic_id = ${topicId}
                       AND filename = ${filename}
@@ -54,7 +54,7 @@ exports.handler = async (event) => {
                   `;
 
             if (existingFile.length === 0) {
-              const result = await sqlConnection`
+              const result = await sqlConnectionTableCreator`
                 INSERT INTO "Documents" (topic_id, filename, filetype, metadata)
                 VALUES (${topicId}, ${filename}, ${filetype}, ${metadata})
                 RETURNING *;
@@ -65,7 +65,7 @@ exports.handler = async (event) => {
             }
 
             // Update the metadata field
-            const result = await sqlConnection`
+            const result = await sqlConnectionTableCreator`
                       UPDATE "Documents"
                       SET metadata = ${metadata}
                       WHERE topic_id = ${topicId}
@@ -148,7 +148,7 @@ exports.handler = async (event) => {
 
           try {
             // Update the topic's name and system prompt in the Topics table
-            const result = await sqlConnection`
+            const result = await sqlConnectionTableCreator`
                 UPDATE "Topics"
                 SET
                   topic_name = ${topicName},
@@ -186,7 +186,7 @@ exports.handler = async (event) => {
   
             try {
               // Delete the topic from the Topics table
-              await sqlConnection`
+              await sqlConnectionTableCreator`
                   DELETE FROM "Topics"
                   WHERE topic_id = ${topicId};
                 `;
@@ -208,7 +208,7 @@ exports.handler = async (event) => {
           case "GET /admin/analytics":
             try {
               // Query to get all topics related to the given topic_id and their message counts, filtering by user role
-              const messageCreations = await sqlConnection`
+              const messageCreations = await sqlConnectionTableCreator`
                   SELECT t.topic_id, t.topic_name, COUNT(m.message_id) AS message_count
                   FROM "Topics" t
                   LEFT JOIN "Sessions" s ON t.topic_id = s.topic_id
@@ -221,7 +221,7 @@ exports.handler = async (event) => {
               `;
 
               // Query to get the number of topic accesses using User_Engagement_Log, filtering by user role
-              const sessionCreations = await sqlConnection`
+              const sessionCreations = await sqlConnectionTableCreator`
                   SELECT t.topic_id, COUNT(uel.log_id) AS session_creation_count
                   FROM "Topics" t
                   LEFT JOIN "User_Engagement_Log" uel ON t.topic_id = uel.topic_id
@@ -232,7 +232,7 @@ exports.handler = async (event) => {
                   ORDER BY t.topic_id ASC;
               `;
 
-              const sessionDeletions = await sqlConnection`
+              const sessionDeletions = await sqlConnectionTableCreator`
                 SELECT t.topic_id, COUNT(uel.log_id) AS session_deletion_count
                 FROM "Topics" t
                 LEFT JOIN "User_Engagement_Log" uel ON t.topic_id = uel.topic_id

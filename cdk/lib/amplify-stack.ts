@@ -55,7 +55,7 @@ export class AmplifyStack extends cdk.Stack {
         owner: username,
         repository: "Quantum-AI",
         oauthToken: cdk.SecretValue.secretsManager(
-          "github-personal-access-token",
+          "github-quantumAI-personal-access-token",
           {
             jsonField: "my-github-token",
           }

@@ -204,7 +204,7 @@ exports.handler = async (event) => {
           const userEmail = event.queryStringParameters.email;
 
           try {
-            // Step 1: Get the user ID using the student_email
+            // Step 1: Get the user ID using the user_email
             const userResult = await sqlConnection`
                   SELECT user_id
                   FROM "Users"
@@ -222,7 +222,7 @@ exports.handler = async (event) => {
 
             const userId = userResult[0].user_id;
 
-            // Step 4: Retrieve session data specific to the student's module
+            // Step 4: Retrieve session data for the user
             const data = await sqlConnection`
                   SELECT "Sessions".*
                   FROM "Sessions"

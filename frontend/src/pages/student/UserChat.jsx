@@ -213,7 +213,7 @@ const UserChat = ({ admin }) => {
       .some((message) => !message.user_sent);
   };
 
-  async function retrieveKnowledgeBase(message, sessionId) {
+  async function retrieveKnowledgeBase(message, sessionId, topicId) {
     try {
       const authSession = await fetchAuthSession();
       const { email } = await fetchUserAttributes();
@@ -227,7 +227,7 @@ const UserChat = ({ admin }) => {
           )}&email=${encodeURIComponent(
             email
           )}&topic_id=${encodeURIComponent(
-            session.topic_id
+            topicId
           )}`,
           {
             method: "POST",
@@ -394,18 +394,19 @@ const UserChat = ({ admin }) => {
 
         return retrieveKnowledgeBase(
           textGenData.llm_output,
-          newSession.session_id
+          newSession.session_id,
+          newSession.topic_id
         );
       })
       .catch((error) => {
-        const simulatedMessage = {
-          message_id: "00000000-0000-0000-0000-000000000000", // Placeholder UUID
-          session_id: "11111111-1111-1111-1111-111111111111", // Placeholder UUID
-          user_sent: false,
-          message_content: "The Stewart Blusson Quantum Matter Institute (Blusson QMI) is the first Global Research Excellence (GREx) Institute at the University of British Columbia. Their investigators are collaborative theorists and experimentalists working together across departments and disciplines to identify, classify and explore quantum materials and phenomena, catalyzing the discovery and design of the quantum technologies of the future.",
-          time_sent: new Date().toISOString(), // Current timestamp
-        };
-        setNewMessage(simulatedMessage);
+        // const simulatedMessage = {
+        //   message_id: "00000000-0000-0000-0000-000000000000", // Placeholder UUID
+        //   session_id: "11111111-1111-1111-1111-111111111111", // Placeholder UUID
+        //   user_sent: false,
+        //   message_content: "The Stewart Blusson Quantum Matter Institute (Blusson QMI) is the first Global Research Excellence (GREx) Institute at the University of British Columbia. Their investigators are collaborative theorists and experimentalists working together across departments and disciplines to identify, classify and explore quantum materials and phenomena, catalyzing the discovery and design of the quantum technologies of the future.",
+        //   time_sent: new Date().toISOString(), // Current timestamp
+        // };
+        // setNewMessage(simulatedMessage);
         setIsSubmitting(false);
         setIsAItyping(false);
         console.error("Error:", error);
@@ -492,19 +493,20 @@ const UserChat = ({ admin }) => {
       .then((textResponseData) => {
         retrieveKnowledgeBase(
           textResponseData.llm_output,
-          sessionData.session_id
+          sessionData.session_id,
+          sessionData.topic_id
         );
         return sessionData;
       })
       .catch((error) => {
-        const simulatedMessage = {
-          message_id: "00000000-0000-0000-0000-000000000000", // Placeholder UUID
-          session_id: "11111111-1111-1111-1111-111111111111", // Placeholder UUID
-          user_sent: false,
-          message_content: "Hello, welcome to Quantum AI!",
-          time_sent: new Date().toISOString(), // Current timestamp
-        };
-        setNewMessage(simulatedMessage);
+        // const simulatedMessage = {
+        //   message_id: "00000000-0000-0000-0000-000000000000", // Placeholder UUID
+        //   session_id: "11111111-1111-1111-1111-111111111111", // Placeholder UUID
+        //   user_sent: false,
+        //   message_content: "Hello, welcome to Quantum AI!",
+        //   time_sent: new Date().toISOString(), // Current timestamp
+        // };
+        // setNewMessage(simulatedMessage);
         console.error("Error creating new chat:", error);
         setCreatingSession(false);
         setIsAItyping(false);
@@ -722,20 +724,26 @@ const UserChat = ({ admin }) => {
                       onMouseEnter={() => setIsOpen(true)} // Set to true on hover
                       onMouseLeave={() => setIsOpen(false)} // Set to false when not hovering
                 >
-                  {topics.map((topic, index) => (
-                    <div
-                      key={index}
-                      className="px-4 py-2 hover:bg-[#212427] text-left cursor-pointer"
-                      onClick={() => {
-                        if (!creatingSession) {
-                          setCreatingSession(true);
-                          handleNewChat(topic);
-                        }
-                      }}
-                    >
-                      + {topic.topic_name}
+                  {topics.length > 0 ? (
+                    topics.map((topic, index) => (
+                      <div
+                        key={index}
+                        className="px-4 py-2 hover:bg-[#212427] text-left cursor-pointer"
+                        onClick={() => {
+                          if (!creatingSession) {
+                            setCreatingSession(true);
+                            handleNewChat(topic);
+                          }
+                        }}
+                      >
+                        + {topic.topic_name}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-4 py-2 text-left cursor-default">
+                      No Topics Available
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             

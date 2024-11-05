@@ -223,6 +223,10 @@ const AdminEditTopic = () => {
 
   const updateTopic = async () => {
     const { token } = await getAuthSessionAndEmail();
+    console.log("token", token);
+    console.log("topic", topic);
+    console.log("topicName", topicName);
+    console.log("prompt", prompt);
 
     const editTopicResponse = await fetch(
       `${
@@ -353,9 +357,12 @@ const AdminEditTopic = () => {
     }
     try {
       await updateTopic();
+      console.log("Updated Topic");
       const { token } = await getAuthSessionAndEmail();
       await deleteFiles(deletedFiles, token);
+      console.log("deletedFiles", deletedFiles);
       await uploadFiles(newFiles, token);
+      console.log("newFiles", newFiles);
       await Promise.all([
         updateMetaData(files, token),
         updateMetaData(savedFiles, token),

@@ -24,6 +24,21 @@ def get_secret():
     secret = json.loads(response)
     return secret
 
+def get_parameter(param_name):
+    """
+    Fetch a parameter value from Systems Manager Parameter Store.
+    """
+    try:
+        ssm_client = boto3.client("ssm")
+        response = ssm_client.get_parameter(Name=param_name, WithDecryption=True)
+        return response["Parameter"]["Value"]
+    except Exception as e:
+        logger.error(f"Error fetching parameter {param_name}: {e}")
+        raise
+
+## GET PARAMETER VALUES FOR CONSTANTS
+EMBEDDING_MODEL_ID = get_parameter(os.environ["EMBEDDING_MODEL_PARAM"])
+
 def connect_to_db():
     try:
         db_secret = get_secret()
@@ -50,7 +65,7 @@ def parse_s3_file_path(file_key):
     print(f"file_key: {file_key}")
     try:
         topic_id, file_category, filename_with_ext = file_key.split('/')
-        file_name, file_type = filename_with_ext.split('.')
+        file_name, file_type = filename_with_ext.rsplit('.', 1)  # Split on the last period
         return topic_id, file_category, file_name, file_type
     except Exception as e:
         logger.error(f"Error parsing S3 file path: {e}")
@@ -173,7 +188,7 @@ def update_vectorstore_from_s3(bucket, topic_id):
     )
 
     embeddings = BedrockEmbeddings(
-        model_id='amazon.titan-embed-text-v2:0', 
+        model_id=EMBEDDING_MODEL_ID,
         client=bedrock_runtime,
         region_name=REGION
     )
@@ -190,6 +205,7 @@ def update_vectorstore_from_s3(bucket, topic_id):
     }
 
     try:
+        print(f"Updating vectorstore for topic {topic_id}...")
         update_vectorstore(
             bucket=bucket,
             topic=topic_id,
@@ -227,22 +243,25 @@ def handler(event, context):
                 "body": json.dumps("Error parsing S3 file path.")
             }
 
-        # Insert the file into the PostgreSQL database
-        try:
-            insert_file_into_db(
-                topic_id=topic_id,
-                file_name=file_name,
-                file_type=file_type,
-                file_path=file_key,
-                bucket_name=bucket_name
-            )
-            logger.info(f"File {file_name}.{file_type} inserted successfully.")
-        except Exception as e:
-            logger.error(f"Error inserting file {file_name}.{file_type} into database: {e}")
-            return {
-                "statusCode": 500,
-                "body": json.dumps(f"Error inserting file {file_name}.{file_type}: {e}")
-            }
+        if event_name.startswith('ObjectCreated:'):
+            # Insert the file into the PostgreSQL database
+            try:
+                insert_file_into_db(
+                    topic_id=topic_id,
+                    file_name=file_name,
+                    file_type=file_type,
+                    file_path=file_key,
+                    bucket_name=bucket_name
+                )
+                logger.info(f"File {file_name}.{file_type} inserted successfully.")
+            except Exception as e:
+                logger.error(f"Error inserting file {file_name}.{file_type} into database: {e}")
+                return {
+                    "statusCode": 500,
+                    "body": json.dumps(f"Error inserting file {file_name}.{file_type}: {e}")
+                }
+        else:
+            logger.info(f"File {file_name}.{file_type} is being deleted. Deleting files from database does not occur here.")
         
         # Update embeddings for topic after the file is successfully inserted into the database
         try:

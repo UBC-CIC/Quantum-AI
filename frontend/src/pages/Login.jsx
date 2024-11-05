@@ -698,14 +698,14 @@ export const Login = () => {
               <div className="flex flex-col items-center justify-center">
                 <form onSubmit={handleNewUserPassword}>
                   <input
-                    className="input input-bordered mt-1 h-10 w-full text-xs"
+                    className="input input-bordered mt-1 h-10 w-full text-xs bg-gray-200 border border-gray-400 rounded pl-2"
                     name="newPassword"
                     placeholder="New Password"
                     type="password"
                     required
                   />
                   <input
-                    className="input input-bordered mt-1 h-10 w-full text-xs"
+                    className="input input-bordered mt-1 h-10 w-full text-xs bg-gray-200 border border-gray-400 rounded pl-2"
                     name="confirmNewPassword"
                     placeholder="Confirm New Password"
                     type="password"
