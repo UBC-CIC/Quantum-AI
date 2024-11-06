@@ -358,11 +358,16 @@ const UserChat = ({ admin }) => {
           ...prevSession,
           session_name: textGenData.session_name,
         }));
+        console.log("TextGenData:", textGenData);
+        console.log("NewSession:", newSession);
+
         const updateSessionName = `${
           import.meta.env.VITE_API_ENDPOINT
         }user/update_session_name?session_id=${encodeURIComponent(
           newSession.session_id
         )}`;
+
+        console.log("Update session name:", updateSessionName);
 
         setSessions((prevSessions) => {
           return prevSessions.map((s) =>
@@ -371,7 +376,6 @@ const UserChat = ({ admin }) => {
               : s
           );
         });
-
 
         return Promise.all([
           fetch(updateSessionName, {
@@ -387,13 +391,15 @@ const UserChat = ({ admin }) => {
           textGenData,
         ]);
       })
-      .then(([response1, response2, textGenData]) => {
-        if (!response1.ok || !response2.ok) {
+      .then(([response1, response2]) => {
+        console.log("Response1:", response1);
+        console.log("Response2:", response2);
+        if (!response1.ok) {
           throw new Error("Failed to fetch endpoints");
         }
 
         return retrieveKnowledgeBase(
-          textGenData.llm_output,
+          response2.llm_output,
           newSession.session_id,
           newSession.topic_id
         );

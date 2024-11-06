@@ -969,9 +969,7 @@ export class ApiGatewayStack extends cdk.Stack {
       }
     );
 
-
-    /**
-     *
+    /*
      * Create Lambda with container image for data ingestion workflow in RAG pipeline
      * This function will be triggered when a file in uploaded or deleted from, the S3 Bucket
      */

@@ -3,9 +3,12 @@ import json
 import boto3
 import logging
 import psycopg2
+import langchain
 from langchain_aws import BedrockEmbeddings
 from helpers.vectorstore import get_vectorstore_retriever
 from helpers.chat import get_bedrock_llm, get_initial_user_query, get_user_query, create_dynamodb_history_table, get_response, update_session_name
+langchain.debug = True
+langchain.verbose = True
 
 # Set up basic logging
 logging.basicConfig(level=logging.INFO)
@@ -301,6 +304,7 @@ def handler(event, context):
     
     try:
         logger.info("Generating response from the LLM.")
+        print("history_aware_retriever",history_aware_retriever)
         response = get_response(
             query=user_query,
             llm=llm,
