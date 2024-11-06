@@ -304,7 +304,7 @@ def handler(event, context):
     
     try:
         logger.info("Generating response from the LLM.")
-        print("history_aware_retriever",history_aware_retriever)
+        #print("history_aware_retriever",history_aware_retriever)
         response = get_response(
             query=user_query,
             llm=llm,

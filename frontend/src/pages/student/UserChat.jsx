@@ -815,7 +815,10 @@ const UserChat = ({ admin }) => {
           </div>
 
           {/* Chat Area */}
-          <div className="flex-grow bg-[#F8F9FD] flex flex-col-reverse">
+          <div className="flex-grow bg-[#F8F9FD] flex flex-col">
+          <div className="w-full">
+              <UserHeader admin={admin}/>
+            </div>
               {!session ? (
                 <div className="flex-grow bg-[#F8F9FD] flex items-center justify-center">
                   <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", paddingBottom: 1, mt: -5 }}>
@@ -834,24 +837,9 @@ const UserChat = ({ admin }) => {
                 </div>
               ) : (
                 // Keep everything as is when the conditions are not met
-                <div className="flex-grow bg-[#F8F9FD] flex flex-col-reverse">
-                  {/* Input Area */}
-                  <div className="flex rounded items-center justify-between border bg-[#f2f0f0] border-[#8C8C8C] py-1 mb-6 mx-20">
-                    <textarea
-                      ref={textareaRef}
-                      className="text-sm w-full outline-none bg-[#f2f0f0] text-black resize-none max-h-32 mx-2"
-                      style={{ maxHeight: "8rem" }}
-                      placeholder="Enter Message Here..."
-                      maxLength={2096}
-                    />
-                    <IoSend
-                      onClick={handleSubmit}
-                      className="cursor-pointer w-5 h-5 mr-4 text-[#2E8797]"
-                    />
-                  </div>
-                  
+                <div className="flex-grow flex flex-col h-[calc(100vh-5rem)]"> {/* Adjust 5rem based on your header height */}
                   {/* Messages */}
-                  <div className="flex-grow overflow-y-auto p-4 h-full">
+                  <div className="flex-grow overflow-y-auto p-4">
                     {messages.map((message, index) =>
                       message.user_sent ? (
                         <UserMessage
@@ -874,11 +862,23 @@ const UserChat = ({ admin }) => {
                       currentSessionId === session.session_id && <TypingIndicator />}
                     <div ref={messagesEndRef} />
                   </div>
+
+                  {/* Input Area */}
+                  <div className="flex rounded items-center justify-between border bg-[#f2f0f0] border-[#8C8C8C] py-1 mb-4 mt-4 mx-20">
+                    <textarea
+                      ref={textareaRef}
+                      className="text-sm w-full outline-none bg-[#f2f0f0] text-black resize-none max-h-32 mx-2"
+                      style={{ maxHeight: "8rem" }}
+                      placeholder="Enter Message Here..."
+                      maxLength={2096}
+                    />
+                    <IoSend
+                      onClick={handleSubmit}
+                      className="cursor-pointer w-5 h-5 mr-4 text-[#2E8797]"
+                    />
+                  </div>
                 </div>
               )}
-            <div className="w-full">
-              <UserHeader admin={admin}/>
-            </div>
           </div>
           </>
         )}

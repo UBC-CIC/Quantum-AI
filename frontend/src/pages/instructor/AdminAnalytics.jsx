@@ -192,7 +192,7 @@ const AdminAnalytics = () => {
                   {data.map((topic, index) => (
                     <Accordion key={index}>
                       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                        <Typography>{titleCase(topic.topic_name)}</Typography>
+                        <Typography variant="subtitle1">{titleCase(topic.topic_name)}</Typography>
                       </AccordionSummary>
                       <AccordionDetails>
                         <Box width="100%">
@@ -200,23 +200,23 @@ const AdminAnalytics = () => {
                             container
                             spacing={1}
                             alignItems="center"
-                            direction="column"
+                            direction="row"
                           >
                             <Grid item>
-                              <Typography>Message Count</Typography>
-                              <Typography>{topic.message_count}</Typography>
+                              <Typography variant="subtitle2">Message Count</Typography>
+                              <Typography variant="subtitle2">{topic.message_count}</Typography>
                             </Grid>
                             <Grid item>
-                              <Typography>Active Sessions</Typography>
-                              <Typography>{topic.sessions_created - topic.sessions_deleted}</Typography>
+                              <Typography variant="subtitle2">Active Sessions</Typography>
+                              <Typography variant="subtitle2">{topic.sessions_created - topic.sessions_deleted}</Typography>
                             </Grid>
                             <Grid item>
-                              <Typography>Sessions Created</Typography>
-                              <Typography>{topic.sessions_created}</Typography>
+                              <Typography variant="subtitle2">Sessions Created</Typography>
+                              <Typography variant="subtitle2">{topic.sessions_created}</Typography>
                             </Grid>
                             <Grid item>
-                              <Typography>Sessions Deleted</Typography>
-                              <Typography>{topic.sessions_deleted}</Typography>
+                              <Typography variant="subtitle2">Sessions Deleted</Typography>
+                              <Typography variant="subtitle2">{topic.sessions_deleted}</Typography>
                             </Grid>
                           </Grid>
                         </Box>

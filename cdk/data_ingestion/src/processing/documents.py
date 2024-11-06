@@ -65,7 +65,9 @@ def store_doc_texts(
     """
     with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
         s3.download_file(bucket, f"{topic}/documents/{filename}", tmp_file.name)
-        doc = pymupdf.open(tmp_file.name)
+        file_name, file_type = filename.rsplit('.', 1)  # Split on the last period
+        print(f"Downloaded {filename} to {tmp_file.name} with type {file_type}")
+        doc = pymupdf.open(tmp_file.name, filetype=file_type)
         
         with BytesIO() as output_buffer:
             for page_num, page in enumerate(doc, start=1):
@@ -112,6 +114,7 @@ def add_document(
         filename=filename,
         output_bucket=output_bucket
     )
+    print("output_filenames", output_filenames)
     this_doc_chunks = store_doc_chunks(
         bucket=output_bucket,
         filenames=output_filenames,
@@ -196,6 +199,7 @@ def process_documents(
             continue  # Skip pages without any content (e.g., if the bucket is empty)
         for file in page['Contents']:
             filename = file['Key']
+            print(f"Processing {filename}")
             if filename.split('/')[-2] == "documents": # Ensures that only files in the 'documents' folder are processed
                 if filename.endswith((".pdf", ".docx", ".pptx", ".txt", ".xlsx", ".xps", ".mobi", ".cbz")):
                     this_doc_chunks = add_document(
