@@ -98,7 +98,7 @@ def lambda_handler(event, context):
 
     try:
         # Allowed file types for documents
-        allowed_document_types = {"pdf", "docx", "pptx", "txt", "xlsx", "xps", "mobi", "cbz"}
+        allowed_document_types = {"pdf", "docx", "pptx", "txt", "xlsx", "xps", "mobi", "cbz", "qasm"}
 
         folder = None
         objects_to_delete = []
