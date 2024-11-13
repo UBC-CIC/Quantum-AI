@@ -9,6 +9,8 @@ from langchain_aws import BedrockEmbeddings
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain.indexes import SQLRecordManager, index
 
+supported_types = [".pdf", ".docx", ".pptx", ".txt", ".xlsx", ".xps", ".mobi", ".cbz"]
+
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -67,6 +69,8 @@ def store_doc_texts(
         s3.download_file(bucket, f"{topic}/documents/{filename}", tmp_file.name)
         file_name, file_type = filename.rsplit('.', 1)  # Split on the last period
         print(f"Downloaded {filename} to {tmp_file.name} with type {file_type}")
+        if file_type not in supported_types:
+            file_type = "txt"
         doc = pymupdf.open(tmp_file.name, filetype=file_type)
         
         with BytesIO() as output_buffer:
@@ -201,7 +205,6 @@ def process_documents(
             filename = file['Key']
             print(f"Processing {filename}")
             if filename.split('/')[-2] == "documents": # Ensures that only files in the 'documents' folder are processed
-                if filename.endswith((".pdf", ".docx", ".pptx", ".txt", ".xlsx", ".xps", ".mobi", ".cbz")):
                     this_doc_chunks = add_document(
                         bucket=bucket,
                         topic=topic,
