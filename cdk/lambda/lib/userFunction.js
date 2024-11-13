@@ -188,15 +188,7 @@ exports.handler = async (event) => {
               FROM "Topics"
               ORDER BY "Topics".topic_name;
           `;
-
-          const generalTopic = {
-            topic_id: "fe6e2b97-c39f-43c2-8aed-2b269a3b9529",
-            topic_name: "General",
-            system_prompt: "You are an expert in Quantum materials, technology and phenomena."
-          };
-
-          const allTopics = [generalTopic, ...topicsData];
-          response.body = JSON.stringify(allTopics);
+          response.body = JSON.stringify(topicsData);
       } catch (err) {
           response.statusCode = 500;
           console.error(err);
