@@ -45,7 +45,7 @@ const AdminManageTopics = () => {
         );
         if (response.ok) {
           const data = await response.json();
-          const sortedTopics = data.sort((a, b) => a.topic_name.localeCompare(b.topic_name));
+          const sortedTopics = data.filter(topic => topic.topic_name !== "General").sort((a, b) => a.topic_name.localeCompare(b.topic_name));
           setTopics(sortedTopics);
         } else {
           console.error("Failed to fetch topics:", response.statusText);
