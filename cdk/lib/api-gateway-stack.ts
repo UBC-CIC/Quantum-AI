@@ -1000,7 +1000,7 @@ export class ApiGatewayStack extends cdk.Stack {
       "DataIngestLambdaDockerFunc"
     );
 
-    dataIngestionBucket.grantRead(dataIngestLambdaDockerFunc);
+    dataIngestionBucket.grantReadWrite(dataIngestLambdaDockerFunc);
     dataIngestionBucket.grantDelete(dataIngestLambdaDockerFunc);
 
     // Add ListBucket permission explicitly
