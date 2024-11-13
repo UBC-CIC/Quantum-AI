@@ -78,6 +78,8 @@ def handler(event, context):
                 "system_prompt" text
             );
 
+            INSERT INTO "Topics" ("topic_id", "topic_name", "system_prompt") VALUES (uuid_generate_v4(), 'General', 'You are an expert in Quantum materials, technology and phenomena.');
+
             CREATE TABLE IF NOT EXISTS "Sessions" (
                 "session_id" uuid PRIMARY KEY DEFAULT (uuid_generate_v4()),
                 "user_id" uuid,

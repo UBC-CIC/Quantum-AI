@@ -188,7 +188,6 @@ exports.handler = async (event) => {
               FROM "Topics"
               ORDER BY "Topics".topic_name;
           `;
-  
           response.body = JSON.stringify(topicsData);
       } catch (err) {
           response.statusCode = 500;

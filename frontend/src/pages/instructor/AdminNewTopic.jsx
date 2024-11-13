@@ -129,10 +129,14 @@ export const AdminNewTopic = () => {
         }
       );
       if (!response.ok) {
-        console.error(`Failed to create topic`, response.statusText);
-        toast.error("Topic Creation Failed", {
+        const errorData = await response.json();
+        const errorMessage = errorData.error || "An unexpected error occurred";
+
+        console.error(`Failed to create topic`, errorData);
+
+        toast.error(`Topic Creation Failed: ${errorMessage}`, {
           position: "top-center",
-          autoClose: 1000,
+          autoClose: 3000,
           hideProgressBar: false,
           closeOnClick: true,
           pauseOnHover: true,
@@ -153,7 +157,7 @@ export const AdminNewTopic = () => {
         setNewFiles([]);
         toast.success("Topic Created Successfully", {
           position: "top-center",
-          autoClose: 1000,
+          autoClose: 2000,
           hideProgressBar: false,
           closeOnClick: true,
           pauseOnHover: true,
@@ -167,7 +171,7 @@ export const AdminNewTopic = () => {
     } finally {
       setTimeout(function () {
         handleBackClick();
-      }, 1000);
+      }, 3000);
     }
   };
 
