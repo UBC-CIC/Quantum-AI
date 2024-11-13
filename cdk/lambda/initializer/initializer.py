@@ -117,6 +117,8 @@ def handler(event, context):
 
             ALTER TABLE "User_Session_Engagement_Log" ADD FOREIGN KEY ("user_id") REFERENCES "Users" ("user_id") ON DELETE CASCADE ON UPDATE CASCADE;
             
+            ALTER TABLE "Documents" ADD FOREIGN KEY ("topic_id") REFERENCES "Topics" ("topic_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
             ALTER TABLE "Sessions" ADD FOREIGN KEY ("topic_id") REFERENCES "Topics" ("topic_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
             ALTER TABLE "Messages" ADD FOREIGN KEY ("session_id") REFERENCES "Sessions" ("session_id") ON DELETE CASCADE ON UPDATE CASCADE;
