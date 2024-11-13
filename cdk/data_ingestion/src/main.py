@@ -204,12 +204,29 @@ def update_vectorstore_from_s3(bucket, topic_id):
         'port': db_secret["port"]
     }
 
+    vectorstore_general_topic_dict = {
+        'collection_name': 'General',
+        'dbname': db_secret["dbname"],
+        'user': db_secret["username"],
+        'password': db_secret["password"],
+        'host': db_secret["host"],
+        'port': db_secret["port"]
+    }
+
     try:
         print(f"Updating vectorstore for topic {topic_id}...")
         update_vectorstore(
             bucket=bucket,
             topic=topic_id,
             vectorstore_config_dict=vectorstore_config_dict,
+            embeddings=embeddings
+        )
+
+        print("Updating vectorstore for the general topic...")
+        update_vectorstore(
+            bucket=bucket,
+            topic='General',
+            vectorstore_config_dict=vectorstore_general_topic_dict,
             embeddings=embeddings
         )
     except Exception as e:
