@@ -130,7 +130,10 @@ export const AdminNewTopic = () => {
       );
       if (!response.ok) {
         console.error(`Failed to create topic`, response.statusText);
-        toast.error("Topic Creation Failed", {
+        const errorData = await response.json();
+        const errorMessage = errorData.errorMessage || "An unexpected error occurred";
+
+        toast.error(`Topic Creation Failed: ${errorMessage}`, {
           position: "top-center",
           autoClose: 1000,
           hideProgressBar: false,

@@ -107,6 +107,14 @@ exports.handler = async (event) => {
               topic_name,
             } = event.queryStringParameters;
 
+            if (topic_name.toLowerCase() === "general") {
+              response.statusCode = 400;
+              response.body = JSON.stringify({
+                error: "Topic name cannot be 'General'",
+              });
+              break;
+            }
+            
             const { system_prompt } = JSON.parse(event.body);
 
             // Insert new topic
