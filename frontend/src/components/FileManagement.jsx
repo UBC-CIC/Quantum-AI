@@ -171,7 +171,7 @@ const FileManagement = ({
           }}
         >
           <input
-            accept=".pdf,.docx,.pptx,.txt,.xlsx,.xps,.mobi,.cbz"
+            accept=".pdf,.docx,.pptx,.txt,.xlsx,.xps,.mobi,.cbz,.qasm"
             type="file"
             multiple
             hidden
