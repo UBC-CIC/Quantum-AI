@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 function convertTimezone(sessionName) {
-  if (sessionName === "New chat") {
+  if (sessionName.startsWith("New Chat")) {
       return sessionName;
   }
 

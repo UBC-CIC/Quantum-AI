@@ -147,7 +147,13 @@ const UserChat = ({ admin }) => {
         );
         if (response.ok) {
           const data = await response.json();
-          setTopics(data);
+          // Move the "General" topic to the beginning, if it exists
+          const sortedData = data.sort((a, b) => {
+            if (a.topic_name === "General") return -1; // Move "General" to the top
+            if (b.topic_name === "General") return 1;
+            return 0;
+          });
+          setTopics(sortedData);
         } else {
           console.error("Failed to fetch topics:", response.statusText);
         }
@@ -489,7 +495,7 @@ const UserChat = ({ admin }) => {
       })
       .then(({ email }) => {
         userEmail = email;
-        const session_name = "New chat";
+        const session_name = `New Chat - ${topic.topic_name}`;
         const url = `${
           import.meta.env.VITE_API_ENDPOINT
         }user/create_session?email=${encodeURIComponent(

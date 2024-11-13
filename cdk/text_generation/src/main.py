@@ -179,8 +179,9 @@ def handler(event, context):
     query_params = event.get("queryStringParameters", {})
 
     topic_id = query_params.get("topic_id", "")
+    topic = get_topic_name(topic_id)
     session_id = query_params.get("session_id", "")
-    session_name = query_params.get("session_name", "New Chat")
+    session_name = query_params.get("session_name") or f"New Chat - {topic}"
 
     if not topic_id:
         logger.error("Missing required parameter: topic_id")
@@ -222,8 +223,6 @@ def handler(event, context):
             },
             'body': json.dumps('Error fetching system prompt')
         }
-
-    topic = get_topic_name(topic_id)
 
     if topic is None:
         logger.error(f"Invalid topic_id: {topic_id}")
@@ -339,7 +338,7 @@ def handler(event, context):
             logger.info("Not the first exchange between the LLM and user. Session name remains the same.")
     except Exception as e:
         logger.error(f"Error updating session name: {e}")
-        session_name = "New Chat"
+        session_name = f"New Chat - {topic}"
     
     logger.info("Returning the generated response.")
     return {
