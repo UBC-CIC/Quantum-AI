@@ -263,36 +263,37 @@ def handler(event, context):
         general_topic_id = cur.fetchone()[0]
 
         if event_name.startswith("ObjectCreated:"):
-            s3 = boto3.resource("s3")
-            copy_source = {
-                "Bucket": bucket_name,
-                "Key": file_key,
-            }
-            copy_dest_key = (
-                f"{general_topic_id}/{file_category}/{file_name}.{file_type}"
-            )
-            s3.meta.client.copy(copy_source, bucket_name, copy_dest_key)
-
-            # Insert the file into the PostgreSQL database
-            try:
-                insert_file_into_db(
-                    topic_id=topic_id,
-                    file_name=file_name,
-                    file_type=file_type,
-                    file_path=file_key,
-                    bucket_name=bucket_name,
-                )
-                logger.info(f"File {file_name}.{file_type} inserted successfully.")
-            except Exception as e:
-                logger.error(
-                    f"Error inserting file {file_name}.{file_type} into database: {e}"
-                )
-                return {
-                    "statusCode": 500,
-                    "body": json.dumps(
-                        f"Error inserting file {file_name}.{file_type}: {e}"
-                    ),
+            if topic_id != general_topic_id:
+                s3 = boto3.resource("s3")
+                copy_source = {
+                    "Bucket": bucket_name,
+                    "Key": file_key,
                 }
+                copy_dest_key = (
+                    f"{general_topic_id}/{file_category}/{file_name}.{file_type}"
+                )
+                s3.meta.client.copy(copy_source, bucket_name, copy_dest_key)
+
+                # Insert the file into the PostgreSQL database
+                try:
+                    insert_file_into_db(
+                        topic_id=topic_id,
+                        file_name=file_name,
+                        file_type=file_type,
+                        file_path=file_key,
+                        bucket_name=bucket_name,
+                    )
+                    logger.info(f"File {file_name}.{file_type} inserted successfully.")
+                except Exception as e:
+                    logger.error(
+                        f"Error inserting file {file_name}.{file_type} into database: {e}"
+                    )
+                    return {
+                        "statusCode": 500,
+                        "body": json.dumps(
+                            f"Error inserting file {file_name}.{file_type}: {e}"
+                        ),
+                    }
         else:
             logger.info(
                 f"File {file_name}.{file_type} is being deleted. Deleting files from database does not occur here."
