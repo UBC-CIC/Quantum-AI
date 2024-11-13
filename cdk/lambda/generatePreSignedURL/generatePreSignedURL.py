@@ -58,7 +58,8 @@ def lambda_handler(event, context):
         "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "xps": "application/oxps",  # or "application/vnd.ms-xpsdocument" for legacy XPS
         "mobi": "application/x-mobipocket-ebook",
-        "cbz": "application/vnd.comicbook+zip"
+        "cbz": "application/vnd.comicbook+zip",
+        "qasm": "text/plain"
     }
     
     if file_type in allowed_document_types:
