@@ -59,7 +59,7 @@ def lambda_handler(event, context):
         "xps": "application/oxps",  # or "application/vnd.ms-xpsdocument" for legacy XPS
         "mobi": "application/x-mobipocket-ebook",
         "cbz": "application/vnd.comicbook+zip",
-        "qasm": "text/plain"
+        "qasm": "qasm"
     }
     
     if file_type in allowed_document_types:
