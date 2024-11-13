@@ -62,6 +62,7 @@ const AdminAnalytics = () => {
         );
         if (response.ok) {
           const analytics_data = await response.json();
+          console.log("analytics_data", analytics_data);
           setData(analytics_data);
           const graphDataFormatted = analytics_data.map((topic) => ({
             module: topic.topic_name,
@@ -90,6 +91,14 @@ const AdminAnalytics = () => {
   const handleChange = (event, newValue) => {
     setValue(newValue);
   };
+
+  function formatTime(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = Math.round(seconds % 60);
+    
+    return `${hours}h ${minutes}m ${remainingSeconds}s`;
+  }
 
   return (
     <div className="flex h-screen">
@@ -205,6 +214,14 @@ const AdminAnalytics = () => {
                             <Grid item>
                               <Typography variant="subtitle2">Message Count</Typography>
                               <Typography variant="subtitle2">{topic.message_count}</Typography>
+                            </Grid>
+                            <Grid item>
+                              <Typography variant="subtitle2">Average Session Time</Typography>
+                              <Typography variant="subtitle2">{formatTime(topic.average_session_time)}</Typography>
+                            </Grid>
+                            <Grid item>
+                              <Typography variant="subtitle2">Total Session Time</Typography>
+                              <Typography variant="subtitle2">{formatTime(topic.total_session_time)}</Typography>
                             </Grid>
                             <Grid item>
                               <Typography variant="subtitle2">Active Sessions</Typography>

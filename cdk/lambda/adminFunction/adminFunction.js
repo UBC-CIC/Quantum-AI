@@ -209,7 +209,7 @@ exports.handler = async (event) => {
             try {
               // Query to get all topics related to the given topic_id and their message counts, filtering by user role
               const messageCreations = await sqlConnectionTableCreator`
-                  SELECT t.topic_id, t.topic_name, COUNT(m.message_id) AS message_count
+                  SELECT t.topic_id, t.topic_name, COUNT(DISTINCT m.message_id) AS message_count
                   FROM "Topics" t
                   LEFT JOIN "Sessions" s ON t.topic_id = s.topic_id
                   LEFT JOIN "Messages" m ON s.session_id = m.session_id
@@ -243,11 +243,111 @@ exports.handler = async (event) => {
                 ORDER BY t.topic_id ASC;
               `;
 
+              // Step 1: Fetch logs in descending order (newest logs first) and filter by user role
+              const logs = await sqlConnectionTableCreator`
+                  SELECT uel.*, u.user_id 
+                  FROM "User_Session_Engagement_Log" uel
+                  JOIN "Users" u ON uel.user_id = u.user_id
+                  WHERE 'user' = ANY(u.roles)
+                  ORDER BY uel."timestamp" ASC;
+              `;
+
+              // Initialize stack and a map to store session durations
+              const stack = [];
+              const sessionDurations = new Map(); // session_id => total duration
+
+              // Step 2: Process logs with the stack to calculate session durations
+              for (const log of logs) {
+                const { session_id, timestamp, engagement_type } = log;
+
+                if (engagement_type === "session start") {
+                    // Push "session start" log onto the stack
+                    stack.push(log);
+                } else if (engagement_type === "session end") {
+                    // Look for matching "session start" log on top of the stack
+                    let matched = false;
+                    for (let i = stack.length - 1; i >= 0; i--) {
+                        const endLog = stack[i];
+                        if (endLog.session_id === session_id) {
+                            // Calculate session duration
+                            const duration = (new Date(timestamp) - new Date(endLog.timestamp)) / 1000; // in seconds
+                            if (sessionDurations.has(session_id)) {
+                                sessionDurations.set(session_id, sessionDurations.get(session_id) + duration);
+                            } else {
+                                sessionDurations.set(session_id, duration);
+                            }
+                            // Remove the matched "session start" log from the stack
+                            stack.splice(i, 1);
+                            matched = true;
+                            break;
+                        }
+                    }
+                    // If no match is found, push "session end" log to stack for later deletion
+                    if (!matched) {
+                        console.log("No matching start log found, pushing to stack:", log);
+                        stack.push(log);
+                    }
+                }
+              }
+
+              // Step 3: Delete all unmatched logs (remaining items in the stack)
+              const unmatchedLogs = stack.map(log => log.log_id); // Extract log_ids of all unmatched logs
+              console.log("Unmatched logs:", unmatchedLogs);
+              if (unmatchedLogs.length > 0) {
+                  await sqlConnectionTableCreator`
+                      DELETE FROM "User_Session_Engagement_Log"
+                      WHERE "log_id" = ANY(${unmatchedLogs});
+                  `;
+              }
+
+              console.log("Session durations:", sessionDurations);
+
+              // Step 4: Calculate the average session time per topic
+              const sessionDetails = await sqlConnectionTableCreator`
+                  SELECT s.session_id, s.topic_id, u.user_id
+                  FROM "Sessions" s
+                  JOIN "User_Session_Engagement_Log" uel ON s.session_id = uel.session_id
+                  JOIN "Users" u ON uel.user_id = u.user_id
+                  WHERE 'user' = ANY(u.roles);
+              `;
+
+              const topicDurations = {}; // topic_id => { totalDuration: number, sessionCount: number, uniqueUsers: Set }
+
+              console.log("Session details:", sessionDetails);
+
+              sessionDetails.forEach(({ session_id, topic_id, user_id }) => {
+                  if (!topicDurations[topic_id]) {
+                      topicDurations[topic_id] = { totalDuration: 0, sessionCount: 0, uniqueUsers: new Set() };
+                  }
+                  if (sessionDurations.has(session_id)) {
+                      topicDurations[topic_id].totalDuration += sessionDurations.get(session_id);
+                      topicDurations[topic_id].sessionCount += 1; // Increment session count for each session added
+                      topicDurations[topic_id].uniqueUsers.add(user_id);
+                  }
+              });
+
+              console.log("Topic durations:", topicDurations);
+
+              const totalSessionTimes = Object.entries(topicDurations).map(([topic_id, data]) => ({
+                  topic_id,
+                  average_session_time: data.sessionCount > 0 
+                      ? (data.totalDuration / data.sessionCount)
+                      : 0
+              }));
+
+              const averageSessionTimes = Object.entries(topicDurations).map(([topic_id, data]) => ({
+                  topic_id,
+                  average_session_time: data.sessionCount > 0 
+                      ? ((data.totalDuration / data.sessionCount) / (data.sessionCount / 2)) / data.uniqueUsers.size  // Divide by session count and unique users for average session duration
+                      : 0
+              }));
 
               // Combine all data into a single response, ensuring all topics are included
               const analyticsData = messageCreations.map((topic) => {
                   const sessionsCreated = sessionCreations.find((ma) => ma.topic_id === topic.topic_id) || {};
                   const sessionsDeleted = sessionDeletions.find((sd) => sd.topic_id === topic.topic_id) || {};
+                  const avgSessionData = averageSessionTimes.find(avg => avg.topic_id === topic.topic_id) || {};
+                  const totalSessionData = totalSessionTimes.find(avg => avg.topic_id === topic.topic_id) || {};
 
                   return {
                       topic_id: topic.topic_id,
@@ -255,6 +355,8 @@ exports.handler = async (event) => {
                       message_count: topic.message_count || 0,
                       sessions_created: sessionsCreated.session_creation_count || 0,
                       sessions_deleted: sessionsDeleted.session_deletion_count || 0,
+                      average_session_time: avgSessionData.average_session_time || 0,
+                      total_session_time: totalSessionData.average_session_time || 0
                   };
               });
 

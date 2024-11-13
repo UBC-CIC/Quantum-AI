@@ -37,6 +37,7 @@ function titleCase(str) {
 const AdminEditTopic = () => {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [metadata, setMetadata] = useState({});
 
   const [files, setFiles] = useState([]);
@@ -50,7 +51,7 @@ const AdminEditTopic = () => {
   const [topicName, setTopicName] = useState("");
   const [prompt, setPrompt] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
-
+  
   const handleBackClick = () => {
     window.history.back();
   };
@@ -133,6 +134,9 @@ const AdminEditTopic = () => {
   }, [topic]);
 
   const handleDelete = async () => {
+    if (isDeleting) return;
+    setIsDeleting(true);
+
     try {
       const session = await fetchAuthSession();
       const token = session.tokens.idToken
@@ -187,6 +191,7 @@ const AdminEditTopic = () => {
         throw new Error("Failed to delete topic");
       }
     } catch (error) {
+      setIsDeleting(false);
       console.error(error.message);
       toast.error("Failed to delete topic", {
         position: "top-center",
@@ -499,6 +504,7 @@ const AdminEditTopic = () => {
                 color="primary"
                 onClick={handleBackClick}
                 sx={{ width: "30%", maxHeight: "40px" }}
+                disabled={isSaving || isDeleting}
               >
                 Cancel
               </Button>
@@ -507,8 +513,9 @@ const AdminEditTopic = () => {
                 color="error"
                 onClick={handleDeleteConfirmation}
                 sx={{ width: "40%", maxHeight: "40px" }}
+                disabled={isSaving || isDeleting}
               >
-                Delete Topic
+                {isDeleting ? "Deleting..." : "Delete Topic"}
               </Button>
             </Box>
           </Grid>
@@ -519,8 +526,9 @@ const AdminEditTopic = () => {
               color="primary"
               onClick={handleSave}
               style={{ width: "40%", maxHeight: "40px" }}
+              disabled={isSaving || isDeleting}
             >
-              Save Topic
+              {isSaving ? "Saving..." : "Save Topic"}
             </Button>
           </Grid>
         </Grid>

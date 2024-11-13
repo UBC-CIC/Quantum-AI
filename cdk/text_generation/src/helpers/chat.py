@@ -7,6 +7,7 @@ from langchain.chains import create_retrieval_chain
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_community.chat_message_histories import DynamoDBChatMessageHistory
 from langchain_core.pydantic_v1 import BaseModel, Field
+from datetime import datetime
 
 class LLM_evaluation(BaseModel):
     response: str = Field(description="Answer to the user's query.")
@@ -137,7 +138,6 @@ def get_response(
     system_prompt = (
         ""
         "system"
-        f"You are an expert in Quantum materials, technology and phenomena. \n"
         f"{topic_system_prompt}"
         ""
         "documents"
@@ -213,15 +213,16 @@ def get_llm_output(response: str) -> dict:
         llm_output=response
     )
 
-def update_session_name(table_name: str, session_id: str, bedrock_llm_id: str) -> str:
+def update_session_name(table_name: str, session_id: str, bedrock_llm_id: str, topic: str) -> str:
     """
     Check if both the LLM and the user have exchanged exactly one message each.
-    If so, generate and return a session name using the content of the user's first message
-    and the LLM's first response. Otherwise, return None.
+    If so, generate and return a session name. Otherwise, return None.
 
     Args:
     session_id (str): The unique ID for the session.
     table_name (str): The DynamoDB table name where the conversation history is stored.
+    bedrock_llm_id (str): The unique ID for the Bedrock LLM model.
+    topic (str): The topic of the conversation.
 
     Returns:
     str: The updated session name if conditions are met, otherwise None.
@@ -258,46 +259,51 @@ def update_session_name(table_name: str, session_id: str, bedrock_llm_id: str) -
         
         if message_type == 'human':
             human_messages.append(item)
-            if len(human_messages) > 2:
+            if len(human_messages) > 1:
                 print("More than one user message found; not the first exchange.")
                 return None
         
         elif message_type == 'ai':
             ai_messages.append(item)
-            if len(ai_messages) > 2:
+            if len(ai_messages) > 1:
                 print("More than one AI message found; not the first exchange.")
                 return None
 
-    if len(human_messages) != 2 or len(ai_messages) != 2:
+    if len(human_messages) != 1 or len(ai_messages) != 1:
         print("Not a complete first exchange between the LLM and user.")
         return None
     
-    user_message = human_messages[0].get('M', {}).get('data', {}).get('M', {}).get('content', {}).get('S', "")
-    llm_message = ai_messages[0].get('M', {}).get('data', {}).get('M', {}).get('content', {}).get('S', "")
+    # user_message = human_messages[0].get('M', {}).get('data', {}).get('M', {}).get('content', {}).get('S', "")
+    # llm_message = ai_messages[0].get('M', {}).get('data', {}).get('M', {}).get('content', {}).get('S', "")
     
-    llm = BedrockLLM(
-                        model_id = bedrock_llm_id
-                    )
+    # llm = BedrockLLM(
+    #                     model_id = bedrock_llm_id
+    #                 )
     
-    system_prompt = """
-        You are given the first message from an AI and the first message from a user in a conversation. 
-        Based on these two messages, come up with a name that describes the conversation. 
-        The name should be less than 30 characters. ONLY OUTPUT THE NAME YOU GENERATED. NO OTHER TEXT.
-    """
+    # system_prompt = """
+    #     You are given the first message from an AI and the first message from a user in a conversation. 
+    #     Based on these two messages, come up with a name that describes the conversation. 
+    #     The name should be less than 30 characters. ONLY OUTPUT THE NAME YOU GENERATED. NO OTHER TEXT.
+    # """
     
-    prompt = f"""
-        <|begin_of_text|>
-        <|start_header_id|>system<|end_header_id|>
-        {system_prompt}
-        <|eot_id|>
-        <|start_header_id|>AI Message<|end_header_id|>
-        {llm_message}
-        <|eot_id|>
-        <|start_header_id|>User Message<|end_header_id|>
-        {user_message}
-        <|eot_id|>
-        <|start_header_id|>assistant<|end_header_id|>
-    """
+    # prompt = f"""
+    #     <|begin_of_text|>
+    #     <|start_header_id|>system<|end_header_id|>
+    #     {system_prompt}
+    #     <|eot_id|>
+    #     <|start_header_id|>AI Message<|end_header_id|>
+    #     {llm_message}
+    #     <|eot_id|>
+    #     <|start_header_id|>User Message<|end_header_id|>
+    #     {user_message}
+    #     <|eot_id|>
+    #     <|start_header_id|>assistant<|end_header_id|>
+    # """
     
-    session_name = llm.invoke(prompt)
+    # session_name = llm.invoke(prompt)
+
+    # Generate a session name using the current timestamp and topic name
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    session_name = f"{timestamp} - {topic}"
+
     return session_name

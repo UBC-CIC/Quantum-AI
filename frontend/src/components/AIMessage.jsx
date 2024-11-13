@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { dracula } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import logo from "../assets/logo.png";
+import Markdown from 'https://esm.sh/react-markdown@9'
 
 const AIMessage = ({ message }) => {
   const renderCodeBlock = (code, language) => {
@@ -30,7 +31,7 @@ const AIMessage = ({ message }) => {
               const code = codeLines.join("\n");
               return renderCodeBlock(code, language.trim());
             }
-            return part;
+            return <Markdown key={index}>{part}</Markdown>;
           })}
         </div>
       </div>

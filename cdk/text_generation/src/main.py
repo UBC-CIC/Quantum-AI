@@ -236,8 +236,11 @@ def handler(event, context):
     question = body.get("message_content", "")
     
     if not question:
-        logger.info(f"Start of conversation. Creating conversation history table in DynamoDB.")
-        user_query = get_initial_user_query(topic)
+        logger.error(f"No message content found in the request body.")
+        return {
+            'statusCode': 400,
+            'body': json.dumps('No message content found in the request body')
+        }
     else:
         logger.info(f"Processing user question: {question}")
         user_query = get_user_query(question)
@@ -328,7 +331,7 @@ def handler(event, context):
     
     try:
         logger.info("Updating session name if this is the first exchange between the LLM and user.")
-        potential_session_name = update_session_name(TABLE_NAME, session_id, BEDROCK_LLM_ID)
+        potential_session_name = update_session_name(TABLE_NAME, session_id, BEDROCK_LLM_ID, topic)
         if potential_session_name:
             logger.info("This is the first exchange between the LLM and user. Updating session name.")
             session_name = potential_session_name

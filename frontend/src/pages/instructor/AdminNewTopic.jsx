@@ -165,7 +165,6 @@ export const AdminNewTopic = () => {
     } catch (error) {
       console.error("Error saving changes:", error);
     } finally {
-      setIsSaving(false);
       setTimeout(function () {
         handleBackClick();
       }, 1000);
@@ -223,6 +222,7 @@ export const AdminNewTopic = () => {
                 color="primary"
                 onClick={handleBackClick}
                 sx={{ width: "30%" }}
+                disabled={isSaving}
               >
                 Cancel
               </Button>
@@ -235,8 +235,9 @@ export const AdminNewTopic = () => {
               color="primary"
               onClick={handleSave}
               style={{ width: "40%" }}
+              disabled={isSaving}
             >
-              Create Topic
+              {isSaving ? "Creating..." : "Create Topic"}
             </Button>
           </Grid>
         </Grid>

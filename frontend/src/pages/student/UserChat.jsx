@@ -60,6 +60,7 @@ const UserChat = ({ admin }) => {
   const messagesEndRef = useRef(null);
   const [sessions, setSessions] = useState([]);
   const [session, setSession] = useState(null);
+  const [previousSession, setPreviousSession] = useState(null);
   const [messages, setMessages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState(null);
@@ -70,6 +71,7 @@ const UserChat = ({ admin }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [topics, setTopics] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [newSessionCreated, setNewSessionCreated] = useState(false);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -78,7 +80,7 @@ const UserChat = ({ admin }) => {
   }, [messages]);
 
   useEffect(() => {
-    console.log("New message:", newMessage);
+    //console.log("New message:", newMessage);
     if (newMessage !== null) {
       if (currentSessionId === session.session_id) {
         setMessages((prevItems) => [...prevItems, newMessage]);
@@ -182,8 +184,14 @@ const UserChat = ({ admin }) => {
         );
         if (response.ok) {
           const data = await response.json();
-          console.log("Sessions:", data);
+          //console.log("Sessions:", data);
           setSessions(data);
+          //set previous session to second last session if there is one
+          // console.log("Checking Sessions:", data);
+          // if (data.length > 1) {
+          //   console.log("Setting previous session:", data[data.length - 2]);
+          //   setPreviousSession(data[data.length - 2]);
+          // }
           setSession(data[data.length - 1]);
         } else {
           console.error("Failed to fetch sessions:", response.statusText);
@@ -255,6 +263,44 @@ const UserChat = ({ admin }) => {
     }
   }
 
+  function createUserSessionEngagementLog(sessionId, engagementType) {
+    let userEmail;
+    let authToken;
+
+    return fetchAuthSession()
+      .then((session) => {
+        authToken = session.tokens.idToken
+        return fetchUserAttributes();
+      })
+      .then(({ email }) => {
+        userEmail = email;
+        const url = `${
+          import.meta.env.VITE_API_ENDPOINT
+        }user/create_user_session_engagement_log?email=${encodeURIComponent(
+          userEmail
+        )}&session_id=${encodeURIComponent(
+          sessionId
+        )}&engagement_type=${encodeURIComponent(engagementType)}`;
+
+        return fetch(url, {
+          method: "POST",
+          headers: {
+            Authorization: authToken,
+            "Content-Type": "application/json",
+          },
+        });
+      })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Failed to create user session engagement log: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .catch((error) => {
+        console.error("Error creating user session engagement log:", error);
+      })
+  }
+
   const handleSubmit = () => {
     if (isSubmitting || isAItyping || creatingSession) return;
     setIsSubmitting(true);
@@ -321,6 +367,7 @@ const UserChat = ({ admin }) => {
       })
       .then((messageData) => {
         setNewMessage(messageData[0]);
+        setNewSessionCreated(false);
         setIsAItyping(true);
         textareaRef.current.value = "";
 
@@ -358,8 +405,8 @@ const UserChat = ({ admin }) => {
           ...prevSession,
           session_name: textGenData.session_name,
         }));
-        console.log("TextGenData:", textGenData);
-        console.log("NewSession:", newSession);
+        //console.log("TextGenData:", textGenData);
+        //console.log("NewSession:", newSession);
 
         const updateSessionName = `${
           import.meta.env.VITE_API_ENDPOINT
@@ -367,7 +414,7 @@ const UserChat = ({ admin }) => {
           newSession.session_id
         )}`;
 
-        console.log("Update session name:", updateSessionName);
+        //console.log("Update session name:", updateSessionName);
 
         setSessions((prevSessions) => {
           return prevSessions.map((s) =>
@@ -392,8 +439,8 @@ const UserChat = ({ admin }) => {
         ]);
       })
       .then(([response1, response2]) => {
-        console.log("Response1:", response1);
-        console.log("Response2:", response2);
+        //console.log("Response1:", response1);
+        //console.log("Response2:", response2);
         if (!response1.ok) {
           throw new Error("Failed to fetch endpoints");
         }
@@ -434,7 +481,7 @@ const UserChat = ({ admin }) => {
     let sessionData;
     let userEmail;
     let authToken;
-    setIsAItyping(true);
+    //setIsAItyping(true);
     return fetchAuthSession()
       .then((session) => {
         authToken = session.tokens.idToken
@@ -469,40 +516,14 @@ const UserChat = ({ admin }) => {
         sessionData = data[0];
         setCurrentSessionId(sessionData.session_id);
         setSessions((prevItems) => [...prevItems, sessionData]);
+        //set previous session to second last session if there is one
+        console.log("Checking Sessions:", sessions);
+        if (sessions.length > 0) {
+          console.log("Setting previous session:", sessions[sessions.length - 1]);
+          setPreviousSession(sessions[sessions.length - 1]);
+        }
         setSession(sessionData);
         setCreatingSession(false);
-
-        const textGenUrl = `${
-          import.meta.env.VITE_API_ENDPOINT
-        }user/text_generation?topic_id=${encodeURIComponent(
-          topic.topic_id
-        )}&session_id=${encodeURIComponent(
-          sessionData.session_id
-        )}&session_name=${encodeURIComponent("New chat")}`;
-
-        return fetch(textGenUrl, {
-          method: "POST",
-          headers: {
-            Authorization: authToken,
-            "Content-Type": "application/json",
-          },
-        });
-      })
-      .then((textResponse) => {
-        if (!textResponse.ok) {
-          throw new Error(
-            `Failed to create initial message: ${textResponse.statusText}`
-          );
-        }
-        return textResponse.json();
-      })
-      .then((textResponseData) => {
-        retrieveKnowledgeBase(
-          textResponseData.llm_output,
-          sessionData.session_id,
-          sessionData.topic_id
-        );
-        return sessionData;
       })
       .catch((error) => {
         // const simulatedMessage = {
@@ -515,18 +536,19 @@ const UserChat = ({ admin }) => {
         // setNewMessage(simulatedMessage);
         console.error("Error creating new chat:", error);
         setCreatingSession(false);
-        setIsAItyping(false);
+        //setIsAItyping(false);
       })
-      .finally(() => {
-        setIsAItyping(false);
-      });
+      // .finally(() => {
+      //   setIsAItyping(false);
+      // });
   };
 
   const handleDeleteSession = async (sessionDelete) => {
     try {
+      //console.log("Deleting session:", sessionDelete.session_id);
       const authSession = await fetchAuthSession();
       const { email } = await fetchUserAttributes();
-      const token = authSession.tokens.idToken
+      const token = authSession.tokens.idToken;
       const response = await fetch(
         `${
           import.meta.env.VITE_API_ENDPOINT
@@ -544,12 +566,15 @@ const UserChat = ({ admin }) => {
         }
       );
       if (response.ok) {
+        console.log("Logging deleted session end:", sessionDelete.session_id);
+        createUserSessionEngagementLog(sessionDelete.session_id, "session end")
         setSessions((prevSessions) =>
           prevSessions.filter(
             (isession) => isession.session_id !== sessionDelete.session_id
           )
         );
         if (sessionDelete.session_id === session.session_id) {
+          setPreviousSession(sessionDelete);
           setSession(null);
           setMessages([]);
         }
@@ -652,9 +677,11 @@ const UserChat = ({ admin }) => {
       if (response.ok) {
         const data = await response.json();
         setMessages(data);
+        setNewSessionCreated(false);
       } else {
         console.error("Failed to retreive messages:", response.statusText);
         setMessages([]);
+        setNewSessionCreated(true);
       }
     } catch (error) {
       console.error("Error fetching messages:", error);
@@ -662,9 +689,76 @@ const UserChat = ({ admin }) => {
     }
   };
 
+  const switchingSessions = (previousSession, currentSession) => {
+    let userEmail;
+    let authToken;
+    return fetchAuthSession()
+      .then((session) => {
+        authToken = session.tokens.idToken
+        return fetchUserAttributes();
+      })
+      .then(({ email }) => {
+        userEmail = email;
+        const prevSessionUrl = `${
+          import.meta.env.VITE_API_ENDPOINT
+        }user/create_user_session_engagement_log?email=${encodeURIComponent(
+          userEmail
+        )}&session_id=${encodeURIComponent(
+          previousSession.session_id
+        )}&engagement_type=${encodeURIComponent("session end")}`;
+
+        const currentSessionUrl = `${
+          import.meta.env.VITE_API_ENDPOINT
+        }user/create_user_session_engagement_log?email=${encodeURIComponent(
+          userEmail
+        )}&session_id=${encodeURIComponent(
+          currentSession.session_id
+        )}&engagement_type=${encodeURIComponent("session start")}`;
+
+        return Promise.all([
+          fetch(prevSessionUrl, {
+            method: "POST",
+            headers: {
+              Authorization: authToken,
+              "Content-Type": "application/json",
+            },
+          }),
+          fetch(currentSessionUrl, {
+            method: "POST",
+            headers: {
+              Authorization: authToken,
+              "Content-Type": "application/json",
+            },
+          }),
+        ]);
+      })
+      .then(([response1, response2]) => {
+        if (!response1.ok || !response2.ok) {
+          throw new Error(`Failed to create user session engagement logs: ${response1.statusText}`);
+        }
+        setPreviousSession(currentSession);
+        console.log("Switched sessions");
+        return response1.json();
+      })
+      .catch((error) => {
+        console.error("Error switching sessions", error);
+      })
+  };
+
+
   useEffect(() => {
-    console.log("Session:", session);
     if (session) {
+      console.log("Session Change:", session.session_id);
+      if (previousSession) {
+        console.log("Previous Session:", previousSession.session_id);
+        if (session.session_id !== previousSession.session_id) {
+          switchingSessions(previousSession, session);
+        }
+      } else {
+        console.log("No previous session");
+        createUserSessionEngagementLog(session.session_id, "session start")
+        setPreviousSession(session);
+      }
       getMessages();
     }
   }, [session]);
@@ -839,8 +933,23 @@ const UserChat = ({ admin }) => {
                 // Keep everything as is when the conditions are not met
                 <div className="flex-grow flex flex-col h-[calc(100vh-5rem)]"> {/* Adjust 5rem based on your header height */}
                   {/* Messages */}
-                  <div className="flex-grow overflow-y-auto p-4">
-                    {messages.map((message, index) =>
+                <div className="flex-grow overflow-y-auto p-4">
+                  {newSessionCreated ? (
+                    <div className="flex items-center justify-center h-full">
+                    <Typography
+                      sx={{ 
+                        color: "#212427", 
+                        fontWeight: "bold", 
+                        textAlign: "center", 
+                        fontSize: "4vh",
+                        transform: "translateY(-50%)" // This moves the text down by 25% of its container's height
+                      }}
+                    >
+                      What can I help you with today?
+                    </Typography>
+                  </div>
+                  ) : (
+                    messages.map((message, index) =>
                       message.user_sent ? (
                         <UserMessage
                           key={message.message_id}
@@ -855,12 +964,13 @@ const UserChat = ({ admin }) => {
                       ) : (
                         <AIMessage key={message.message_id} message={message.message_content} />
                       )
-                    )}
-                    {isAItyping &&
-                      currentSessionId &&
-                      session?.session_id &&
-                      currentSessionId === session.session_id && <TypingIndicator />}
-                    <div ref={messagesEndRef} />
+                    )
+                  )}
+                  {isAItyping &&
+                    currentSessionId &&
+                    session?.session_id &&
+                    currentSessionId === session.session_id && <TypingIndicator />}
+                  <div ref={messagesEndRef} />
                   </div>
 
                   {/* Input Area */}

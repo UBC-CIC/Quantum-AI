@@ -102,9 +102,19 @@ def handler(event, context):
                 "engagement_type" varchar
             );
 
+            CREATE TABLE IF NOT EXISTS "User_Session_Engagement_Log" (
+                "log_id" uuid PRIMARY KEY DEFAULT (uuid_generate_v4()),
+                "user_id" uuid,
+                "session_id" uuid,
+                "timestamp" timestamp,
+                "engagement_type" varchar
+            );
+
             ALTER TABLE "User_Engagement_Log" ADD FOREIGN KEY ("user_id") REFERENCES "Users" ("user_id") ON DELETE CASCADE ON UPDATE CASCADE;
             ALTER TABLE "User_Engagement_Log" ADD FOREIGN KEY ("topic_id") REFERENCES "Topics" ("topic_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+            ALTER TABLE "User_Session_Engagement_Log" ADD FOREIGN KEY ("user_id") REFERENCES "Users" ("user_id") ON DELETE CASCADE ON UPDATE CASCADE;
+            
             ALTER TABLE "Sessions" ADD FOREIGN KEY ("topic_id") REFERENCES "Topics" ("topic_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
             ALTER TABLE "Messages" ADD FOREIGN KEY ("session_id") REFERENCES "Sessions" ("session_id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -259,6 +269,11 @@ def handler(event, context):
         cursor.execute(sql)
         print(cursor.fetchall())
 
+        sql = """
+            SELECT * FROM "User_Session_Engagement_Log";
+        """
+        cursor.execute(sql)
+        print(cursor.fetchall())
 
         # Close cursor and connection
         cursor.close()

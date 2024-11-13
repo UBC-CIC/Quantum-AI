@@ -552,6 +552,61 @@ exports.handler = async (event) => {
             response.body = JSON.stringify({ error: "session_id is required" });
           }
           break;
+        case "POST /user/create_user_session_engagement_log":
+          if (
+            event.queryStringParameters != null &&
+            event.queryStringParameters.session_id &&
+            event.queryStringParameters.email &&
+            event.queryStringParameters.engagement_type
+          ) {
+            const sessionId = event.queryStringParameters.session_id;
+            const userEmail = event.queryStringParameters.email;
+            const engagementType = event.queryStringParameters.engagement_type;
+  
+            try {
+              // Step 1: Get the user ID using the user_email
+              const userResult = await sqlConnection`
+                    SELECT user_id
+                    FROM "Users"
+                    WHERE user_email = ${userEmail}
+                    LIMIT 1;
+                `;
+  
+              if (userResult.length === 0) {
+                response.statusCode = 404;
+                response.body = JSON.stringify({
+                  error: "User not found.",
+                });
+                break;
+              }
+  
+              const userId = userResult[0].user_id;
+  
+              // Step 2: Insert an entry into the User_Engagement_Log
+              const result = await sqlConnection`
+                    INSERT INTO "User_Session_Engagement_Log" (log_id, user_id, session_id, timestamp, engagement_type)
+                    VALUES (
+                      uuid_generate_v4(),
+                      ${userId},
+                      ${sessionId},
+                      CURRENT_TIMESTAMP,
+                      ${engagementType}
+                    )
+                  `;
+  
+              response.body = JSON.stringify(result);
+            } catch (err) {
+              response.statusCode = 500;
+              console.error(err);
+              response.body = JSON.stringify({ error: "Internal server error" });
+            }
+          } else {
+            response.statusCode = 400;
+            response.body = JSON.stringify({
+              error: "Invalid value",
+            });
+          }
+          break;
       default:
         throw new Error(`Unsupported route: "${pathData}"`);
     }
