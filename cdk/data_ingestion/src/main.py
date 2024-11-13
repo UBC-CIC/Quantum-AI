@@ -224,7 +224,7 @@ def update_vectorstore_from_s3(bucket, topic_id):
     """
     cur.execute(select_query, ("General",))
 
-    general_topic_id = cur.fetchone()
+    general_topic_id = cur.fetchone()[0]
 
     vectorstore_general_topic_dict = {
         "collection_name": general_topic_id,
