@@ -61,12 +61,17 @@ const AdminAnalytics = () => {
           }
         );
         if (response.ok) {
-          const analytics_data = await response.json();
-          console.log("analytics_data", analytics_data);
-          setData(analytics_data);
-          const graphDataFormatted = analytics_data.map((topic) => ({
+          const analyticsData = await response.json();
+          const sortedAnalyticsData = analyticsData.sort((a, b) => {
+            if (a.topic_name === "General") return -1; // Move "General" to the top
+            if (b.topic_name === "General") return 1;
+            return 0;
+          });
+          console.log("analytics_data", sortedAnalyticsData);
+          setData(sortedAnalyticsData);
+          const graphDataFormatted = sortedAnalyticsData.map((topic) => ({
             module: topic.topic_name,
-            Messages: topic.message_count,
+            Messages: topic.user_message_count,
           }));
           setGraphData(graphDataFormatted);
         } else {
@@ -93,11 +98,10 @@ const AdminAnalytics = () => {
   };
 
   function formatTime(seconds) {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
+    const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.round(seconds % 60);
     
-    return `${hours}h ${minutes}m ${remainingSeconds}s`;
+    return `${minutes}m ${remainingSeconds}s`;
   }
 
   return (
@@ -136,12 +140,12 @@ const AdminAnalytics = () => {
                   paddingLeft={10}
                   padding={2}
                 >
-                  Message Count
+                  User Message Count
                 </Typography>
                 {graphData.length > 0 ? (
                   <LineChart
-                    width={900}
-                    height={300}
+                    width={1000}
+                    height={400}
                     data={graphData}
                     margin={{
                       top: 5,
@@ -197,7 +201,7 @@ const AdminAnalytics = () => {
 
             {value === 0 ? (
               data.length > 0 ? (
-                <Box mt={2}>
+                <Box mt={2} mb={4}>
                   {data.map((topic, index) => (
                     <Accordion key={index}>
                       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -207,13 +211,18 @@ const AdminAnalytics = () => {
                         <Box width="100%">
                           <Grid
                             container
-                            spacing={1}
+                            justifyContent="space-between" // Add space between grid items
                             alignItems="center"
                             direction="row"
+                            sx={{ px: 4, py: 2 }} // Adds padding on the left and right
                           >
                             <Grid item>
-                              <Typography variant="subtitle2">Message Count</Typography>
-                              <Typography variant="subtitle2">{topic.message_count}</Typography>
+                              <Typography variant="subtitle2">User Message Count</Typography>
+                              <Typography variant="subtitle2">{topic.user_message_count}</Typography>
+                            </Grid>
+                            <Grid item>
+                              <Typography variant="subtitle2">AI Message Count</Typography>
+                              <Typography variant="subtitle2">{topic.ai_message_count}</Typography>
                             </Grid>
                             <Grid item>
                               <Typography variant="subtitle2">Average Session Time</Typography>

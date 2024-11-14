@@ -217,7 +217,7 @@ exports.handler = async (event) => {
             try {
               // Query to get all topics related to the given topic_id and their message counts, filtering by user role
               const messageCreations = await sqlConnectionTableCreator`
-                  SELECT t.topic_id, t.topic_name, COUNT(DISTINCT m.message_id) AS message_count
+                  SELECT t.topic_id, t.topic_name, COUNT(DISTINCT CASE WHEN m.user_sent = true THEN m.message_id END) AS user_message_count, COUNT(DISTINCT CASE WHEN m.user_sent = false THEN m.message_id END) AS ai_message_count
                   FROM "Topics" t
                   LEFT JOIN "Sessions" s ON t.topic_id = s.topic_id
                   LEFT JOIN "Messages" m ON s.session_id = m.session_id
@@ -278,7 +278,8 @@ exports.handler = async (event) => {
                         const endLog = stack[i];
                         if (endLog.session_id === session_id) {
                             // Calculate session duration
-                            const duration = (new Date(timestamp) - new Date(endLog.timestamp)) / 1000; // in seconds
+                            const calculatedDuration = (new Date(timestamp) - new Date(endLog.timestamp)) / 1000; // in seconds
+                            const duration = Math.min(calculatedDuration, 3600); // Cap at 3600 seconds (60 minutes)
                             if (sessionDurations.has(session_id)) {
                                 sessionDurations.set(session_id, sessionDurations.get(session_id) + duration);
                             } else {
@@ -360,7 +361,8 @@ exports.handler = async (event) => {
                   return {
                       topic_id: topic.topic_id,
                       topic_name: topic.topic_name,
-                      message_count: topic.message_count || 0,
+                      user_message_count: topic.user_message_count || 0,
+                      ai_message_count: topic.ai_message_count || 0,
                       sessions_created: sessionsCreated.session_creation_count || 0,
                       sessions_deleted: sessionsDeleted.session_deletion_count || 0,
                       average_session_time: avgSessionData.average_session_time || 0,

@@ -30,7 +30,7 @@ const UserMessage = ({ message, isMostRecent, onDelete, hasAiMessageAfter }) => 
       <div className="flex flex-row-reverse items-start">
         {/* Chat Bubble for Bot Message */}
         <div
-          className="ml-4 mr-2 p-4 bg-gray-100 text-black rounded-xl shadow-md text-left"
+          className="ml-4 mr-2 p-4 bg-gray-200 text-black rounded-xl shadow-md text-left"
           style={{ maxWidth: "60vw", wordWrap: "break-word" }}
         >
           {message.split("```").map((part, index) => {

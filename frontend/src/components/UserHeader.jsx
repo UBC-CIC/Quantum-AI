@@ -46,7 +46,7 @@ const UserHeader = ({ admin = false }) => {
             <FaCog size={40} className={`${isSpinning ? "slow-spin" : ""}`} />
           </button>
           <div
-            className={`absolute right-6 w-60 bg-[#1E1818] rounded shadow-lg z-10 opacity-80 transition-all duration-300 ease-in-out transform ${
+            className={`absolute z-50 right-6 w-60 bg-[#1E1818] rounded shadow-lg z-10 opacity-80 transition-all duration-300 ease-in-out transform ${
               isDropdownOpen ? "scale-100" : "scale-0 pointer-events-none"
             }`}
           >

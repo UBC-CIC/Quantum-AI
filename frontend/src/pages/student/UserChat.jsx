@@ -826,7 +826,7 @@ const UserChat = ({ admin }) => {
                     New Chat
                     <FaChevronDown className="ml-2" />
                 </div>
-                <div className={`absolute left-0 top-full w-full bg-[#212427] bg-opacity-85 text-white overflow-hidden transition-all duration-100 ease-in-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
+                <div className={`absolute left-0 top-full w-full z-50 bg-[#212427] bg-opacity-90 text-white overflow-hidden transition-all duration-100 ease-in-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
                       onMouseEnter={() => setIsOpen(true)} // Set to true on hover
                       onMouseLeave={() => setIsOpen(false)} // Set to false when not hovering
                 >
@@ -834,7 +834,7 @@ const UserChat = ({ admin }) => {
                     topics.map((topic, index) => (
                       <div
                         key={index}
-                        className="px-4 py-2 hover:bg-[#212427] text-left cursor-pointer"
+                        className="px-4 py-2 hover:bg-gray-600 text-left cursor-pointer"
                         onClick={() => {
                           if (!creatingSession) {
                             setCreatingSession(true);
