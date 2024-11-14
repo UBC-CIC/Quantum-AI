@@ -19,7 +19,9 @@ import {
   Box,
   Typography,
 } from "@mui/material";
-import 'ldrs/quantum'
+import { quantum } from 'ldrs'
+
+quantum.register()
 
 const TypingIndicator = () => (
   <div className="flex items-center ml-20 mb-4">
@@ -37,7 +39,7 @@ const TypingIndicator = () => (
         style={{ animationDelay: "0.4s" }}
       ></div>
     </div> */}
-    <l-quantum size="45" speed="1.75" color="#2E8797" />
+    <l-quantum size="45" speed="1.75" color="#2E8797"></l-quantum>
 
     <span className="ml-2 text-gray-500">Quantum AI is typing...</span>
   </div>
@@ -779,7 +781,7 @@ const UserChat = ({ admin }) => {
             alignItems="center"
             sx={{ height: "100vh", backgroundColor: "#2E8797" }}
           >
-            <l-quantum size="45" speed="1.75" color="white" />
+            <l-quantum size="45" speed="1.75" color="white"></l-quantum>
           </Grid>
         ) : (
           <>

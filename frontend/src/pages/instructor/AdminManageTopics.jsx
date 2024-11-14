@@ -9,7 +9,9 @@ import {
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UserHeader from "../../components/UserHeader";
-import 'ldrs/quantum'
+import { quantum } from 'ldrs'
+
+quantum.register()
 
 function titleCase(str) {
   if (typeof str !== 'string') {
@@ -115,7 +117,7 @@ const AdminManageTopics = () => {
             alignItems="center"
             sx={{ height: "100vh", backgroundColor: "#2E8797" }}
           >
-            <l-quantum size="45" speed="1.75" color="white" />
+            <l-quantum size="45" speed="1.75" color="white"></l-quantum>
           </Grid>
         ) : (
           <Box

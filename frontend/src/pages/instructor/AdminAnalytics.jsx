@@ -22,7 +22,9 @@ import {
   Legend,
 } from "recharts";
 import UserHeader from "../../components/UserHeader";
-import 'ldrs/quantum'
+import { quantum } from 'ldrs'
+
+quantum.register()
 
 function titleCase(str) {
   if (typeof str !== "string") {
@@ -114,7 +116,7 @@ const AdminAnalytics = () => {
             alignItems="center"
             sx={{ height: "100vh", backgroundColor: "#2E8797" }}
           >
-            <l-quantum size="45" speed="1.75" color="white" />
+            <l-quantum size="45" speed="1.75" color="white"></l-quantum>
           </Grid>
         ) : (
           <Box

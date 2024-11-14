@@ -20,7 +20,9 @@ import {
 } from "@mui/material";
 import PageContainer from "../Container";
 import FileManagement from "../../components/FileManagement";
-import 'ldrs/quantum'
+import { quantum } from 'ldrs'
+
+quantum.register()
 
 function titleCase(str) {
   if (typeof str !== "string") {
@@ -449,7 +451,7 @@ const AdminEditTopic = () => {
     alignItems="center"
     sx={{ height: "100vh", backgroundColor: "#2E8797" }}
   >
-    <l-quantum size="45" speed="1.75" color="white" />
+    <l-quantum size="45" speed="1.75" color="white"></l-quantum>
   </Grid>;
 
   return (
