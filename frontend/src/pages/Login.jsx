@@ -194,6 +194,8 @@ export const Login = () => {
   // user gets new password
   const handleNewUserPassword = async (event) => {
     event.preventDefault();
+    const firstName = event.target.firstName.value;
+    const lastName = event.target.lastName.value;
     const newPassword = event.target.newPassword.value;
     const confirmNewPassword = event.target.confirmNewPassword.value;
 
@@ -224,6 +226,32 @@ export const Login = () => {
       });
       console.log("User logged in:", user.isSignedIn, user.nextStep.signInStep);
       if (user.isSignedIn) {
+        // Send user data to backend
+        const session = await fetchAuthSession();
+        const token = session.tokens.idToken
+
+        const response = await fetch(
+          `${
+            import.meta.env.VITE_API_ENDPOINT
+          }user/create_user?user_email=${encodeURIComponent(
+            username
+          )}&username=${encodeURIComponent(
+            username
+          )}&first_name=${encodeURIComponent(
+            firstName
+          )}&last_name=${encodeURIComponent(
+            lastName
+          )}&preferred_name=${encodeURIComponent(firstName)}`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: token,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        const data = await response.json();
+        console.log("Response from backend:", data);
         window.location.reload();
       }
     } catch (error) {
@@ -693,10 +721,22 @@ export const Login = () => {
                 New User
               </Typography>
               <p className="text-sm">
-                Please enter a new password for your account.
+                Please enter a name and new password for your account.
               </p>
               <div className="flex flex-col items-center justify-center">
                 <form onSubmit={handleNewUserPassword}>
+                  <input
+                    className="input input-bordered mt-1 h-10 w-full text-xs bg-gray-200 border border-gray-400 rounded pl-2"
+                    name="firstName"
+                    placeholder="First Name"
+                    required
+                  />
+                  <input
+                    className="input input-bordered mt-1 h-10 w-full text-xs bg-gray-200 border border-gray-400 rounded pl-2"
+                    name="lastName"
+                    placeholder="Last Name"
+                    required
+                  />
                   <input
                     className="input input-bordered mt-1 h-10 w-full text-xs bg-gray-200 border border-gray-400 rounded pl-2"
                     name="newPassword"
@@ -723,7 +763,7 @@ export const Login = () => {
                     color="primary"
                     sx={{ mt: 3, mb: 2, backgroundColor: "#2E8797", "&:hover": { backgroundColor: "#1b5f6e" } }}
                   >
-                    Submit New Password
+                    Submit
                   </Button>
                 </form>
               </div>
