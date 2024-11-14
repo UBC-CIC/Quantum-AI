@@ -9,6 +9,7 @@ import {
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UserHeader from "../../components/UserHeader";
+import 'ldrs/quantum'
 
 function titleCase(str) {
   if (typeof str !== 'string') {

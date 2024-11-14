@@ -22,6 +22,7 @@ import {
   Legend,
 } from "recharts";
 import UserHeader from "../../components/UserHeader";
+import 'ldrs/quantum'
 
 function titleCase(str) {
   if (typeof str !== "string") {

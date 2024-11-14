@@ -20,6 +20,7 @@ import {
 } from "@mui/material";
 import PageContainer from "../Container";
 import FileManagement from "../../components/FileManagement";
+import 'ldrs/quantum'
 
 function titleCase(str) {
   if (typeof str !== "string") {

@@ -19,6 +19,7 @@ import {
   Box,
   Typography,
 } from "@mui/material";
+import 'ldrs/quantum'
 
 const TypingIndicator = () => (
   <div className="flex items-center ml-20 mb-4">
