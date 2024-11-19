@@ -8,15 +8,15 @@
 
 1. The user sends a request to the application hosted on AWS Amplify.
 2. Amplify integrates with the backend API Gateway.
-3. Instructors can upload course materials to the application, which are stored in an S3 bucket using a pre-signed upload URL.
-4. Adding a new course file to the S3 bucket triggers the data ingestion workflow. The Lambda function runs a Docker container with Amazon Elastic Container Registry (ECR). 
+3. Instructors can upload topic materials to the application, which are stored in an S3 bucket using a pre-signed upload URL.
+4. Adding a new topic file to the S3 bucket triggers the data ingestion workflow. The Lambda function runs a Docker container with Amazon Elastic Container Registry (ECR). 
 5. The Lambda function embeds the text from uploaded files into vectors using Amazon Bedrock. This project uses the Amazon Titan Text Embeddings V2 model to generate embeddings.
 6. The lambda function stores the vectors in the PostgreSQL database.
-7. Users can perform course management/access actions by sending an API request which invokes a lambda function.
+7. Users can perform topic management/access actions by sending an API request which invokes a lambda function.
 8. This lambda function interacts with Amazon RDS.
 9. Users can start chatting with the LLM by sending an API request that invokes the Lambda function to generate a response. The Lambda function runs a Docker container with Amazon ECR.
 10. The lambda function stores the embedded messages in Amazon DynamoDB
-11. This lambda function uses RAG architecture to retrieve the response from LLMs hosted on Amazon Bedrock augmented with the course's information stored in the Amazon RDS.
+11. This lambda function uses RAG architecture to retrieve the response from LLMs hosted on Amazon Bedrock augmented with the topic's information stored in the Amazon RDS.
 
 ## Database Schema
 

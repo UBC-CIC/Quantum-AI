@@ -8,7 +8,7 @@
     - [Create GitHub Personal Access Token](#create-github-personal-access-token)
   - [Deployment](#deployment)
     - [Step 1: Fork \& Clone The Repository](#step-1-fork--clone-the-repository)
-    - [Step 2: Upload Secrets](#step-2-upload-secrets)
+    - [Step 2: Upload Secrets and Parameters](#step-2-upload-secrets-and-parameters)
     - [Step 3: CDK Deployment](#step-3-cdk-deployment)
   - [Post-Deployment](#post-deployment)
     - [Step 1: Build AWS Amplify App](#step-1-build-aws-amplify-app)
@@ -50,14 +50,14 @@ Now let's clone the GitHub repository onto your machine. To do this:
 2. For an Apple computer, open Terminal. If on a Windows machine, open Command Prompt or Windows Terminal. Enter into the folder you made using the command `cd path/to/folder`. To find the path to a folder on a Mac, right click on the folder and press `Get Info`, then select the whole text found under `Where:` and copy with ⌘C. On Windows (not WSL), enter into the folder on File Explorer and click on the path box (located to the left of the search bar), then copy the whole text that shows up.
 3. Clone the GitHub repository by entering the following command. Be sure to replace `<YOUR-GITHUB-USERNAME>` with your own username.
 ```
-git clone https://github.com/<YOUR-GITHUB-USERNAME>/AI-Learning-Assistant.git
+git clone https://github.com/<YOUR-GITHUB-USERNAME>/Quantum-AI.git
 ```
 The code should now be in the folder you created. Navigate into the root folder containing the entire codebase by running the command:
 ```
-cd AI-Learning-Assistant
+cd Quantum-AI
 ```
 
-### Step 2: Upload Secrets
+### Step 2: Upload Secrets and Parameters
 You would have to supply your GitHub personal access token you created eariler when dpeloying the solution. Run the following command and ensure you replace `<YOUR-GITHUB-TOKEN>` and `<YOUR-PROFILE-NAME>` with your actual GitHub token and the appropriate AWS profile name.
 ```
 aws secretsmanager create-secret \
@@ -70,7 +70,7 @@ Moreover, you will need to upload your github username to Amazon SSM Parameter S
 
 ```
 aws ssm put-parameter \
-    --name "aila-owner-name" \
+    --name "quantumAI-owner-name" \
     --value "<YOUR-GITHUB-USERNAME>" \
     --type String \
     --profile <YOUR-PROFILE-NAME>
@@ -80,7 +80,7 @@ You would have to supply a custom database username when deploying the solution 
 
 ```
 aws secretsmanager create-secret \
-    --name AILASecrets \
+    --name QuantumAISecrets \
     --secret-string '{\"DB_Username\":\"<YOUR-DB-USERNAME>\"}'\
     --profile <your-profile-name>
 ```
@@ -89,14 +89,35 @@ For example,
 
 ```
 aws secretsmanager create-secret \
-    --name AILASecrets \
-    --secret-string '{\"DB_Username\":\"AILASecrets\"}'\
+    --name QuantumAISecrets \
+    --secret-string '{\"DB_Username\":\"QuantumAISecrets\"}'\
     --profile <your-profile-name>
 ```
+
+Finally, in order to restrict user sign up to specific email domains, you will need to upload a comma separated list of allowed email domains to Amazon SSM Parameter Store. You can do so by running the following command. Make sure you replace `<YOUR-ALLOWED-EMAIL-DOMAIN-LIST>` and `<YOUR-PROFILE-NAME>` with your actual list and the appropriate AWS profile name.
+
+```
+aws ssm put-parameter \
+    --name "/QuantumAI/AllowedEmailDomains" \
+    --value "<YOUR-ALLOWED-EMAIL-DOMAIN-LIST>" \
+    --type SecureString \
+    --profile <YOUR-PROFILE-NAME>
+```
+
+For example,
+
+```
+aws ssm put-parameter \
+    --name "/QuantumAI/AllowedEmailDomains" \
+    --value "gmail.com,ubc.ca" \
+    --type SecureString \
+    --profile <YOUR-PROFILE-NAME>
+```
+
 ### Step 3: CDK Deployment
 It's time to set up everything that goes on behind the scenes! For more information on how the backend works, feel free to refer to the Architecture Deep Dive, but an understanding of the backend is not necessary for deployment.
 
-Open a terminal in the `/backend` directory.
+Open a terminal in the `/cdk` directory.
 
 **Download Requirements**: Install requirements with npm by running `npm install` command.
 
@@ -110,22 +131,21 @@ cdk bootstrap aws://<YOUR_AWS_ACCOUNT_ID>/<YOUR_ACCOUNT_REGION> --profile <your-
 **Deploy CDK stack**
 You may run the following command to deploy the stacks all at once. Again, replace `<your-profile-name>` with the appropriate AWS profile used earlier.
 ```
-cdk deploy --all --parameters AmplifyStack:githubRepoName=AI-LEARNING-ASSISTANT --profile <your-profile-name>
+cdk deploy --all --profile <your-profile-name>
 ```
-If you have trouble running the above command, try removing all the \ and run it in one line.
 
 ## Post-Deployment
 ### Step 1: Build AWS Amplify App
 
 1. Log in to AWS console, and navigate to **AWS Amplify**. You can do so by typing `Amplify` in the search bar at the top.
-2. From `All apps`, click `aila-amplify`.
+2. From `All apps`, click `quantumAI-amplify`.
 3. Then click `main` under `branches`
 4. Click `run job` and wait for the build to complete.
 5. You now have access to the `Amplify App ID` and the public domain name to use the web app.
 
 ### Step 2: Change Redirects
 
-1. Click back to navigate to `aila-amplify/Overview`
+1. Click back to navigate to `quamtumAI-amplify/Overview`
 2. In the left side bar click   `Rewrites and Redirects` under `Hosting`
 3. Click `manage redirects` on the top right
 4. Click `add rewrite`
