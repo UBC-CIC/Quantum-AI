@@ -610,6 +610,11 @@ export class ApiGatewayStack extends cdk.Stack {
       })
     );
 
+    coglambdaRole.addToPolicy(new iam.PolicyStatement({
+        actions: ['ssm:GetParameter'],
+        resources: [`arn:aws:ssm:${this.region}:${this.account}:parameter/*`]
+    }));
+
     const AutoSignupLambda = new lambda.Function(this, "addUserOnSignUp", {
       runtime: lambda.Runtime.NODEJS_20_X,
       code: lambda.Code.fromAsset("lambda/lib"),
@@ -641,6 +646,26 @@ export class ApiGatewayStack extends cdk.Stack {
       layers: [postgres],
       role: coglambdaRole,
     });
+
+    const preSignupLambda = new lambda.Function(this, "preSignupLambda", {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      code: lambda.Code.fromAsset("lambda/lib"),
+      handler: "preSignup.handler",
+      timeout: Duration.seconds(300),
+      environment: {
+          ALLOWED_EMAIL_DOMAINS: '/QuantumAI/AllowedEmailDomains',
+      },
+      vpc: vpcStack.vpc,
+      functionName: "preSignupLambda",
+      memorySize: 128,
+      role: coglambdaRole,
+    });
+    
+    this.userPool.addTrigger(
+        cognito.UserPoolOperation.PRE_SIGN_UP,
+        preSignupLambda
+    );
+  
 
     this.userPool.addTrigger(
       cognito.UserPoolOperation.POST_AUTHENTICATION,
