@@ -17,7 +17,6 @@ import * as cognito from "aws-cdk-lib/aws-cognito";
 import { CfnJson } from "aws-cdk-lib";
 import { VpcStack } from "./vpc-stack";
 import { DatabaseStack } from "./database-stack";
-//import { parse, stringify } from "yaml";
 import { Fn } from "aws-cdk-lib";
 import { Asset } from "aws-cdk-lib/aws-s3-assets";
 import * as s3 from "aws-cdk-lib/aws-s3";
@@ -275,34 +274,6 @@ export class ApiGatewayStack extends cdk.Stack {
       })
     );
 
-    // const techAdminRole = new iam.Role(this, "TechAdminRole", {
-    //   assumedBy: new iam.FederatedPrincipal(
-    //     "cognito-identity.amazonaws.com",
-    //     {
-    //       StringEquals: {
-    //         "cognito-identity.amazonaws.com:aud": this.identityPool.ref,
-    //       },
-    //       "ForAnyValue:StringLike": {
-    //         "cognito-identity.amazonaws.com:amr": "authenticated",
-    //       },
-    //     },
-    //     "sts:AssumeRoleWithWebIdentity"
-    //   ),
-    // });
-
-    // techAdminRole.attachInlinePolicy(
-    //   new iam.Policy(this, "TechAdminPolicy", {
-    //     statements: [
-    //       createPolicyStatement(
-    //         ["execute-api:Invoke"],
-    //         [
-    //           `arn:aws:execute-api:${this.region}:${this.account}:${this.api.restApiId}/*`,
-    //         ]
-    //       ),
-    //     ],
-    //   })
-    // );
-
     // Create Cognito user pool groups
     const userGroup = new cognito.CfnUserPoolGroup(this, "UserGroup", {
       groupName: "user",
@@ -315,16 +286,6 @@ export class ApiGatewayStack extends cdk.Stack {
       userPoolId: this.userPool.userPoolId,
       roleArn: adminRole.roleArn,
     });
-
-    // const techAdminGroup = new cognito.CfnUserPoolGroup(
-    //   this,
-    //   "TechAdminGroup",
-    //   {
-    //     groupName: "techadmin",
-    //     userPoolId: this.userPool.userPoolId,
-    //     roleArn: techAdminRole.roleArn,
-    //   }
-    // );
 
     // Create unauthenticated role with no permissions
     const unauthenticatedRole = new iam.Role(this, "UnauthenticatedRole", {
@@ -451,38 +412,6 @@ export class ApiGatewayStack extends cdk.Stack {
     const cfnLambda_user = lambdaUserFunction.node
       .defaultChild as lambda.CfnFunction;
     cfnLambda_user.overrideLogicalId("userFunction");
-
-    // const lambdaInstructorFunction = new lambda.Function(
-    //   this,
-    //   "instructorFunction",
-    //   {
-    //     runtime: lambda.Runtime.NODEJS_20_X,
-    //     code: lambda.Code.fromAsset("lambda/lib"),
-    //     handler: "instructorFunction.handler",
-    //     timeout: Duration.seconds(300),
-    //     vpc: vpcStack.vpc,
-    //     environment: {
-    //       SM_DB_CREDENTIALS: db.secretPathUser.secretName,
-    //       RDS_PROXY_ENDPOINT: db.rdsProxyEndpoint,
-    //       USER_POOL: this.userPool.userPoolId,
-    //     },
-    //     functionName: "instructorFunction",
-    //     memorySize: 512,
-    //     layers: [postgres],
-    //     role: lambdaRole,
-    //   }
-    // );
-
-    // // Add the permission to the Lambda function's policy to allow API Gateway access
-    // lambdaInstructorFunction.addPermission("AllowApiGatewayInvoke", {
-    //   principal: new iam.ServicePrincipal("apigateway.amazonaws.com"),
-    //   action: "lambda:InvokeFunction",
-    //   sourceArn: `arn:aws:execute-api:${this.region}:${this.account}:${this.api.restApiId}/*/*/instructor*`,
-    // });
-
-    // const cfnLambda_Instructor = lambdaInstructorFunction.node
-    //   .defaultChild as lambda.CfnFunction;
-    // cfnLambda_Instructor.overrideLogicalId("instructorFunction");
 
     const lambdaAdminFunction = new lambda.Function(this, "adminFunction", {
       runtime: lambda.Runtime.NODEJS_20_X,
@@ -673,21 +602,16 @@ export class ApiGatewayStack extends cdk.Stack {
     );
 
     //cognito auto assign authenticated users to the user group
-
     this.userPool.addTrigger(
       cognito.UserPoolOperation.POST_CONFIRMATION,
       AutoSignupLambda
     );
 
-    // const authorizer = new apigateway.CognitoUserPoolsAuthorizer(this, 'ailaAuthorizer', {
-    //   cognitoUserPools: [this.userPool],
-    // });
     new cdk.CfnOutput(this, "UserPoolIdOutput", {
       value: this.userPool.userPoolId,
       description: "The ID of the Cognito User Pool",
     });
 
-    // **
     //  *
     //  * Create Lambda for Admin Authorization endpoints
     //  */
@@ -754,41 +678,6 @@ export class ApiGatewayStack extends cdk.Stack {
     apiGW_authorizationFunction_user.overrideLogicalId(
       "userLambdaAuthorizer"
     );
-
-    // /**
-    //  *
-    //  * Create Lambda for User Authorization endpoints
-    //  */
-    // const authorizationFunction_instructor = new lambda.Function(
-    //   this,
-    //   "instructor-authorization-api-gateway",
-    //   {
-    //     runtime: lambda.Runtime.NODEJS_20_X,
-    //     code: lambda.Code.fromAsset("lambda/instructorAuthorizerFunction"),
-    //     handler: "instructorAuthorizerFunction.handler",
-    //     timeout: Duration.seconds(300),
-    //     vpc: vpcStack.vpc,
-    //     environment: {
-    //       SM_COGNITO_CREDENTIALS: this.secret.secretName,
-    //     },
-    //     functionName: "instructorLambdaAuthorizer",
-    //     memorySize: 512,
-    //     layers: [jwt],
-    //     role: lambdaRole,
-    //   }
-    // );
-
-    // // Add the permission to the Lambda function's policy to allow API Gateway access
-    // authorizationFunction_instructor.grantInvoke(
-    //   new iam.ServicePrincipal("apigateway.amazonaws.com")
-    // );
-
-    // // Change Logical ID to match the one decleared in YAML file of Open API
-    // const apiGW_authorizationFunction_instructor =
-    //   authorizationFunction_instructor.node.defaultChild as lambda.CfnFunction;
-    // apiGW_authorizationFunction_instructor.overrideLogicalId(
-    //   "instructorLambdaAuthorizer"
-    // );
 
     // Create parameters for Bedrock LLM ID, Embedding Model ID, and Table Name in Parameter Store
     const bedrockLLMParameter = new ssm.StringParameter(this, "BedrockLLMParameter", {

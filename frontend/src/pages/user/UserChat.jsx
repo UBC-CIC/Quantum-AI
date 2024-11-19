@@ -10,11 +10,6 @@ import { GoSidebarExpand, GoSidebarCollapse } from "react-icons/go";
 import { IoSend } from "react-icons/io5";
 import logo from "../../assets/logo.png";
 import {
-  Button,
-  CssBaseline,
-  TextField,
-  Link,
-  Paper,
   Grid,
   Box,
   Typography,
@@ -25,22 +20,7 @@ quantum.register()
 
 const TypingIndicator = () => (
   <div className="flex items-center ml-20 mb-4">
-    {/* <div className="flex space-x-1">
-      <div
-        className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
-        style={{ animationDelay: "0s" }}
-      ></div>
-      <div
-        className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
-        style={{ animationDelay: "0.2s" }}
-      ></div>
-      <div
-        className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
-        style={{ animationDelay: "0.4s" }}
-      ></div>
-    </div> */}
     <l-quantum size="45" speed="1.75" color="#2E8797"></l-quantum>
-
     <span className="ml-2 text-gray-500">Quantum AI is typing...</span>
   </div>
 );
@@ -83,7 +63,6 @@ const UserChat = ({ admin }) => {
   }, [messages]);
 
   useEffect(() => {
-    //console.log("New message:", newMessage);
     if (newMessage !== null) {
       if (currentSessionId === session.session_id) {
         setMessages((prevItems) => [...prevItems, newMessage]);
@@ -193,14 +172,7 @@ const UserChat = ({ admin }) => {
         );
         if (response.ok) {
           const data = await response.json();
-          //console.log("Sessions:", data);
           setSessions(data);
-          //set previous session to second last session if there is one
-          // console.log("Checking Sessions:", data);
-          // if (data.length > 1) {
-          //   console.log("Setting previous session:", data[data.length - 2]);
-          //   setPreviousSession(data[data.length - 2]);
-          // }
           setSession(data[data.length - 1]);
         } else {
           console.error("Failed to fetch sessions:", response.statusText);
@@ -414,16 +386,12 @@ const UserChat = ({ admin }) => {
           ...prevSession,
           session_name: textGenData.session_name,
         }));
-        //console.log("TextGenData:", textGenData);
-        //console.log("NewSession:", newSession);
 
         const updateSessionName = `${
           import.meta.env.VITE_API_ENDPOINT
         }user/update_session_name?session_id=${encodeURIComponent(
           newSession.session_id
         )}`;
-
-        //console.log("Update session name:", updateSessionName);
 
         setSessions((prevSessions) => {
           return prevSessions.map((s) =>
@@ -448,8 +416,6 @@ const UserChat = ({ admin }) => {
         ]);
       })
       .then(([response1, response2]) => {
-        //console.log("Response1:", response1);
-        //console.log("Response2:", response2);
         if (!response1.ok) {
           throw new Error("Failed to fetch endpoints");
         }
@@ -461,14 +427,6 @@ const UserChat = ({ admin }) => {
         );
       })
       .catch((error) => {
-        // const simulatedMessage = {
-        //   message_id: "00000000-0000-0000-0000-000000000000", // Placeholder UUID
-        //   session_id: "11111111-1111-1111-1111-111111111111", // Placeholder UUID
-        //   user_sent: false,
-        //   message_content: "The Stewart Blusson Quantum Matter Institute (Blusson QMI) is the first Global Research Excellence (GREx) Institute at the University of British Columbia. Their investigators are collaborative theorists and experimentalists working together across departments and disciplines to identify, classify and explore quantum materials and phenomena, catalyzing the discovery and design of the quantum technologies of the future.",
-        //   time_sent: new Date().toISOString(), // Current timestamp
-        // };
-        // setNewMessage(simulatedMessage);
         setIsSubmitting(false);
         setIsAItyping(false);
         console.error("Error:", error);
@@ -490,7 +448,6 @@ const UserChat = ({ admin }) => {
     let sessionData;
     let userEmail;
     let authToken;
-    //setIsAItyping(true);
     return fetchAuthSession()
       .then((session) => {
         authToken = session.tokens.idToken
@@ -535,26 +492,13 @@ const UserChat = ({ admin }) => {
         setCreatingSession(false);
       })
       .catch((error) => {
-        // const simulatedMessage = {
-        //   message_id: "00000000-0000-0000-0000-000000000000", // Placeholder UUID
-        //   session_id: "11111111-1111-1111-1111-111111111111", // Placeholder UUID
-        //   user_sent: false,
-        //   message_content: "Hello, welcome to Quantum AI!",
-        //   time_sent: new Date().toISOString(), // Current timestamp
-        // };
-        // setNewMessage(simulatedMessage);
         console.error("Error creating new chat:", error);
         setCreatingSession(false);
-        //setIsAItyping(false);
       })
-      // .finally(() => {
-      //   setIsAItyping(false);
-      // });
   };
 
   const handleDeleteSession = async (sessionDelete) => {
     try {
-      //console.log("Deleting session:", sessionDelete.session_id);
       const authSession = await fetchAuthSession();
       const { email } = await fetchUserAttributes();
       const token = authSession.tokens.idToken;

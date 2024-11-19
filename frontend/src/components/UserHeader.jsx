@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { signOut } from "aws-amplify/auth";
 import { useLocation, useNavigate } from "react-router-dom";
-import { FaSignOutAlt, FaCog, FaCommentDots, FaFileAlt, FaChartBar } from "react-icons/fa";
+import { FaCog, FaCommentDots, FaFileAlt, FaChartBar } from "react-icons/fa";
 
 const UserHeader = ({ admin = false }) => {
   const [isDropdownOpen, setDropdownOpen] = useState(false);

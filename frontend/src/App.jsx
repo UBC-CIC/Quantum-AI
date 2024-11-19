@@ -13,11 +13,11 @@ import {
 import { useEffect, useState, createContext } from "react";
 // pages
 import Login from "./pages/Login";
-import UserChat from "./pages/student/UserChat";
-import AdminManageTopics from "./pages/instructor/AdminManageTopics";
-import AdminEditTopic from "./pages/instructor/AdminEditTopic";
-import AdminNewTopic from "./pages/instructor/AdminNewTopic";
-import AdminAnalytics from "./pages/instructor/AdminAnalytics";
+import UserChat from "./pages/user/UserChat";
+import AdminManageTopics from "./pages/admin/AdminManageTopics";
+import AdminEditTopic from "./pages/admin/AdminEditTopic";
+import AdminNewTopic from "./pages/admin/AdminNewTopic";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
 
 export const UserContext = createContext();
 

@@ -2,7 +2,6 @@ import { useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { fetchAuthSession } from "aws-amplify/auth";
-
 import {
   TextField,
   Button,
