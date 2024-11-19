@@ -315,6 +315,19 @@ exports.handler = async (event) => {
                 }
               }
 
+              const unmatchedSessionStarts = stack.filter(log => log.engagement_type === "session start");
+              
+              // Add 20 minutes (1200 seconds) to the session map for unmatched "session start" logs
+              for (const unmatchedStart of unmatchedSessionStarts) {
+                const { session_id } = unmatchedStart;
+                const defaultDuration = 1200; // 20 minutes in seconds
+                if (sessionDurations.has(session_id)) {
+                    sessionDurations.set(session_id, sessionDurations.get(session_id) + defaultDuration);
+                } else {
+                    sessionDurations.set(session_id, defaultDuration);
+                }
+              }
+
               // Step 3: Delete all unmatched logs (remaining items in the stack)
               const unmatchedLogs = stack.map(log => log.log_id); // Extract log_ids of all unmatched logs
               console.log("Unmatched logs:", unmatchedLogs);
