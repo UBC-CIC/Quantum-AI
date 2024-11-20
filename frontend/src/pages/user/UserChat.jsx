@@ -717,7 +717,7 @@ const UserChat = ({ admin }) => {
   }, [session]);
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen overflow-hidden">
       {loading ? (
           <Grid
             container
@@ -733,7 +733,7 @@ const UserChat = ({ admin }) => {
           <div
             className={`bg-gradient-to-tr from-[#00EEFF] to-[#2E8797] transition-all duration-500 ${
               isSidebarOpen ? "w-[25%]" : "w-16"
-            } flex-shrink-0`}
+            } flex-shrink-0 flex flex-col h-screen`}
           >
             {/* Top Section */}
             <div className="flex items-center justify-between p-4">
@@ -862,7 +862,7 @@ const UserChat = ({ admin }) => {
           </div>
 
           {/* Chat Area */}
-          <div className="flex-grow bg-[#F8F9FD] flex flex-col">
+          <div className="flex-grow bg-[#F8F9FD] flex flex-col h-screen overflow-hidden">
           <div className="w-full">
               <UserHeader admin={admin}/>
             </div>
