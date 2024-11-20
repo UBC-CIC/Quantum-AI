@@ -1,18 +1,35 @@
 # documents.py
 
 ## Table of Contents <a name="table-of-contents"></a>
-- [Script Overview](#script-overview)
-    - [Import Libraries](#import-libraries)
-    - [AWS Configuration and Setup](#aws-configuration-and-setup)
-    - [Helper Functions](#helper-functions)
-    - [Main Functions](#main-functions)
-    - [Execution Flow](#execution-flow)
-- [Detailed Function Descriptions](#detailed-function-descriptions)
-    - [Function: `extract_txt`](#extract_txt)
-    - [Function: `store_doc_texts`](#store_doc_texts)
-    - [Function: `add_document`](#add_document)
-    - [Function: `store_doc_chunks`](#store_doc_chunks)
-    - [Function: `process_documents`](#process_documents)
+- [documents.py](#documentspy)
+  - [Table of Contents ](#table-of-contents-)
+  - [Script Overview ](#script-overview-)
+    - [Import Libraries ](#import-libraries-)
+    - [AWS Configuration and Setup ](#aws-configuration-and-setup-)
+    - [Helper Functions ](#helper-functions-)
+    - [Main Functions ](#main-functions-)
+    - [Execution Flow ](#execution-flow-)
+  - [Detailed Function Descriptions ](#detailed-function-descriptions-)
+    - [Function: `extract_txt` ](#function-extract_txt-)
+      - [Purpose](#purpose)
+      - [Process Flow](#process-flow)
+      - [Inputs and Outputs](#inputs-and-outputs)
+    - [Function: `store_doc_texts` ](#function-store_doc_texts-)
+      - [Purpose](#purpose-1)
+      - [Process Flow](#process-flow-1)
+      - [Inputs and Outputs](#inputs-and-outputs-1)
+    - [Function: `add_document` ](#function-add_document-)
+      - [Purpose](#purpose-2)
+      - [Process Flow](#process-flow-2)
+      - [Inputs and Outputs](#inputs-and-outputs-2)
+    - [Function: `store_doc_chunks` ](#function-store_doc_chunks-)
+      - [Purpose](#purpose-3)
+      - [Process Flow](#process-flow-3)
+      - [Inputs and Outputs](#inputs-and-outputs-3)
+    - [Function: `process_documents` ](#function-process_documents-)
+      - [Purpose](#purpose-4)
+      - [Process Flow](#process-flow-4)
+      - [Inputs and Outputs](#inputs-and-outputs-4)
 
 ## Script Overview <a name="script-overview"></a>
 This script automates the process of extracting text from files stored in an AWS S3 bucket, chunking the text semantically, and storing the processed chunks in a vector store. It supports interaction with AWS S3, PGVector for vectorized document storage, and semantic chunking using LangChain's text splitting methods.
@@ -84,13 +101,12 @@ Extract text from a file in an S3 bucket and return it as a string.
 ```python
 def store_doc_texts(
     bucket: str, 
-    course: str, 
-    module: str,
+    topic: str, 
     filename: str, 
     output_bucket: str
 ) -> List[str]:
     with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-        s3.download_file(bucket, f"{course}/{module}/documents/{filename}", tmp_file.name)
+        s3.download_file(bucket, f"{topic}/documents/{filename}", tmp_file.name)
         doc = pymupdf.open(tmp_file.name)
         output_buffer = BytesIO()
 
@@ -99,13 +115,13 @@ def store_doc_texts(
             output_buffer.write(text)
             output_buffer.write(bytes((12,)))
 
-            page_output_key = f'{course}/{module}/documents/{filename}_page_{page_num}.txt'
+            page_output_key = f'{topic}/documents/{filename}_page_{page_num}.txt'
             page_output_buffer = BytesIO(text)
             s3.upload_fileobj(page_output_buffer, output_bucket, page_output_key)
 
         os.remove(tmp_file.name)
 
-    return [f'{course}/{module}/documents/{filename}_page_{page_num}.txt' for page_num in range(1, len(doc) + 1)]
+    return [f'{topic}/documents/{filename}_page_{page_num}.txt' for page_num in range(1, len(doc) + 1)]
 ```
 #### Purpose
 Extract and store each page of a document as a separate text file in an S3 bucket.
@@ -118,7 +134,7 @@ Extract and store each page of a document as a separate text file in an S3 bucke
 #### Inputs and Outputs
 - **Inputs**:
   - `bucket`: Name of the input S3 bucket containing the document.
-  - `course`, `module`: Folder structure within the S3 bucket.
+  - `topic`: Name of the topic folder in the S3 bucket.
   - `filename`: Name of the document file.
   - `output_bucket`: S3 bucket to store extracted text files.
 - **Outputs**: 
@@ -128,8 +144,7 @@ Extract and store each page of a document as a separate text file in an S3 bucke
 ```python
 def add_document(
     bucket: str, 
-    course: str, 
-    module: str,
+    topic: str, 
     filename: str, 
     vectorstore: PGVector, 
     embeddings: BedrockEmbeddings,
@@ -137,8 +152,7 @@ def add_document(
 ) -> List[Document]:
     output_filenames = store_doc_texts(
         bucket=bucket,
-        course=course,
-        module=module,
+        topic=topic,
         filename=filename,
         output_bucket=output_bucket
     )
@@ -162,7 +176,7 @@ Processes and adds a document's chunks to the vector store.
 #### Inputs and Outputs
 - **Inputs**:
   - `bucket`: Input S3 bucket containing the document.
-  - `course`, `module`: Folder structure within the S3 bucket.
+  - `topic`: Name of the topic folder in the S3 bucket.
   - `filename`: Name of the document file.
   - `vectorstore`: PGVector instance for storing document chunks.
   - `embeddings`: Embeddings instance to generate chunk embeddings.
@@ -191,7 +205,7 @@ def store_doc_chunks(
         doc_chunks = text_splitter.create_documents([doc_texts])
         
         head, _, _ = filename.partition("_page")
-        true_filename = head # Converts 'CourseCode_XXX_-_Course-Name.pdf_page_1.txt' to 'CourseCode_XXX_-_Course-Name.pdf'
+        true_filename = head
         
         doc_chunks = [x for x in doc_chunks if x.page_content]
         
@@ -232,13 +246,13 @@ Processes and stores document chunks in the vector store.
 ```python
 def process_documents(
     bucket: str, 
-    course: str, 
+    topic: str, 
     vectorstore: PGVector, 
     embeddings: BedrockEmbeddings,
     record_manager: SQLRecordManager
 ) -> None:
     paginator = s3.get_paginator('list_objects_v2')
-    page_iterator = paginator.paginate(Bucket=bucket, Prefix=f"{course}/")
+    page_iterator = paginator.paginate(Bucket=bucket, Prefix=f"{topic}/")
     all_doc_chunks = []
     
     for page in page_iterator:
@@ -246,13 +260,11 @@ def process_documents(
             continue  # Skip pages without any content (e.g., if the bucket is empty)
         for file in page['Contents']:
             filename = file['Key']
+            print(f"Processing {filename}")
             if filename.split('/')[-2] == "documents": # Ensures that only files in the 'documents' folder are processed
-                if filename.endswith((".pdf", ".docx", ".pptx", ".txt", ".xlsx", ".xps", ".mobi", ".cbz")):
-                    module = filename.split('/')[1]
                     this_doc_chunks = add_document(
                         bucket=bucket,
-                        course=course,
-                        module=module,
+                        topic=topic,
                         filename=os.path.basename(filename),
                         vectorstore=vectorstore,
                         embeddings=embeddings
@@ -283,7 +295,7 @@ Processes and indexes documents from an S3 bucket, adding them to the vector sto
 #### Inputs and Outputs
 - **Inputs**:
   - `bucket`: S3 bucket containing the documents.
-  - `course`: Folder structure within the S3 bucket.
+  - `topic`: Topic folder in the S3 bucket.
   - `vectorstore`: PGVector instance for storing document chunks.
   - `embeddings`: BedrockEmbeddings instance.
   - `record_manager`: SQLRecordManager instance for managing indexing.

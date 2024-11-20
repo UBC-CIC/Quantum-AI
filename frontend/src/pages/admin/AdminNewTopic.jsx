@@ -92,7 +92,7 @@ export const AdminNewTopic = () => {
 
     // Validation check
     if (!topicName || !prompt) {
-      toast.error("Module Name and Prompt are required.", {
+      toast.error("Topic Name and Prompt are required.", {
         position: "top-center",
         autoClose: 2000,
         hideProgressBar: false,

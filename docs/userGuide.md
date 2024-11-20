@@ -8,8 +8,7 @@ Once you have deployed the solution, the following user guide will help you navi
 | Index    | Description |
 | -------- | ------- |
 | [Administrator View](#admin-view)  | How the Admnistrator views the project | 
-| [Instructor View](#instructor-view)  | How the Instructor views the project |
-| [Student View](#student-view)  | How the Student views the project |
+| [User View](#user-view)  | How the User views the project |
 
 ## Administrator View
 To sign up as an administrator, you need to sign up regularly first as a student:

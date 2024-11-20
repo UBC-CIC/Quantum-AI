@@ -1,18 +1,26 @@
 # helper.py
 
 ## Table of Contents <a name="table-of-contents"></a>
-- [Script Overview](#script-overview)
-  - [Import Libraries](#import-libraries)
-  - [AWS and Database Setup](#aws-and-database-setup)
-  - [Helper Functions](#helper-functions)
-  - [Main Functions](#main-functions)
-  - [Execution Flow](#execution-flow)
-- [Detailed Function Descriptions](#detailed-function-descriptions)
-  - [Function: `get_vectorstore`](#get_vectorstore)
-  - [Function: `store_course_data`](#store_course_data)
+- [helper.py](#helperpy)
+  - [Table of Contents ](#table-of-contents-)
+  - [Script Overview ](#script-overview-)
+    - [Import Libraries ](#import-libraries-)
+    - [AWS and Database Setup ](#aws-and-database-setup-)
+    - [Helper Functions ](#helper-functions-)
+    - [Main Functions ](#main-functions-)
+    - [Execution Flow ](#execution-flow-)
+  - [Detailed Function Descriptions ](#detailed-function-descriptions-)
+    - [Function: `get_vectorstore` ](#function-get_vectorstore-)
+      - [Purpose](#purpose)
+      - [Process Flow](#process-flow)
+      - [Inputs and Outputs](#inputs-and-outputs)
+    - [Function: `store_topic_data` ](#function-store_topic_data-)
+      - [Purpose](#purpose-1)
+      - [Process Flow](#process-flow-1)
+      - [Inputs and Outputs](#inputs-and-outputs-1)
 
 ## Script Overview <a name="script-overview"></a>
-This script is designed to interact with an AWS S3 bucket, process course-related documents, and store the extracted data into a PostgreSQL-based vector store using LangChain. The script supports embedding documents, chunking them, and managing metadata in the vector store.
+This script is designed to interact with an AWS S3 bucket, process topic-related documents, and store the extracted data into a PostgreSQL-based vector store using LangChain. The script supports embedding documents, chunking them, and managing metadata in the vector store.
 
 ### Import Libraries <a name="import-libraries"></a>
 - **logging**: Used for logging script actions and errors.
@@ -24,19 +32,19 @@ This script is designed to interact with an AWS S3 bucket, process course-relate
 - **process_documents**: A helper function from `processing.documents` to process documents and add them to the vector store.
 
 ### AWS and Database Setup <a name="aws-and-database-setup"></a>
-- **boto3.client('s3')**: Initializes the S3 client to interact with AWS S3, used for fetching course documents from S3 buckets.
+- **boto3.client('s3')**: Initializes the S3 client to interact with AWS S3, used for fetching topic documents from S3 buckets.
 - **psycopg2**: Connects to the PostgreSQL database to set up the vector store and store the processed document embeddings.
 
 ### Helper Functions <a name="helper-functions"></a>
 - **get_vectorstore**: Initializes and returns a PGVector instance connected to the PostgreSQL database. It handles connection setup and error handling.
   
 ### Main Functions <a name="main-functions"></a>
-- **store_course_data**: Processes the course-related documents from an S3 bucket, extracts text, chunks the text, embeds the chunks, and stores the data in a vector store.
+- **store_topic_data**: Processes the topic-related documents from an S3 bucket, extracts text, chunks the text, embeds the chunks, and stores the data in a vector store.
 
 ### Execution Flow <a name="execution-flow"></a>
 1. **AWS S3**: The script fetches documents from an S3 bucket.
 2. **PostgreSQL Connection**: A PGVector instance is created and connected to the PostgreSQL database.
-3. **Document Processing**: Course documents are processed, chunked, and embedded.
+3. **Document Processing**: Topic documents are processed, chunked, and embedded.
 4. **Vector Store**: The processed chunks are stored in the vector store for retrieval and search.
 
 ## Detailed Function Descriptions <a name="detailed-function-descriptions"></a>
@@ -117,11 +125,11 @@ Initializes and returns a `PGVector` instance that connects to a PostgreSQL data
   - Returns the initialized `PGVector` instance and the connection string if successful.
   - Returns `None` if an error occurred during setup.
 
-### Function: `store_course_data` <a name="store_course_data"></a>
+### Function: `store_topic_data` <a name="store_topic_data"></a>
 ```python
-def store_course_data(
+def store_topic_data(
     bucket: str, 
-    course: str, 
+    topic: str, 
     vectorstore_config_dict: Dict[str, str], 
     embeddings: BedrockEmbeddings
 ) -> None:
@@ -150,14 +158,14 @@ def store_course_data(
     # Process all files in the "documents" folder
     process_documents(
         bucket=bucket,
-        course=course,
+        topic=topic,
         vectorstore=vectorstore,
         embeddings=embeddings,
         record_manager=record_manager
     )
 ```
 #### Purpose
-Processes the course data from an S3 bucket and stores it into the vector store, allowing for efficient document retrieval via embeddings.
+Processes the topic data from an S3 bucket and stores it into the vector store, allowing for efficient document retrieval via embeddings.
 
 #### Process Flow
 1. **Initialize Vector Store**:
@@ -166,15 +174,15 @@ Processes the course data from an S3 bucket and stores it into the vector store,
 2. **Set Up Document Store**:
    - Defines a `SQLRecordManager` to manage document records in the vector store and creates the schema for the record manager.
 3. **Document Processing**:
-   - Calls the `process_documents` function, which processes the documents stored in the S3 bucket under the specified course folder.
+   - Calls the `process_documents` function, which processes the documents stored in the S3 bucket under the specified topic folder.
    - Extracts text, chunks the documents, embeds the chunks, and stores them in the vector store.
 4. **Logging and Error Handling**:
    - Logs messages for each significant step of the process, including any errors encountered.
 
 #### Inputs and Outputs
 - **Inputs**:
-  - `bucket`: The name of the S3 bucket containing the course data.
-  - `course`: The course name or folder in the S3 bucket.
+  - `bucket`: The name of the S3 bucket containing the topic data.
+  - `topic`: The topic name or folder in the S3 bucket.
   - `vectorstore_config_dict`: A dictionary containing the vector store configuration, including database credentials and collection name.
   - `embeddings`: The BedrockEmbeddings instance used for generating document embeddings.
   

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
+import { Tags } from 'aws-cdk-lib';
 import { AmplifyStack } from '../lib/amplify-stack';
 import { ApiGatewayStack } from '../lib/api-gateway-stack';
 import { DatabaseStack } from '../lib/database-stack';
@@ -18,3 +19,4 @@ const dbStack = new DatabaseStack(app, 'QuantumAIDatabaseStack', vpcStack, { env
 const apiStack = new ApiGatewayStack(app, 'QuantumAIApiGatewayStack', dbStack, vpcStack,  { env });
 const dbFlowStack = new DBFlowStack(app, 'QuantumAIDBFlowStack', vpcStack, dbStack, apiStack, { env });
 const amplifyStack = new AmplifyStack(app, 'QuantumAIAmplifyStack',apiStack, { env });
+Tags.of(app).add("app", "QuantumAI");

@@ -841,7 +841,7 @@ const UserChat = ({ admin }) => {
               </div>
             ) }
 
-            <div className="overflow-y-auto mt-2 mb-6">
+            <div className="flex-grow overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)'}}>
               {isSidebarOpen &&
                 sessions
                   .slice()
