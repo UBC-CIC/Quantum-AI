@@ -1,22 +1,45 @@
 # chat.py
 
 ## Table of Contents <a name="table-of-contents"></a>
-- [Script Overview](#script-overview)
-  - [Import Libraries](#import-libraries)
-  - [AWS and LLM Integration](#aws-and-llm-integration)
-  - [Helper Functions](#helper-functions)
-  - [Execution Flow](#execution-flow)
-- [Detailed Function Descriptions](#detailed-function-descriptions)
-  - [Function: `create_dynamodb_history_table`](#create_dynamodb_history_table)
-  - [Function: `get_bedrock_llm`](#get_bedrock_llm)
-  - [Function: `get_student_query`](#get_student_query)
-  - [Function: `get_initial_student_query`](#get_initial_student_query)
-  - [Function: `get_response`](#get_response)
-  - [Function: `split_into_sentences`](#split_into_sentences)
-  - [Function: `get_llm_output`](#get_llm_output)
+- [chat.py](#chatpy)
+  - [Table of Contents ](#table-of-contents-)
+  - [Script Overview ](#script-overview-)
+    - [Import Libraries ](#import-libraries-)
+    - [AWS and LLM Integration ](#aws-and-llm-integration-)
+    - [Helper Functions ](#helper-functions-)
+    - [Execution Flow ](#execution-flow-)
+  - [Detailed Function Descriptions ](#detailed-function-descriptions-)
+    - [Function: `create_dynamodb_history_table` ](#function-create_dynamodb_history_table-)
+      - [Purpose](#purpose)
+      - [Process Flow](#process-flow)
+      - [Inputs and Outputs](#inputs-and-outputs)
+    - [Function: `get_bedrock_llm` ](#function-get_bedrock_llm-)
+      - [Purpose](#purpose-1)
+      - [Process Flow](#process-flow-1)
+      - [Inputs and Outputs](#inputs-and-outputs-1)
+    - [Function: `get_user_query` ](#function-get_user_query-)
+      - [Purpose](#purpose-2)
+      - [Process Flow](#process-flow-2)
+      - [Inputs and Outputs](#inputs-and-outputs-2)
+    - [Function: `get_initial_user_query` ](#function-get_initial_user_query-)
+      - [Purpose](#purpose-3)
+      - [Process Flow](#process-flow-3)
+      - [Inputs and Outputs](#inputs-and-outputs-3)
+    - [Function: `get_response` ](#function-get_response-)
+      - [Purpose](#purpose-4)
+      - [Process Flow](#process-flow-4)
+      - [Inputs and Outputs](#inputs-and-outputs-4)
+    - [Function: `split_into_sentences` ](#function-split_into_sentences-)
+      - [Purpose](#purpose-5)
+      - [Process Flow](#process-flow-5)
+      - [Inputs and Outputs](#inputs-and-outputs-5)
+    - [Function: `get_llm_output` ](#function-get_llm_output-)
+      - [Purpose](#purpose-6)
+      - [Process Flow](#process-flow-6)
+      - [Inputs and Outputs](#inputs-and-outputs-6)
 
 ## Script Overview <a name="script-overview"></a>
-This script integrates AWS services like DynamoDB and Bedrock LLM with LangChain to create an educational chatbot that can engage with students, ask questions, provide answers, and track student progress toward mastery of a topic. It also includes history-aware functionality, which uses chat history to provide relevant context during conversations.
+This script integrates AWS services like DynamoDB and Bedrock LLM with LangChain to create an chatbot that can answer user queries related to a specified topic . It also includes history-aware functionality, which uses chat history to provide relevant context during conversations.
 
 ### Import Libraries <a name="import-libraries"></a>
 - **boto3**: AWS SDK to interact with services like DynamoDB and manage resources.
@@ -28,22 +51,20 @@ This script integrates AWS services like DynamoDB and Bedrock LLM with LangChain
 - **DynamoDBChatMessageHistory**: Stores chat history in DynamoDB.
 
 ### AWS and LLM Integration <a name="aws-and-llm-integration"></a>
-- **DynamoDB**: Used to store and retrieve session history for conversations between the student and the chatbot.
-- **ChatBedrock**: Used to interact with AWS Bedrock LLM for generating responses and engaging with the student.
+- **DynamoDB**: Used to store and retrieve session history for conversations between the user and the chatbot.
+- **ChatBedrock**: Used to interact with AWS Bedrock LLM for generating responses and engaging with the user.
 
 ### Helper Functions <a name="helper-functions"></a>
 - **create_dynamodb_history_table**: Creates a DynamoDB table to store chat session history if it doesn't already exist.
 - **get_bedrock_llm**: Retrieves an instance of the Bedrock LLM based on a provided model ID.
-- **get_student_query**: Formats a student's query into a structured template suitable for processing.
-- **get_initial_student_query**: Generates an initial prompt for a student to greet the chatbot and request a question on a specific topic.
-- **get_response**: Manages the interaction between the student query, the Bedrock LLM, and the history-aware retriever to generate responses.
-- **get_llm_output**: Processes the output from the LLM and checks if the student's competency has been achieved.
+- **get_user_query**: Formats a user's query into a structured template suitable for processing.
+- **get_response**: Manages the interaction between the user query, the Bedrock LLM, and the history-aware retriever to generate responses.
+- **get_llm_output**: Processes the output from the LLM and checks if the user's competency has been achieved.
 
 ### Execution Flow <a name="execution-flow"></a>
 1. **DynamoDB Table Creation**: The `create_dynamodb_history_table` function ensures that a DynamoDB table is available to store session history.
-2. **Query Processing**: The `get_student_query` and `get_initial_student_query` functions format student queries for processing.
-3. **Response Generation**: The `get_response` function uses the Bedrock LLM and chat history to generate responses to student queries and evaluates the student's progress toward mastering the topic.
-4. **Competency Evaluation**: The `get_llm_output` function checks if the LLM response indicates that the student has mastered the topic.
+2. **Query Processing**: The `get_user_query` function formats user queries for processing.
+3. **Response Generation**: The `get_response` function uses the Bedrock LLM and chat history to generate responses to user queries and evaluates the user's progress toward mastering the topic.
 
 ## Detailed Function Descriptions <a name="detailed-function-descriptions"></a>
 
@@ -113,46 +134,46 @@ Retrieves a Bedrock LLM instance based on the provided model ID, with optional c
 
 ---
 
-### Function: `get_student_query` <a name="get_student_query"></a>
+### Function: `get_user_query` <a name="get_user_query"></a>
 ```python
-def get_student_query(raw_query: str) -> str:
-    student_query = f"""
+def get_user_query(raw_query: str) -> str:
+    user_query = f"""
     user
     {raw_query}
     
     """
-    return student_query
+    return user_query
 ```
 #### Purpose
-Formats a raw student query into a structured template suitable for further processing by the LLM.
+Formats a raw user query into a structured template suitable for further processing by the LLM.
 
 #### Process Flow
-1. **Format Query**: Wraps the student's query with the `user` label to structure it for the LLM.
+1. **Format Query**: Wraps the user's query with the `user` label to structure it for the LLM.
 2. **Return Formatted Query**: Returns the structured query.
 
 #### Inputs and Outputs
 - **Inputs**:
-  - `raw_query`: The raw query input from the student.
+  - `raw_query`: The raw query input from the user.
   
 - **Outputs**:
   - Returns the formatted query string.
 
 ---
 
-### Function: `get_initial_student_query` <a name="get_initial_student_query"></a>
+### Function: `get_initial_user_query` <a name="get_initial_user_query"></a>
 ```python
-def get_initial_student_query(topic: str) -> str:
-    student_query = f"""
+def get_initial_user_query(topic: str) -> str:
+    user_query = f"""
     user
     Greet me and then ask me a question related to the topic: {topic}. 
     """
-    return student_query
+    return user_query
 ```
 #### Purpose
-Generates an initial prompt asking the student to greet the system and pose a question related to a specific topic.
+Generates an initial prompt asking the user to greet the system and pose a question related to a specific topic.
 
 #### Process Flow
-1. **Generate Initial Query**: Constructs a query asking the student to greet the system and inquire about a specific topic.
+1. **Generate Initial Query**: Constructs a query asking the user to greet the system and inquire about a specific topic.
 2. **Return Query**: Returns the generated query.
 
 #### Inputs and Outputs
@@ -179,12 +200,12 @@ def get_response(
         ""
         "system"
         "You are an instructor for a course. "
-        f"Your job is to help the student master the topic: {topic}. \n"        
-        "Engage with the student by asking questions and conversing with them to identify any gaps in their understanding of the topic. If you identify gaps, address these gaps by providing explanations, answering the student's questions, and referring to the relevant context to help the student gain a comprehensive understanding of the topic. "
-        "Continue this process until you determine that the student has mastered the topic. \nOnce mastery is achieved, include COMPETENCY ACHIEVED in your response and do not ask any further questions about the topic. "
+        f"Your job is to help the user master the topic: {topic}. \n"        
+        "Engage with the user by asking questions and conversing with them to identify any gaps in their understanding of the topic. If you identify gaps, address these gaps by providing explanations, answering the user's questions, and referring to the relevant context to help the user gain a comprehensive understanding of the topic. "
+        "Continue this process until you determine that the user has mastered the topic. \nOnce mastery is achieved, include COMPETENCY ACHIEVED in your response and do not ask any further questions about the topic. "
         "Use the following pieces of retrieved context to answer "
-        "a question asked by the student. Use three sentences maximum and keep the "
-        "answer concise. End each answer with a question that tests the student's knowledge about the topic."
+        "a question asked by the user. Use three sentences maximum and keep the "
+        "answer concise. End each answer with a question that tests the user's knowledge about the topic."
         ""
         "documents"
         "{context}"
@@ -226,18 +247,18 @@ def get_response(
     return get_llm_output(response)
 ```
 #### Purpose
-Generates a response to the student's query using the LLM and a history-aware retriever, incorporating context from previous conversations stored in DynamoDB.
+Generates a response to the user's query using the LLM and a history-aware retriever, incorporating context from previous conversations stored in DynamoDB.
 
 #### Process Flow
-1. **Prompt Setup**: Creates a system prompt instructing the LLM to help the student master a specific topic, engaging them in conversation and filling gaps in their understanding.
-2. **Contextual Question Answering**: Uses a retrieval chain to fetch relevant documents based on the student's query and chat history.
+1. **Prompt Setup**: Creates a system prompt instructing the LLM to help the user master a specific topic, engaging them in conversation and filling gaps in their understanding.
+2. **Contextual Question Answering**: Uses a retrieval chain to fetch relevant documents based on the user's query and chat history.
 3. **Chat History Handling**: The conversation history is managed using `DynamoDBChatMessageHistory` for the specific session.
 4. **Generate Response**: Generates the response using the LLM and returns the result.
 
 #### Inputs and Outputs
 - **Inputs**:
-  - `query`: The student's query string.
-  - `topic`: The topic the student is learning about.
+  - `query`: The user's query string.
+  - `topic`: The topic the user is learning about.
   - `llm`: The Bedrock LLM instance.
   - `history_aware_retriever`: The retriever providing relevant documents for the query.
   - `table_name`: DynamoDB table name used to store the chat history.
@@ -310,7 +331,7 @@ def get_llm_output(response: str) -> dict:
         )
 ```
 #### Purpose
-Processes the response from the LLM to determine if competency in the topic has been achieved by the student, and extracts the relevant output.
+Processes the response from the LLM to determine if competency in the topic has been achieved by the user, and extracts the relevant output.
 
 #### Process Flow
 1. **Check for "COMPETENCY ACHIEVED" Absence**: If **"COMPETENCY ACHIEVED"** is **not** in the response, return the original response with `llm_verdict` set to `False`.
