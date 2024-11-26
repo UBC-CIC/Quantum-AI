@@ -15,6 +15,8 @@ export class DBFlowStack extends Stack {
     constructor(scope: Construct, id: string, vpcStack: VpcStack, db: DatabaseStack, apiStack: ApiGatewayStack, props?: StackProps){
         super(scope, id, props);
 
+        const resourcePrefix = this.node.tryGetContext('prefix');
+
         /**
          * 
          * Create an database initializer using lambda
@@ -69,7 +71,7 @@ export class DBFlowStack extends Stack {
         );
         // Create an initilizer for the RDS instance, only invoke during deployment
         const initializerLambda = new triggers.TriggerFunction(this, "quantumAI-triggerLambda", {
-            functionName: "quantumAI-initializerFunction",
+            functionName: `${resourcePrefix}-initializerFunction`,
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: "initializer.handler",
             timeout: Duration.seconds(300),

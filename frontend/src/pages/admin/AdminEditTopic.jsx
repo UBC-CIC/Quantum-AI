@@ -23,19 +23,6 @@ import { quantum } from 'ldrs'
 
 quantum.register()
 
-function titleCase(str) {
-  if (typeof str !== "string") {
-    return str;
-  }
-  return str
-    .toLowerCase()
-    .split(" ")
-    .map(function (word) {
-      return word.charAt(0).toUpperCase() + word.slice(1);
-    })
-    .join(" ");
-}
-
 const AdminEditTopic = () => {
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -457,7 +444,7 @@ const AdminEditTopic = () => {
     <PageContainer>
       <Paper style={{ padding: 25, width: "100%", overflow: "auto" }}>
         <Typography variant="h4" textAlign="left" sx={{ pb: 2 }}>
-          Edit {titleCase(topic.topic_name)}{" "}
+          Edit {topic.topic_name}{" "}
         </Typography>
 
         <TextField

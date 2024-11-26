@@ -78,7 +78,7 @@ def handler(event, context):
                 "system_prompt" text
             );
 
-            INSERT INTO "Topics" ("topic_id", "topic_name", "system_prompt") VALUES (uuid_generate_v4(), 'General', 'You are a highly qualified expert in quantum materials, technology, and phenomena, representing the Stewart Blusson Quantum Matter Institute at UBC. When responding to users' queries, maintain a professional and authoritative tone. Utilize the knowledge available to you to provide thorough, accurate, and insightful answers, drawing upon relevant documents as necessary, without explicitly stating that documents have been provided. If a user query is unrelated to quantum materials, technology, phenomena, or the Stewart Blusson Quantum Matter Institute, politely inform the user that your expertise is limited to these areas and encourage them to ask questions within your scope.');
+            INSERT INTO "Topics" ("topic_id", "topic_name", "system_prompt") VALUES (uuid_generate_v4(), 'General', 'You are a highly qualified expert in quantum materials, technology, and phenomena, representing the Stewart Blusson Quantum Matter Institute at UBC. When responding to user queries, maintain a professional and authoritative tone. Utilize the knowledge available to you to provide thorough, accurate, and insightful answers, drawing upon relevant documents as necessary, without explicitly stating that documents have been provided. If a user query is unrelated to quantum materials, technology, phenomena, or the Stewart Blusson Quantum Matter Institute, politely inform the user that your expertise is limited to these areas and encourage them to ask questions within your scope.');
 
             CREATE TABLE IF NOT EXISTS "Sessions" (
                 "session_id" uuid PRIMARY KEY DEFAULT (uuid_generate_v4()),
@@ -111,6 +111,16 @@ def handler(event, context):
                 "timestamp" timestamp,
                 "engagement_type" varchar
             );
+
+            CREATE TABLE IF NOT EXISTS "Feedback" (
+                "feedback_id" uuid PRIMARY KEY DEFAULT (uuid_generate_v4()),
+                "topic_id" uuid,
+                "feedback_rating" integer,
+                "timestamp" timestamp,
+                "feedback_description" varchar
+            );
+
+            ALTER TABLE "Feedback" ADD FOREIGN KEY ("topic_id") REFERENCES "Topics" ("topic_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
             ALTER TABLE "User_Engagement_Log" ADD FOREIGN KEY ("user_id") REFERENCES "Users" ("user_id") ON DELETE CASCADE ON UPDATE CASCADE;
             ALTER TABLE "User_Engagement_Log" ADD FOREIGN KEY ("topic_id") REFERENCES "Topics" ("topic_id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -275,6 +285,12 @@ def handler(event, context):
 
         sql = """
             SELECT * FROM "User_Session_Engagement_Log";
+        """
+        cursor.execute(sql)
+        print(cursor.fetchall())
+
+        sql = """
+            SELECT * FROM "Feedback";
         """
         cursor.execute(sql)
         print(cursor.fetchall())

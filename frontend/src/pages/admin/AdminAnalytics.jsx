@@ -10,6 +10,9 @@ import {
   AccordionDetails,
   Grid,
   Paper,
+  Card,
+  CardContent,
+  CardHeader,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {
@@ -38,12 +41,18 @@ function titleCase(str) {
     .join(" ");
 }
 
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleString(); // This will convert to local time
+}
+
 const AdminAnalytics = () => {
   const [value, setValue] = useState(0);
   const [graphData, setGraphData] = useState([]);
   const [data, setData] = useState([]);
   const [maxMessages, setMaxMessages] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [feedbackData, setFeedbackData] = useState([]);
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -86,7 +95,41 @@ const AdminAnalytics = () => {
       setLoading(false);
     };
 
+    const fetchFeedback = async () => {
+      try {
+        const session = await fetchAuthSession();
+        const token = session.tokens.idToken
+        const response = await fetch(
+          `${
+            import.meta.env.VITE_API_ENDPOINT
+          }admin/feedback`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: token,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (response.ok) {
+          const feedbackData = await response.json();
+          const sortedFeedbackData = feedbackData.sort((a, b) => {
+            if (a.topic_name === "General") return -1;
+            if (b.topic_name === "General") return 1;
+            return 0;
+          });
+          console.log("feedback_data", sortedFeedbackData);
+          setFeedbackData(sortedFeedbackData);
+        } else {
+          console.error("Failed to fetch feedback:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error fetching feedback:", error);
+      }
+    };
+
     fetchAnalytics();
+    fetchFeedback();
   }, []);
 
   useEffect(() => {
@@ -189,7 +232,7 @@ const AdminAnalytics = () => {
             <Tabs 
               value={value} 
               onChange={handleChange} 
-              aria-label="grade tabs"
+              aria-label="analytics tabs"
               sx={{
                 "& .MuiTab-root": {
                   color: "#2E8797", // Default color of the tabs
@@ -200,15 +243,16 @@ const AdminAnalytics = () => {
               }} 
             >
               <Tab label="Insights" />
+              <Tab label="Feedback" />
             </Tabs>
 
-            {value === 0 ? (
+            {value === 0 && (
               data.length > 0 ? (
                 <Box mt={2} mb={4}>
                   {data.map((topic, index) => (
                     <Accordion key={index}>
                       <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                        <Typography variant="subtitle1">{titleCase(topic.topic_name)}</Typography>
+                        <Typography variant="subtitle1">{topic.topic_name}</Typography>
                       </AccordionSummary>
                       <AccordionDetails>
                         <Box width="100%">
@@ -263,7 +307,62 @@ const AdminAnalytics = () => {
                   No insights available
                 </Typography>
               )
-            ) : null}
+            )}
+
+            {value === 1 && (
+              feedbackData.length > 0 ? (
+                <Box mt={2} mb={4}>
+                  {feedbackData.map((topic, index) => (
+                    <Accordion key={index}>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Typography variant="subtitle1">{titleCase(topic.topic_name)}</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Typography
+                          variant="h4"
+                          sx={{ mb: 2, fontWeight: 'bold' }}
+                        >
+                          {topic.average_rating.toFixed(1)}
+                        </Typography>
+                        <Typography variant="subtitle2" sx={{ mb: 2 }}>
+                          Average Rating (out of 5)
+                        </Typography>
+                        <Box sx={{ maxHeight: 300, overflow: 'auto' }}>
+                          {topic.feedback.map((feedback) => (
+                            <Card key={feedback.feedback_id} sx={{ mb: 2 }}>
+                              <CardHeader
+                                title={
+                                  <Typography variant="body2">
+                                    Rating: {feedback.feedback_rating}/5
+                                  </Typography>
+                                }
+                                subheader={
+                                  <Typography variant="caption">
+                                    {formatDate(feedback.timestamp)}
+                                  </Typography>
+                                }
+                              />
+                              <CardContent>
+                                <Typography variant="body2">{feedback.feedback_description}</Typography>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </Box>
+                      </AccordionDetails>
+                    </Accordion>
+                  ))}
+                </Box>
+              ) : (
+                <Typography
+                  variant="h6"
+                  color="textSecondary"
+                  textAlign="center"
+                  padding={4}
+                >
+                  No feedback available
+                </Typography>
+              )
+            )}
           </Box>
         )}
     </div>

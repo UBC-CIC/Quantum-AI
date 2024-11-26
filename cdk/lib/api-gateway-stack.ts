@@ -49,6 +49,8 @@ export class ApiGatewayStack extends cdk.Stack {
   ) {
     super(scope, id, props);
 
+    const resourcePrefix = this.node.tryGetContext('prefix');
+
     this.layerList = {};
 
     /**
@@ -100,7 +102,7 @@ export class ApiGatewayStack extends cdk.Stack {
      * Using verification code
      * Inspiration from http://buraktas.com/create-cognito-user-pool-aws-cdk/
      */
-    const userPoolName = "quantumAIUserPool";
+    const userPoolName = `${resourcePrefix}-user-pool`;
     this.userPool = new cognito.UserPool(this, "quantumAI-pool", {
       userPoolName: userPoolName,
       signInAliases: {
@@ -197,7 +199,7 @@ export class ApiGatewayStack extends cdk.Stack {
     this.api = new apigateway.SpecRestApi(this, "APIGateway", {
       apiDefinition: apigateway.AssetApiDefinition.fromInline(data),
       endpointTypes: [apigateway.EndpointType.REGIONAL],
-      restApiName: "quantumAIAPI",
+      restApiName: `${resourcePrefix}-API`,
       deploy: true,
       cloudWatchRole: true,
       deployOptions: {
@@ -304,7 +306,7 @@ export class ApiGatewayStack extends cdk.Stack {
     });
 
     const lambdaRole = new iam.Role(this, "postgresLambdaRole", {
-      roleName: "postgresLambdaRole",
+      roleName: `${resourcePrefix}-postgresLambdaRole`,
       assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
     });
 
@@ -396,7 +398,7 @@ export class ApiGatewayStack extends cdk.Stack {
         RDS_PROXY_ENDPOINT: db.rdsProxyEndpoint,
         USER_POOL: this.userPool.userPoolId,
       },
-      functionName: "userFunction",
+      functionName: `${resourcePrefix}-userFunction`,
       memorySize: 512,
       layers: [postgres],
       role: lambdaRole,
@@ -423,7 +425,7 @@ export class ApiGatewayStack extends cdk.Stack {
         SM_DB_CREDENTIALS: db.secretPathTableCreator.secretName,
         RDS_PROXY_ENDPOINT: db.rdsProxyEndpointTableCreator,
       },
-      functionName: "adminFunction",
+      functionName: `${resourcePrefix}-adminFunction`,
       memorySize: 512,
       layers: [postgres],
       role: lambdaRole,
@@ -441,7 +443,7 @@ export class ApiGatewayStack extends cdk.Stack {
     cfnLambda_Admin.overrideLogicalId("adminFunction");
 
     const coglambdaRole = new iam.Role(this, "cognitoLambdaRole", {
-      roleName: "cognitoLambdaRole",
+      roleName: `${resourcePrefix}-cognitoLambdaRole`,
       assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
     });
 
@@ -554,7 +556,7 @@ export class ApiGatewayStack extends cdk.Stack {
         RDS_PROXY_ENDPOINT: db.rdsProxyEndpointTableCreator,
       },
       vpc: vpcStack.vpc,
-      functionName: "addUserOnSignUp",
+      functionName: `${resourcePrefix}-addUserOnSignUp`,
       memorySize: 128,
       layers: [postgres],
       role: coglambdaRole,
@@ -570,7 +572,7 @@ export class ApiGatewayStack extends cdk.Stack {
         RDS_PROXY_ENDPOINT: db.rdsProxyEndpointTableCreator,
       },
       vpc: db.dbInstance.vpc,
-      functionName: "adjustUserRoles",
+      functionName: `${resourcePrefix}-adjustUserRoles`,
       memorySize: 512,
       layers: [postgres],
       role: coglambdaRole,
@@ -585,7 +587,7 @@ export class ApiGatewayStack extends cdk.Stack {
           ALLOWED_EMAIL_DOMAINS: '/QuantumAI/AllowedEmailDomains',
       },
       vpc: vpcStack.vpc,
-      functionName: "preSignupLambda",
+      functionName: `${resourcePrefix}-preSignupLambda`,
       memorySize: 128,
       role: coglambdaRole,
     });
@@ -627,7 +629,7 @@ export class ApiGatewayStack extends cdk.Stack {
         environment: {
           SM_COGNITO_CREDENTIALS: this.secret.secretName,
         },
-        functionName: "adminLambdaAuthorizer",
+        functionName: `${resourcePrefix}-adminLambdaAuthorizer`,
         memorySize: 512,
         layers: [jwt],
         role: lambdaRole,
@@ -660,7 +662,7 @@ export class ApiGatewayStack extends cdk.Stack {
         environment: {
           SM_COGNITO_CREDENTIALS: this.secret.secretName,
         },
-        functionName: "userLambdaAuthorizer",
+        functionName: `${resourcePrefix}-userLambdaAuthorizer`,
         memorySize: 512,
         layers: [jwt],
         role: lambdaRole,
@@ -711,7 +713,7 @@ export class ApiGatewayStack extends cdk.Stack {
         memorySize: 512,
         timeout: cdk.Duration.seconds(300),
         vpc: vpcStack.vpc, // Pass the VPC
-        functionName: "TextGenLambdaDockerFunc",
+        functionName: `${resourcePrefix}-TextGenLambdaDockerFunc`,
         environment: {
           SM_DB_CREDENTIALS: db.secretPathUser.secretName,
           RDS_PROXY_ENDPOINT: db.rdsProxyEndpoint,
@@ -830,7 +832,7 @@ export class ApiGatewayStack extends cdk.Stack {
           BUCKET: dataIngestionBucket.bucketName,
           REGION: this.region,
         },
-        functionName: "GeneratePreSignedURLFunc",
+        functionName: `${resourcePrefix}-GeneratePreSignedURLFunc`,
         layers: [powertoolsLayer],
       }
     );
@@ -895,7 +897,7 @@ export class ApiGatewayStack extends cdk.Stack {
         memorySize: 512,
         timeout: cdk.Duration.seconds(600),
         vpc: vpcStack.vpc, // Pass the VPC
-        functionName: "DataIngestLambdaDockerFunc",
+        functionName: `${resourcePrefix}-DataIngestLambdaDockerFunc`,
         environment: {
           SM_DB_CREDENTIALS: db.secretPathAdminName,
           RDS_PROXY_ENDPOINT: db.rdsProxyEndpoint,
@@ -1000,7 +1002,7 @@ export class ApiGatewayStack extends cdk.Stack {
         BUCKET: dataIngestionBucket.bucketName,
         REGION: this.region,
       },
-      functionName: "GetFilesFunction",
+      functionName: `${resourcePrefix}-GetFilesFunction`,
       layers: [psycopgLayer, powertoolsLayer],
     });
 
@@ -1050,7 +1052,7 @@ export class ApiGatewayStack extends cdk.Stack {
         BUCKET: dataIngestionBucket.bucketName,
         REGION: this.region,
       },
-      functionName: "DeleteFileFunc",
+      functionName: `${resourcePrefix}-DeleteFileFunc`,
       layers: [psycopgLayer, powertoolsLayer],
     });
 
@@ -1096,7 +1098,7 @@ export class ApiGatewayStack extends cdk.Stack {
         BUCKET: dataIngestionBucket.bucketName,
         REGION: this.region,
       },
-      functionName: "DeleteTopicFunc",
+      functionName: `${resourcePrefix}-DeleteTopicFunc`,
       layers: [powertoolsLayer],
     });
 
@@ -1133,7 +1135,7 @@ export class ApiGatewayStack extends cdk.Stack {
         TABLE_NAME_PARAM: tableNameParameter.parameterName,
         REGION: this.region,
       },
-      functionName: "DeleteLastMessage",
+      functionName: `${resourcePrefix}-DeleteLastMessage`,
       layers: [psycopgLayer, powertoolsLayer],
     });
 

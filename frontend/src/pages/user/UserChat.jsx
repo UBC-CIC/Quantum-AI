@@ -15,6 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import { quantum } from 'ldrs'
+import { toast, ToastContainer } from "react-toastify";
 
 quantum.register()
 
@@ -55,6 +56,7 @@ const UserChat = ({ admin }) => {
   const [topics, setTopics] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [newSessionCreated, setNewSessionCreated] = useState(false);
+  const [isSendingFeedback, setIsSendingFeedback] = useState(false);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -716,6 +718,53 @@ const UserChat = ({ admin }) => {
     }
   }, [session]);
 
+  const handleFeedbackSubmit = async (feedbackRating, feedbackDescription) => {
+    if (!feedbackRating|| isSendingFeedback) return;
+
+    setIsSendingFeedback(true);
+    
+    console.log("Submitting feedback:", feedbackRating, feedbackDescription);
+    const topicId = session.topic_id;
+    console.log("Topic ID:", topicId);
+
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens.idToken
+      const response = await fetch(
+        `${import.meta.env.VITE_API_ENDPOINT}user/create_feedback?topic_id=${encodeURIComponent(
+          topicId
+        )}
+        &feedback_rating=${encodeURIComponent(feedbackRating)}
+        &feedback_description=${encodeURIComponent(feedbackDescription || '')}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: token,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to submit feedback');
+      }
+    } catch (error) {
+      console.error("Error sending feedback:", error);
+      toast.error("Failed to send feedback. Please try again.", {
+        position: "top-center",
+        autoClose: 1000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
+    } finally {
+      setIsSendingFeedback(false);
+    }
+  };
+
   return (
     <div className="flex h-screen overflow-hidden">
       {loading ? (
@@ -729,6 +778,18 @@ const UserChat = ({ admin }) => {
           </Grid>
         ) : (
           <>
+          <ToastContainer
+            position="top-center"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="colored"
+          />
           {/* Sidebar */}
           <div
             className={`bg-gradient-to-tr from-[#00EEFF] to-[#2E8797] transition-all duration-500 ${
@@ -915,7 +976,7 @@ const UserChat = ({ admin }) => {
                           )}
                         />
                       ) : (
-                        <AIMessage key={message.message_id} message={message.message_content} />
+                        <AIMessage key={message.message_id} handleFeedbackSubmit={handleFeedbackSubmit} message={message.message_content} />
                       )
                     )
                   )}

@@ -18,8 +18,6 @@
 10. The lambda function stores the embedded messages in Amazon DynamoDB
 11. This lambda function uses RAG architecture to retrieve the response from LLMs hosted on Amazon Bedrock augmented with the topic's information stored in the Amazon RDS.
 
-**For more information, please see the documentation under [text_generation](/text_generation)
-
 ## Database Schema
 
 ![Database Schema](./images/Quantum_AI_Database_Schema.png)
@@ -120,6 +118,16 @@
 | `session_id`       | The ID of the associated session              |
 | `timestamp`       | The timestamp of the engagement event        |
 | `engagement_type` | The type of engagement (e.g., session start) |
+
+### `Feedback` table
+
+| Column Name       | Description                                  |
+| ----------------- | -------------------------------------------- |
+| `feedback_id`          | The ID of the feedback entry           |
+| `topic_id`         | The ID of the topic the feedback is for                           |
+| `feedback_rating`       | The rating of the feedback              |
+| `timestamp`       | The timestamp of the feedback event        |
+| `feedback_description` | The description of the feedback |
 
 ## S3 Structure
 

@@ -402,6 +402,70 @@ exports.handler = async (event) => {
               response.body = JSON.stringify({ error: "Internal server error" });
             }
             break;
+          case "GET /admin/feedback":
+            try {
+              // Fetch feedback entries with average ratings per topic
+              const feedbackEntries = await sqlConnectionTableCreator`
+                SELECT 
+                  t.topic_name,
+                  f.feedback_id,
+                  f.feedback_rating,
+                  f.feedback_description,
+                  f.timestamp,
+                  AVG(f.feedback_rating) OVER (PARTITION BY t.topic_name) AS average_rating
+                FROM "Feedback" f
+                JOIN "Topics" t ON f.topic_id = t.topic_id
+                ORDER BY t.topic_name ASC, f.timestamp DESC;
+              `;
+          
+              if (feedbackEntries.length === 0) {
+                response.statusCode = 404;
+                response.body = JSON.stringify({
+                  error: "No feedback found",
+                });
+              } else {
+                // Organize feedback by topic_name
+                const groupedFeedback = feedbackEntries.reduce((acc, feedback) => {
+                  const {
+                    topic_name,
+                    feedback_id,
+                    feedback_rating,
+                    feedback_description,
+                    timestamp,
+                    average_rating,
+                  } = feedback;
+          
+                  if (!acc[topic_name]) {
+                    acc[topic_name] = {
+                      topic_name,
+                      average_rating: parseFloat(average_rating), // Ensure average rating is a number
+                      feedback: [],
+                    };
+                  }
+          
+                  acc[topic_name].feedback.push({
+                    feedback_id,
+                    feedback_rating,
+                    feedback_description,
+                    timestamp,
+                  });
+          
+                  return acc;
+                }, {});
+          
+                // Convert grouped feedback to an array for the response
+                const organizedFeedback = Object.values(groupedFeedback);
+          
+                response.statusCode = 200;
+                response.body = JSON.stringify(organizedFeedback);
+              }
+            } catch (err) {
+              response.statusCode = 500;
+              console.error(err);
+              response.body = JSON.stringify({ error: "Internal server error" });
+            }
+                      
+            break;
       default:
         throw new Error(`Unsupported route: "${pathData}"`);
     }

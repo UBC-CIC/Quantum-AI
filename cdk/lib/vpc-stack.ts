@@ -8,10 +8,12 @@ export class VpcStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
+    const resourcePrefix = this.node.tryGetContext('prefix');
+
     const natGatewayProvider = ec2.NatProvider.gateway();
 
     // VPC for application
-    this.vpc = new ec2.Vpc(this, "quantumAI-Vpc", {
+    this.vpc = new ec2.Vpc(this, `${resourcePrefix}-VPC`, {
       //cidr: "10.0.0.0/16",
       ipAddresses: ec2.IpAddresses.cidr('10.0.0.0/16'),
       natGatewayProvider: natGatewayProvider,

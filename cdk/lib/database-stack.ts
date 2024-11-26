@@ -21,6 +21,8 @@ export class DatabaseStack extends Stack {
     constructor(scope: Construct, id: string, vpcStack: VpcStack, props?: StackProps){
         super(scope, id, props);
 
+        const resourcePrefix = this.node.tryGetContext('prefix');
+
         /**
          * 
          * Retrive a secrete from Secret Manager
@@ -91,7 +93,7 @@ export class DatabaseStack extends Stack {
             backupRetention: Duration.days(7),
             deleteAutomatedBackups: true,
             deletionProtection: true,/// To be changed
-            databaseName: "QuantumAI",
+            databaseName: "QuantumAIDatabase",
             publiclyAccessible: false,
             cloudwatchLogsRetention: logs.RetentionDays.INFINITE,
             storageEncrypted: true, // storage encryption at rest
@@ -109,8 +111,9 @@ export class DatabaseStack extends Stack {
         });
          
 
-        const rdsProxyRole = new iam.Role(this, "DBProxyRole", {
-            assumedBy: new iam.ServicePrincipal('rds.amazonaws.com')
+        const rdsProxyRole = new iam.Role(this, "RDSProxyRole", {
+            assumedBy: new iam.ServicePrincipal('rds.amazonaws.com'),
+            roleName: `${resourcePrefix}-RDSProxyRole`
         });
 
         rdsProxyRole.addToPolicy(new iam.PolicyStatement({
@@ -130,6 +133,7 @@ export class DatabaseStack extends Stack {
             role: rdsProxyRole,
             securityGroups: this.dbInstance.connections.securityGroups,
             requireTLS: false,
+            dbProxyName: `${resourcePrefix}-${id}-proxy`
         });
         const rdsProxyTableCreator = this.dbInstance.addProxy(id+'+proxy', {
             secrets: [this.secretPathTableCreator!],

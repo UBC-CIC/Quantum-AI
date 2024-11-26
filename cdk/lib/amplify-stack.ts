@@ -18,6 +18,8 @@ export class AmplifyStack extends cdk.Stack {
   ) {
     super(scope, id, props);
 
+    const resourcePrefix = this.node.tryGetContext('prefix');
+
     const amplifyYaml = yaml.parse(` 
       version: 1
       applications:
@@ -50,7 +52,7 @@ export class AmplifyStack extends cdk.Stack {
     );
 
     const amplifyApp = new App(this, "amplifyApp", {
-      appName: "quantumAI-amplify",
+      appName: `${resourcePrefix}-amplify`,
       sourceCodeProvider: new GitHubSourceCodeProvider({
         owner: username,
         repository: "Quantum-AI",

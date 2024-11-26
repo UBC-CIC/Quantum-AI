@@ -137,14 +137,14 @@ Open a terminal in the `/cdk` directory.
 **Download Requirements**: Install requirements with npm by running `npm install` command.
 
 
-**Initialize the CDK stack**(required only if you have not deployed any resources with CDK in this region before). Please replace `<your-profile-name>` with the appropriate AWS profile used earlier.
+**Initialize the CDK stack**(required only if you have not deployed any resources with CDK in this region before). You can replace`<prefix` with the prefix you want to be added to the names of all the AWS resources that are deployed. Please replace `<your-profile-name>` with the appropriate AWS profile used earlier.
 ```
-cdk synth --profile <your-profile-name>
+cdk synth --context prefix=<prefix> --profile <your-profile-name>
 cdk bootstrap aws://<YOUR_AWS_ACCOUNT_ID>/<YOUR_ACCOUNT_REGION> --profile <your-profile-name>
 ```
 
 **Deploy CDK stack**
-You may run the following command to deploy the stacks all at once. You can replace`<prefix` with the prefix you want to be added to the names of all the AWS resources that are deployed. Again, replace `<your-profile-name>` with the appropriate AWS profile used earlier.
+You may run the following command to deploy the stacks all at once. Again, replace `<your-profile-name>` with the appropriate AWS profile used earlier.
 
 ```
 cdk deploy --all --context prefix=<prefix> --profile <your-profile-name>
@@ -178,6 +178,9 @@ cdk deploy --all --context prefix=QuantumAI-production --profile <your-profile-n
 
 ### Step 3: Visit Web App
 You can now navigate to the web app URL to see your application in action.
+
+### Step 4 (Optional): Change Application Logo
+In order to change the logo that appears in multiple places in the application, you can replace the `logo.png` file in the `frontend/src/assets`directory with your own file but keep the same name. This will replace the current application logo with your own.
 
 ## Cleanup
 ### Taking down the deployed stack

@@ -601,6 +601,45 @@ exports.handler = async (event) => {
             });
           }
           break;
+        case "POST /user/create_feedback":
+          if (
+            event.queryStringParameters.topic_id &&
+            event.queryStringParameters.feedback_rating &&
+            event.queryStringParameters.feedback_description
+          ) {
+            const topicId = event.queryStringParameters.topic_id;
+            const feedbackRating = event.queryStringParameters.feedback_rating;
+            const feedbackDescription = event.queryStringParameters.feedback_description;
+            console.log("topicId", topicId);
+            console.log("feedbackRating", feedbackRating);
+            console.log("feedbackDescription", feedbackDescription);
+
+            try {
+              const feedbackData = await sqlConnection`
+                      INSERT INTO "Feedback" (feedback_id, topic_id, feedback_rating, feedback_description, timestamp)
+                      VALUES (
+                        uuid_generate_v4(),
+                        ${topicId.trim()},
+                        ${feedbackRating},
+                        ${feedbackDescription},
+                        CURRENT_TIMESTAMP
+                      )
+                      RETURNING *;
+                  `;
+
+              response.body = JSON.stringify(feedbackData);
+            } catch (err) {
+              response.statusCode = 500;
+              console.error(err);
+              response.body = JSON.stringify({ error: "Internal server error" });
+            }
+          } else {
+            response.statusCode = 400;
+            response.body = JSON.stringify({
+              error: "Invalid value",
+            });
+          }
+          break;
       default:
         throw new Error(`Unsupported route: "${pathData}"`);
     }

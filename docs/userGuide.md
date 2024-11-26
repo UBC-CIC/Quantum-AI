@@ -11,10 +11,10 @@ Once you have deployed the solution, the following user guide will help you navi
 | [User View](#user-view)  | How the User views the project |
 
 ## Administrator View
-To sign up as an administrator, you need to sign up regularly first as a student:
+To sign up as an administrator, you need to sign up regularly first as a user:
 ![image](./images/create-account.png)
 
-You then get a confirmation email to verify your email. Once you have a student account, to become an adminstrator, you need to change your user group with Cognito through the AWS Console:
+You then get a confirmation email to verify your email. Once you have a user account, to become an adminstrator, you need to change your user group with Cognito through the AWS Console:
 ![image](./images/user-pool.png)
 
 After clicking the user pool of the project, you need to find your email:
@@ -25,76 +25,42 @@ After clicking your email, you can add the 'admin' user group:
 ![image](./images/select-admin.png)
 ![image](./images/admin-added.png)
 
-Once the 'admin' user group is added, delete the 'student' user group:
-![image](./images/delete-student.png)
+Once the 'admin' user group is added, delete the 'user' user group:
+![image](./images/delete-user.png)
 ![image](./images/only-admin.png)
 
-Upon logging in as an administrator, they see the following home page:
-![image](./images/admin-home-page.png)
+Upon logging in as an administrator, you see the following home page:
+![image](./images/admin-home.png)
+![image](./images/admin-home2.png)
 
-Clicking the "ADD INSTRUCTOR" button opens a pop-up where the administrator can enter the email address of a user with an account to add them as an administrator:
-![image](./images/admin-add-instructor.png)
+Hovering over the New Chat button gives you a dropdown from which you can select the topic of the conversation you want to start. If you do not have a specific topic for your query, you can choose the General topic.
+![image](./images/admin-select-topic.png)
 
-The administrator can also click an instructor in the list which takes them to a page consisting of that instructor's details which includes their name, email, and active courses:
-![image](./images/admin-instructor-details.png)
+Once you've started a new chat you can enter your query and the LLM will answer.
+![image](./images/admin-new-chat.png)
 
-In the "Courses" tab, the administrator can view a list of the courses available in this project:
-![image](./images/admin-courses.png)
+You can also provide feedback for the LLM's responses which will be helpful for admins.
+![image](./images/admin-chat-feedback.png)
 
-Clicking the "Active" button leads to a page where the administrator can view all the instructors in that course while being able to change the status of the course:
-![image](./images/admin-active.png)
+Clicking on the gear icon opens a menu of options where, as an admin, you can manage the topics and see analytics for the application.
+![image](./images/admin-gear.png)
 
-In the "Create Course" tab, the administrator can create a course by specifying the name, department, and code of the course. The administrator can also assign instructors to the course here while changing the "System Prompt" that the Large Language Model (LLM) uses as intructions when generating responses:
-![image](./images/admin-create-course.png)
+On the Manage Topics page, you are able to edit existing topics or create new ones.
+![image](./images/admin-manage-docs.png)
 
-## Instructor View
-Upon logging in as an instructor, they see the following home page:
-![image](./images/instructor-home-page.png)
+If you want to edit an existing topic, you are able to change the topic name, the topic prompt, which will be passed as the system prompt to the LLM, and the documents in this topic, which the LLM can refer to when answering any user queries.
+![image](./images/admin-edit-topic.png)
 
-The instructor can click on the "Student View" to see the project how a student would. For more information on how a student views the project, click [here](#student-view). After clicking the "ACTIVE" button beside a course, the instructor can see the analytics of that course with several insights:
-![image](./images/instructor-analytics.png)
+If you want to create a new topic, you fill out the same fields and upload the documents needed for that topic.
+![image](./images/admin-new-topic.png)
 
-Clicking the "Edit Concepts" tab leads to a page where the instructor can see a list of concepts within the course. Here a new concept can be created or existing concepts can be edited or deleted:
-![image](./images/instructor-edit-concept.png)
-![image](./images/instructor-create-concept.png)
-![image](./images/instructor-change-concept.png)
+On the Analytics page, you can view metrics on how users are engaging with the application including statistics on each topic as well as feedback for each topic.
+![image](./images/admin-analytics.png)
+![image](./images/admin-insights.png)
+![image](./images/admin-feedback.png)
 
-Clicking the "Edit Modules" tab leads to a page where the instructor can see a list of modules along with the concepts they belong to in that course. Here a new module can be created or existing modules can be edited:
-![image](./images/instructor-edit-modules.png)
+## User View
+Upon logging in as a user, you see the following home page:
+![image](./images/user-home.png)
 
-Clicking the "CREATE NEW MODULE" button leads to a page where the instructor can create a module. The module's name can be specified here along with the concept it belongs to. The instructor can then upload files to this module from their device. `PDF`, `DOCX`, `PPTX`, `TXT`, `XLSX`, `XPS`, `MOBI`, and `CBZ` file types are supported. The "SAVE MODULE" button here saves the module:
-![image](./images/instructor-create-module.png)
-
-Clicking the "EDIT" button beside a course leads to a page similar to creating a module. The module's name and concept can be changed here. The instructor can also remove previous files from the module while adding new ones. Each file in the module can be downloaded on the instructor's device. The "SAVE MODULE" button here saves the changes made to the module and the "DELETE MODULE" deletes the entire module:
-![image](./images/instructor-edit-module.png)
-
-Clicking the "Prompt Settings" tab leads to a page where the instructor can change the prompt applied to the LLM for this specific course. Upon applying a new prompt, the instructor can also scroll to previous prompts the course used:
-![image](./images/instructor-prompt-settings.png)
-
-Clicking the "View Students" tab leads to a page where the instructor can view all the students in this course. The "Access Code" of the course is a special code that allows students to join the course. The instructor will have to send this code to them. The instructor can also generate a new course code on this page:
-![image](./images/instructor-view-students.png)
-
-The instructor can then click on a student which takes them to that student's chat logs for every module in the course. Each tab represents a different module. Different conversations with the LLM are rendered as different drop downs:
-![image](./images/instructor-view-student-logs.png)
-
-## Student View
-Upon logging in as an student, they see the following home page:
-![image](./images/student-home-page.png)
-
-We are going to be looking at the CPSC 210 course as an example. Upon selecting CPSC 210, the student is shown a list of concepts at the top: Basics, Abstraction, Construction, and Design. Within each concept, there are several modules. For example, the Basics concept has the Program Structure, Methods And Calls, Classes, and Data Flow modules:
-![image](./images/student-modules.png)
-
-If we click the "Review" button beside the Program Structure module, we are taken to a page where an LLM asks us a question and creates a new conversation:
-![image](./images/student-new-conversation.png)
-
-The student can then answer the questions the LLM asks in a conversation manner. Upon answering multiple questions correctly, the LLM determines when the student has achieved competency over the module:
-![image](./images/student-conversation-1.png)
-![image](./images/student-conversation-2.png)
-
-Upon going back to the list of modules in this course, the student can see their learning journey as the module they achieved competency for is complete. The concept that module belonged to has also slightly changed in color by going from an inital red color to orange:
-![image](./images/student-complete-module.png)
-
-After completing more modules, the concept those modules belongs to gradually changes color to show the student's learning journey:
-![image](./images/student-complete-module-1.png)
-![image](./images/student-complete-module-2.png)
-![image](./images/student-complete-module-3.png)
+The functionality of the user is the same as that of an admin except users do not have the ability to Manage Topics or see the Analytics page. Therefore, users do not have the gear icon that admins have.

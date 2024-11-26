@@ -21,10 +21,6 @@
       - [Purpose](#purpose-2)
       - [Process Flow](#process-flow-2)
       - [Inputs and Outputs](#inputs-and-outputs-2)
-    - [Function: `get_initial_user_query` ](#function-get_initial_user_query-)
-      - [Purpose](#purpose-3)
-      - [Process Flow](#process-flow-3)
-      - [Inputs and Outputs](#inputs-and-outputs-3)
     - [Function: `get_response` ](#function-get_response-)
       - [Purpose](#purpose-4)
       - [Process Flow](#process-flow-4)
@@ -160,52 +156,36 @@ Formats a raw user query into a structured template suitable for further process
 
 ---
 
-### Function: `get_initial_user_query` <a name="get_initial_user_query"></a>
-```python
-def get_initial_user_query(topic: str) -> str:
-    user_query = f"""
-    user
-    Greet me and then ask me a question related to the topic: {topic}. 
-    """
-    return user_query
-```
-#### Purpose
-Generates an initial prompt asking the user to greet the system and pose a question related to a specific topic.
-
-#### Process Flow
-1. **Generate Initial Query**: Constructs a query asking the user to greet the system and inquire about a specific topic.
-2. **Return Query**: Returns the generated query.
-
-#### Inputs and Outputs
-- **Inputs**:
-  - `topic`: The topic for which the initial question should be generated.
-  
-- **Outputs**:
-  - Returns the formatted initial query string.
-
 ---
 
 ### Function: `get_response` <a name="get_response"></a>
 ```python
 def get_response(
     query: str,
-    topic: str,
     llm: ChatBedrock,
     history_aware_retriever,
     table_name: str,
-    session_id: str
+    session_id: str,
+    topic_system_prompt: str
 ) -> dict:
+    """
+    Generates a response to a query using the LLM and a history-aware retriever for context.
+
+    Args:
+    query (str): The user's query string for which a response is needed.
+    llm (ChatBedrock): The language model instance used to generate the response.
+    history_aware_retriever: The history-aware retriever instance that provides relevant context documents for the query.
+    table_name (str): The DynamoDB table name used to store and retrieve the chat history.
+    session_id (str): The unique identifier for the chat session to manage history.
+
+    Returns:
+    dict: A dictionary containing the generated response and the source documents used in the retrieval.
+    """
     # Create a system prompt for the question answering
     system_prompt = (
         ""
         "system"
-        "You are an instructor for a course. "
-        f"Your job is to help the user master the topic: {topic}. \n"        
-        "Engage with the user by asking questions and conversing with them to identify any gaps in their understanding of the topic. If you identify gaps, address these gaps by providing explanations, answering the user's questions, and referring to the relevant context to help the user gain a comprehensive understanding of the topic. "
-        "Continue this process until you determine that the user has mastered the topic. \nOnce mastery is achieved, include COMPETENCY ACHIEVED in your response and do not ask any further questions about the topic. "
-        "Use the following pieces of retrieved context to answer "
-        "a question asked by the user. Use three sentences maximum and keep the "
-        "answer concise. End each answer with a question that tests the user's knowledge about the topic."
+        f"{topic_system_prompt}"
         ""
         "documents"
         "{context}"
@@ -234,15 +214,14 @@ def get_response(
         output_messages_key="answer",
     )
     
-    # Generate the response
-    response = conversational_rag_chain.invoke(
-        {
-            "input": query
-        },
-        config={
-            "configurable": {"session_id": session_id}
-        },  # constructs a key "session_id" in `store`.
-    )["answer"]
+    # Generate the response until it's not empty
+    response = ""
+    while not response:
+        response = generate_response(
+            conversational_rag_chain,
+            query,
+            session_id
+        )
     
     return get_llm_output(response)
 ```
@@ -258,7 +237,7 @@ Generates a response to the user's query using the LLM and a history-aware retri
 #### Inputs and Outputs
 - **Inputs**:
   - `query`: The user's query string.
-  - `topic`: The topic the user is learning about.
+  - `topic_system_prompt`: The topic prompt.
   - `llm`: The Bedrock LLM instance.
   - `history_aware_retriever`: The retriever providing relevant documents for the query.
   - `table_name`: DynamoDB table name used to store the chat history.
@@ -301,57 +280,27 @@ Splits a given paragraph into individual sentences using a regular expression to
 ### Function: `get_llm_output` <a name="get_llm_output"></a>
 ```python
 def get_llm_output(response: str) -> dict:
-    if "COMPETENCY ACHIEVED" not in response:
-        return dict(
-            llm_output=response,
-            llm_verdict=False
-        )
-    
-    elif "COMPETENCY ACHIEVED" in response:
-        sentences = split_into_sentences(response)
-        
-        for i in range(len(sentences)):
-            if "COMPETENCY ACHIEVED" in sentences[i]:
-                llm_response = ' '.join(sentences[0:i-1])
-                
-                if sentences[i-1][-1] == '?':
-                    return dict(
-                        llm_output=llm_response,
-                        llm_verdict=False
-                    )
-                else:
-                    return dict(
-                        llm_output=llm_response,
-                        llm_verdict=True
-                    )
-    elif "compet" in response.lower() or "master" in response.lower():
-        return dict(
-            llm_output=response,
-            llm_verdict=True
-        )
+    """
+    Processes the response from the LLM.
+
+    Args:
+    response (str): The response generated by the LLM.
+
+    Returns:
+    dict: A dictionary containing the processed output from the LLM
+    """    
+    return dict(
+        llm_output=response
+    )
 ```
 #### Purpose
-Processes the response from the LLM to determine if competency in the topic has been achieved by the user, and extracts the relevant output.
-
-#### Process Flow
-1. **Check for "COMPETENCY ACHIEVED" Absence**: If **"COMPETENCY ACHIEVED"** is **not** in the response, return the original response with `llm_verdict` set to `False`.
-2. **Check for "COMPETENCY ACHIEVED" Presence**: If **"COMPETENCY ACHIEVED"** is in the response:
-  - Splits the response into sentences using `split_into_sentences(response)`.
-  - Iterates through the sentences to find the one containing **"COMPETENCY ACHIEVED"**.
-  - Extracts all sentences before **"COMPETENCY ACHIEVED"** and joins them into `llm_response`.
-  - Checks the punctuation of the sentence immediately before **"COMPETENCY ACHIEVED"**:
-    - If the preceding sentence ends with a question mark (`?`):
-      - Sets `llm_verdict` to `False` (indicating competency not achieved).
-    - Else:
-      - Sets `llm_verdict` to `True` (indicating competency achieved).
-  - Returns `llm_response` and `llm_verdict`.
-3. **Check for Keywords "compet" or "master"**: If the **"compet"** or **"master"** word stems are in the response, return the original response with `llm_verdict` set to `True`.
+Processes the response from the LLM and extracts the relevant output.
 
 #### Inputs and Outputs
 - **Inputs**:
   - `response`: The response generated by the LLM.
   
 - **Outputs**:
-  - Returns a dictionary with the LLM's output and a boolean indicating whether competency has been achieved.
+  - Returns a dictionary with the LLM's output
 
 [🔼 Back to top](#table-of-contents)
