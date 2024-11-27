@@ -107,7 +107,7 @@ const AIMessage = ({ message, handleFeedbackSubmit, messageId }) => {
 
 AIMessage.propTypes = {
   message: PropTypes.string.isRequired,
-  setFeedback: PropTypes.func.isRequired,
+  messageId: PropTypes.string.isRequired,
   handleFeedbackSubmit: PropTypes.func.isRequired,
 };
 

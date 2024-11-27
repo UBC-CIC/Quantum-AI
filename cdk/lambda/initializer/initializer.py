@@ -117,8 +117,8 @@ def handler(event, context):
                 "topic_id" uuid,
                 "feedback_rating" integer,
                 "timestamp" timestamp,
-                "feedback_description" varchar
-                "user_message" varchar
+                "feedback_description" varchar,
+                "user_message" varchar,
                 "ai_message" varchar
             );
 
