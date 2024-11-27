@@ -1,7 +1,6 @@
 import { Stack, StackProps, RemovalPolicy, SecretValue } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { Duration } from 'aws-cdk-lib';
-
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as rds from 'aws-cdk-lib/aws-rds';
 import * as ec2 from "aws-cdk-lib/aws-ec2";
