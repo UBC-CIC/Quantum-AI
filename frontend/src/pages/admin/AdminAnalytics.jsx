@@ -375,8 +375,8 @@ const AdminAnalytics = () => {
                               />
                               <CardContent>
                                 <Typography variant="body2" sx={{ mb: 1 }}>Feedback: {feedback.feedback_description}</Typography>
-                                <Typography variant="body2" sx={{ mb: 1 }}>User Message: {feedback.user_message}</Typography>
-                                <Typography variant="body2">AI Response: {feedback.ai_message}</Typography>
+                                <Typography variant="body2" align="left" sx={{ mb: 1 }}>User Message: {feedback.user_message}</Typography>
+                                <Typography variant="body2" align="left">AI Response: {feedback.ai_message}</Typography>
                               </CardContent>
                             </Card>
                           ))}
