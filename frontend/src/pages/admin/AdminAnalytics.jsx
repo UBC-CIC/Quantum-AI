@@ -53,6 +53,7 @@ const AdminAnalytics = () => {
   const [maxMessages, setMaxMessages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [feedbackData, setFeedbackData] = useState([]);
+  const [filterRating, setFilterRating] = useState("all");
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -149,6 +150,15 @@ const AdminAnalytics = () => {
     
     return `${minutes}m ${remainingSeconds}s`;
   }
+
+  const handleFilterChange = (event) => {
+    setFilterRating(event.target.value);
+  };
+
+  const filteredFeedback = (feedback) => {
+    if (filterRating === "all") return feedback;
+    return feedback.filter((item) => item.feedback_rating === parseInt(filterRating));
+  };
 
   return (
     <div className="flex h-screen">
@@ -327,8 +337,25 @@ const AdminAnalytics = () => {
                         <Typography variant="subtitle2" sx={{ mb: 2 }}>
                           Average Rating (out of 5)
                         </Typography>
+                        <FormControl sx={{ mb: 2, minWidth: 120 }}>
+                          <InputLabel id="rating-filter-label">Filter by Rating</InputLabel>
+                          <Select
+                            labelId="rating-filter-label"
+                            id="rating-filter"
+                            value={filterRating}
+                            label="Filter by Rating"
+                            onChange={handleFilterChange}
+                          >
+                            <MenuItem value="all">All Ratings</MenuItem>
+                            <MenuItem value="1">1 Star</MenuItem>
+                            <MenuItem value="2">2 Stars</MenuItem>
+                            <MenuItem value="3">3 Stars</MenuItem>
+                            <MenuItem value="4">4 Stars</MenuItem>
+                            <MenuItem value="5">5 Stars</MenuItem>
+                          </Select>
+                        </FormControl>
                         <Box sx={{ maxHeight: 300, overflow: 'auto' }}>
-                          {topic.feedback.map((feedback) => (
+                          {filteredFeedback(topic.feedback).map((feedback) => (
                             <Card key={feedback.feedback_id} sx={{ mb: 2 }}>
                               <CardHeader
                                 title={
@@ -343,7 +370,9 @@ const AdminAnalytics = () => {
                                 }
                               />
                               <CardContent>
-                                <Typography variant="body2">{feedback.feedback_description}</Typography>
+                                <Typography variant="body2" sx={{ mb: 1 }}>Feedback: {feedback.feedback_description}</Typography>
+                                <Typography variant="body2" sx={{ mb: 1 }}>User Message: {feedback.user_message}</Typography>
+                                <Typography variant="body2">AI Response: {feedback.ai_message}</Typography>
                               </CardContent>
                             </Card>
                           ))}

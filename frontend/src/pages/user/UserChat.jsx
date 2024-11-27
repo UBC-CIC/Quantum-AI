@@ -718,14 +718,22 @@ const UserChat = ({ admin }) => {
     }
   }, [session]);
 
-  const handleFeedbackSubmit = async (feedbackRating, feedbackDescription) => {
+  const handleFeedbackSubmit = async (feedbackRating, feedbackDescription, messageId) => {
     if (!feedbackRating|| isSendingFeedback) return;
 
     setIsSendingFeedback(true);
     
     console.log("Submitting feedback:", feedbackRating, feedbackDescription);
     const topicId = session.topic_id;
-    console.log("Topic ID:", topicId);
+    console.log("Message ID:", messageId);
+    console.log("Messages:", messages);
+
+    const messageIndex = messages.findIndex(msg => msg.message_id === messageId);
+    const AIMessage = messageIndex !== -1 ? messages[messageIndex].message_content : '';
+    const userMessage = messageIndex > 0 ? messages[messageIndex - 1].message_content : '';
+
+    console.log("User Message:", userMessage);
+    console.log("AI Message:", AIMessage);
 
     try {
       const session = await fetchAuthSession();
@@ -742,6 +750,10 @@ const UserChat = ({ admin }) => {
             Authorization: token,
             "Content-Type": "application/json",
           },
+          body: JSON.stringify({
+            user_message: userMessage,
+            ai_message: AIMessage,
+        }),
         }
       );
 
@@ -976,7 +988,7 @@ const UserChat = ({ admin }) => {
                           )}
                         />
                       ) : (
-                        <AIMessage key={message.message_id} handleFeedbackSubmit={handleFeedbackSubmit} message={message.message_content} />
+                        <AIMessage key={message.message_id} handleFeedbackSubmit={handleFeedbackSubmit} message={message.message_content} messageId={message.message_id}/>
                       )
                     )
                   )}

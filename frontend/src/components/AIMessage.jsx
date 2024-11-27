@@ -7,7 +7,7 @@ import { FaStar } from "react-icons/fa";
 import { FaRegCommentDots } from "react-icons/fa";
 import logo from "../assets/logo.png";
 
-const AIMessage = ({ message, handleFeedbackSubmit }) => {
+const AIMessage = ({ message, handleFeedbackSubmit, messageId }) => {
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [rating, setRating] = useState(0);
   const [description, setDescription] = useState("");
@@ -32,7 +32,7 @@ const AIMessage = ({ message, handleFeedbackSubmit }) => {
   };
 
   const handleSubmit = () => {
-    handleFeedbackSubmit(rating, description);
+    handleFeedbackSubmit(rating, description, messageId);
     setFeedbackSubmitted(true);
     setShowFeedbackForm(false);
     setRating(0);

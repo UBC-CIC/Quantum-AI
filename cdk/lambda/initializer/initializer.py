@@ -118,6 +118,8 @@ def handler(event, context):
                 "feedback_rating" integer,
                 "timestamp" timestamp,
                 "feedback_description" varchar
+                "user_message" varchar
+                "ai_message" varchar
             );
 
             ALTER TABLE "Feedback" ADD FOREIGN KEY ("topic_id") REFERENCES "Topics" ("topic_id") ON DELETE CASCADE ON UPDATE CASCADE;

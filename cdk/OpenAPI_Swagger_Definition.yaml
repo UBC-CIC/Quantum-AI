@@ -1085,6 +1085,19 @@ paths:
           description: Description of the feedback
           schema:
             type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_message:
+                  type: string
+                  description: Content of the user's message
+                ai_message:
+                  type: string
+                  description: Content of the AI's message
       responses:
         "200":
           description: User feedback created

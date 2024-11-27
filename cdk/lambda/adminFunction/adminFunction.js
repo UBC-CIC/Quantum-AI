@@ -412,6 +412,8 @@ exports.handler = async (event) => {
                   f.feedback_rating,
                   f.feedback_description,
                   f.timestamp,
+                  f.user_message,
+                  f.ai_message,
                   AVG(f.feedback_rating) OVER (PARTITION BY t.topic_name) AS average_rating
                 FROM "Feedback" f
                 JOIN "Topics" t ON f.topic_id = t.topic_id
@@ -433,6 +435,8 @@ exports.handler = async (event) => {
                     feedback_description,
                     timestamp,
                     average_rating,
+                    user_message,
+                    ai_message,
                   } = feedback;
           
                   if (!acc[topic_name]) {
@@ -448,6 +452,8 @@ exports.handler = async (event) => {
                     feedback_rating,
                     feedback_description,
                     timestamp,
+                    user_message,
+                    ai_message,
                   });
           
                   return acc;

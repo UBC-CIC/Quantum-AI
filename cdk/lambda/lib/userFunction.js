@@ -605,24 +605,28 @@ exports.handler = async (event) => {
           if (
             event.queryStringParameters.topic_id &&
             event.queryStringParameters.feedback_rating &&
-            event.queryStringParameters.feedback_description
+            event.queryStringParameters.feedback_description &&
+            event.body
           ) {
             const topicId = event.queryStringParameters.topic_id;
             const feedbackRating = event.queryStringParameters.feedback_rating;
             const feedbackDescription = event.queryStringParameters.feedback_description;
+            const { user_message, ai_message } = JSON.parse(event.body);
             console.log("topicId", topicId);
             console.log("feedbackRating", feedbackRating);
             console.log("feedbackDescription", feedbackDescription);
 
             try {
               const feedbackData = await sqlConnection`
-                      INSERT INTO "Feedback" (feedback_id, topic_id, feedback_rating, feedback_description, timestamp)
+                      INSERT INTO "Feedback" (feedback_id, topic_id, feedback_rating, feedback_description, timestamp, user_message, ai_message)
                       VALUES (
                         uuid_generate_v4(),
                         ${topicId.trim()},
                         ${feedbackRating},
                         ${feedbackDescription},
-                        CURRENT_TIMESTAMP
+                        CURRENT_TIMESTAMP,
+                        ${user_message},
+                        ${ai_message}
                       )
                       RETURNING *;
                   `;
