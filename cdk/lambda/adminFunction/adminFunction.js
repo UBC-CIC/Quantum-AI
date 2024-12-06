@@ -97,7 +97,7 @@ exports.handler = async (event) => {
           event.body
         ) {
           try {
-            console.log("topic creation start");
+            
             const {
               topic_name,
             } = event.queryStringParameters;
@@ -127,11 +127,11 @@ exports.handler = async (event) => {
                   RETURNING *;
               `;
 
-            console.log(newTopic);
+            
             response.body = JSON.stringify(newTopic[0]);
           } catch (err) {
             response.statusCode = 500;
-            console.log(err);
+            
             response.body = JSON.stringify({ error: "Internal server error" });
           }
         } else {
@@ -304,7 +304,7 @@ exports.handler = async (event) => {
                     }
                     // If no match is found, push "session end" log to stack for later deletion
                     if (!matched) {
-                        console.log("No matching start log found, pushing to stack:", log);
+                        
                         stack.push(log);
                     }
                 }
@@ -325,7 +325,7 @@ exports.handler = async (event) => {
 
               // Step 3: Delete all unmatched logs (remaining items in the stack)
               const unmatchedLogs = stack.map(log => log.log_id); // Extract log_ids of all unmatched logs
-              console.log("Unmatched logs:", unmatchedLogs);
+              
               if (unmatchedLogs.length > 0) {
                   await sqlConnectionTableCreator`
                       DELETE FROM "User_Session_Engagement_Log"
@@ -333,7 +333,7 @@ exports.handler = async (event) => {
                   `;
               }
 
-              console.log("Session durations:", sessionDurations);
+              
 
               // Step 4: Calculate the average session time per topic
               const sessionDetails = await sqlConnectionTableCreator`
@@ -346,7 +346,7 @@ exports.handler = async (event) => {
 
               const topicDurations = {}; // topic_id => { totalDuration: number, sessionCount: number, uniqueUsers: Set }
 
-              console.log("Session details:", sessionDetails);
+              
 
               sessionDetails.forEach(({ session_id, topic_id, user_id }) => {
                   if (!topicDurations[topic_id]) {
@@ -359,7 +359,7 @@ exports.handler = async (event) => {
                   }
               });
 
-              console.log("Topic durations:", topicDurations);
+              
 
               const totalSessionTimes = Object.entries(topicDurations).map(([topic_id, data]) => ({
                   topic_id,
@@ -477,9 +477,9 @@ exports.handler = async (event) => {
     }
   } catch (error) {
     response.statusCode = 400;
-    console.log(error);
+    
     response.body = JSON.stringify(error.message);
   }
-  console.log(response);
+  
   return response;
 };

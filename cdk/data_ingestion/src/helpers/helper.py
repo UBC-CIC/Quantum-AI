@@ -74,8 +74,6 @@ def store_topic_data(
     embeddings (BedrockEmbeddings): The embeddings instance.
     """
 
-    print("vectorstore_config_dict",vectorstore_config_dict)
-
     vectorstore, connection_string = get_vectorstore(
         collection_name=vectorstore_config_dict['collection_name'],
         embeddings=embeddings,
@@ -85,9 +83,6 @@ def store_topic_data(
         host=vectorstore_config_dict['host'],
         port=int(vectorstore_config_dict['port'])
     )
-    
-    print("vector_store",vectorstore)
-    print("connection_string",connection_string)
     
     if vectorstore:
         # define record manager

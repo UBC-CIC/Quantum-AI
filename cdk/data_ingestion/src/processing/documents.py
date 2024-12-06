@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 s3 = boto3.client('s3')
 
 EMBEDDING_BUCKET_NAME = os.environ["EMBEDDING_BUCKET_NAME"]
-print('EMBEDDING_BUCKET_NAME',EMBEDDING_BUCKET_NAME)
+
 
 def extract_txt(
     bucket: str, 
@@ -68,7 +68,7 @@ def store_doc_texts(
     with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
         s3.download_file(bucket, f"{topic}/documents/{filename}", tmp_file.name)
         file_name, file_type = filename.rsplit('.', 1)  # Split on the last period
-        print(f"Downloaded {filename} to {tmp_file.name} with type {file_type}")
+        
         if file_type not in supported_types:
             file_type = "txt"
         doc = pymupdf.open(tmp_file.name, filetype=file_type)
@@ -111,14 +111,14 @@ def add_document(
     List[Document]: A list of all document chunks for this document that were added to the vectorstore.
     """
     
-    print("output_bucket", output_bucket)
+    
     output_filenames = store_doc_texts(
         bucket=bucket,
         topic=topic,
         filename=filename,
         output_bucket=output_bucket
     )
-    print("output_filenames", output_filenames)
+    
     this_doc_chunks = store_doc_chunks(
         bucket=output_bucket,
         filenames=output_filenames,
@@ -171,7 +171,7 @@ def store_doc_chunks(
                 logger.warning(f"Empty chunk for {filename}")
         
         s3.delete_object(Bucket=bucket, Key=filename)
-        print(f"Deleting {filename} from {bucket}")
+        
         
         this_doc_chunks.extend(doc_chunks)
        
@@ -203,7 +203,7 @@ def process_documents(
             continue  # Skip pages without any content (e.g., if the bucket is empty)
         for file in page['Contents']:
             filename = file['Key']
-            print(f"Processing {filename}")
+            
             if filename.split('/')[-2] == "documents": # Ensures that only files in the 'documents' folder are processed
                     this_doc_chunks = add_document(
                         bucket=bucket,
@@ -223,7 +223,7 @@ def process_documents(
             cleanup="full",
             source_id_key="source"
         )
-        print(f"Indexing updates: \n {idx}")
+        
         logger.info(f"Indexing updates: \n {idx}")
     else:
         idx = index(
@@ -234,4 +234,4 @@ def process_documents(
             source_id_key="source"
         )
         logger.info("No documents found for indexing.")
-        print("No documents found for indexing.")
+        

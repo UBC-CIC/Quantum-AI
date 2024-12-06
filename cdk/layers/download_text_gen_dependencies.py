@@ -44,8 +44,7 @@ for package in packages:
         
         os.remove(package_wheel_file)
 
-        print(f"Downloaded and zipped {package} as {zip_file_name} in {target_directory}")
+        
     else:
         print(f"Wheel file for {package} not found.")
 
-print("All specified packages have been processed.")

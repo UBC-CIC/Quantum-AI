@@ -260,7 +260,7 @@ def process_documents(
             continue  # Skip pages without any content (e.g., if the bucket is empty)
         for file in page['Contents']:
             filename = file['Key']
-            print(f"Processing {filename}")
+            
             if filename.split('/')[-2] == "documents": # Ensures that only files in the 'documents' folder are processed
                     this_doc_chunks = add_document(
                         bucket=bucket,

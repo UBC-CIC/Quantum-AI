@@ -48,7 +48,7 @@ exports.handler = async (event) => {
           SET roles = array_append(roles, 'admin')
           WHERE user_email = ${email};
         `;
-        console.log('DB roles updated to include admin');
+        
       }
     } else if (cognitoRoles.some(role => ['user'].includes(role))) {
       const cognitoNonAdminRole = cognitoRoles.find(role => ['user'].includes(role));
@@ -60,7 +60,7 @@ exports.handler = async (event) => {
           SET roles = ${[cognitoNonAdminRole]}
           WHERE user_email = ${email};
         `;
-        console.log(`DB roles updated to match Cognito (${cognitoNonAdminRole})`);
+        
       } else if (dbRoles.length && dbRoles[0] !== cognitoNonAdminRole) {
         // If DB role doesn't match Cognito and isn't admin, update Cognito to match DB
         const removeFromGroupCommand = new AdminRemoveUserFromGroupCommand({
@@ -77,7 +77,7 @@ exports.handler = async (event) => {
         await client.send(removeFromGroupCommand);
         await client.send(addToGroupCommand);
 
-        console.log(`Cognito roles updated to match DB (${dbRoles[0]})`);
+        
       }
     }
 

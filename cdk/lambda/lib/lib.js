@@ -24,7 +24,7 @@ async function initializeConnection(SM_DB_CREDENTIALS, RDS_PROXY_ENDPOINT) {
     // Create the PostgreSQL connection
     global.sqlConnection = postgres(connectionConfig);
     
-    console.log("Database connection initialized");
+    
   } catch (error) {
     console.error("Error initializing database connection:", error);
     throw new Error("Failed to initialize database connection");

@@ -26,7 +26,7 @@ def get_secret(secret_name, expect_json=True):
         if expect_json:
             return json.loads(response)
         else:
-            print(response)
+            
             return response
 
     except json.JSONDecodeError as e:
@@ -306,7 +306,6 @@ def handler(event, context):
     
     try:
         logger.info("Generating response from the LLM.")
-        #print("history_aware_retriever",history_aware_retriever)
         response = get_response(
             query=user_query,
             llm=llm,

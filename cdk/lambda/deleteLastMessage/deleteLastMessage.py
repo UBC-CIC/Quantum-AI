@@ -21,7 +21,6 @@ def get_secret(secret_name, expect_json=True):
         if expect_json:
             return json.loads(response)
         else:
-            print(response)
             return response
 
     except json.JSONDecodeError as e:

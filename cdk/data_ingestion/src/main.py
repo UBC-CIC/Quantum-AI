@@ -4,6 +4,7 @@ import boto3
 import psycopg2
 from datetime import datetime, timezone
 import logging
+from collections import namedtuple
 
 from helpers.vectorstore import update_vectorstore
 from langchain_aws import BedrockEmbeddings
@@ -66,23 +67,17 @@ def connect_to_db():
             connection.close()
         return None
 
+S3FilePath = namedtuple("S3FilePath", ["topic_id", "file_category", "file_name", "file_type"])
 
 def parse_s3_file_path(file_key):
     # Assuming the file path is of the format: {topic_id}/{documents}/{file_name}.{file_type}
-    print(f"file_key: {file_key}")
     try:
         topic_id, file_category, filename_with_ext = file_key.split("/")
-        file_name, file_type = filename_with_ext.rsplit(
-            ".", 1
-        )  # Split on the last period
-        return topic_id, file_category, file_name, file_type
+        file_name, file_type = filename_with_ext.rsplit(".", 1)  # Split on the last period
+        return S3FilePath(topic_id=topic_id, file_category=file_category, file_name=file_name, file_type=file_type)
     except Exception as e:
         logger.error(f"Error parsing S3 file path: {e}")
         return {"statusCode": 400, "body": json.dumps("Error parsing S3 file path.")}
-
-
-# def log_file_deletion(file_key):
-#     print(f"File deleted: {file_key}")
 
 
 def insert_file_into_db(topic_id, file_name, file_type, file_path, bucket_name):
@@ -185,7 +180,6 @@ def update_vectorstore_from_s3(bucket, topic_id):
     }
 
     try:
-        print(f"Updating vectorstore for topic {topic_id}...")
         update_vectorstore(
             bucket=bucket,
             topic=topic_id,
@@ -196,6 +190,50 @@ def update_vectorstore_from_s3(bucket, topic_id):
         logger.error(f"Error updating vectorstore for topic {topic_id}: {e}")
         raise
 
+def handle_object_created(topic_id, general_topic_id, bucket_name, file_key, file_category, file_name, file_type):
+    """
+    Handles the logic when the event is 'ObjectCreated:' and topic_id is not equal to general_topic_id.
+    """
+    s3 = boto3.resource("s3")
+    copy_source = {
+        "Bucket": bucket_name,
+        "Key": file_key,
+    }
+    copy_dest_key = f"{general_topic_id}/{file_category}/{file_name}.{file_type}"
+    s3.meta.client.copy(copy_source, bucket_name, copy_dest_key)
+
+    # Insert the file into the PostgreSQL database
+    try:
+        insert_file_into_db(
+            topic_id=topic_id,
+            file_name=file_name,
+            file_type=file_type,
+            file_path=file_key,
+            bucket_name=bucket_name,
+        )
+        logger.info(f"File {file_name}.{file_type} inserted successfully.")
+    except Exception as e:
+        logger.error(
+            f"Error inserting file {file_name}.{file_type} into database: {e}"
+        )
+        return {
+            "statusCode": 500,
+            "body": json.dumps(
+                f"Error inserting file {file_name}.{file_type}: {e}"
+            ),
+        }
+
+def handle_else_branch(topic_id, general_topic_id, bucket_name, file_category, file_name, file_type):
+    """
+    Handles the logic when the event is not 'ObjectCreated:'.
+    """
+    logger.info(
+        f"File {file_name}.{file_type} is being deleted. Deleting files from database does not occur here."
+    )
+    if topic_id != general_topic_id:
+        s3 = boto3.client("s3")
+        file_key = f"{general_topic_id}/{file_category}/{file_name}.{file_type}"
+        s3.delete_object(Bucket=bucket_name, Key=file_key)
 
 def handler(event, context):
     records = event.get("Records", [])
@@ -208,13 +246,16 @@ def handler(event, context):
 
         # Only process files from the QUANTUMAI_DATA_INGESTION_BUCKET
         if bucket_name != QUANTUMAI_DATA_INGESTION_BUCKET:
-            print(f"Ignoring event from non-target bucket: {bucket_name}")
             continue  # Ignore this event and move to the next one
         file_key = record["s3"]["object"]["key"]
 
         # if event_name.startswith('ObjectCreated:'):
         # Parse the file path
-        topic_id, file_category, file_name, file_type = parse_s3_file_path(file_key)
+        result = parse_s3_file_path(file_key)
+
+        # Access the parsed components from the named tuple
+        topic_id, file_category, file_name, file_type = result.topic_id, result.file_category, result.file_name, result.file_type
+
         if not topic_id or not file_name or not file_type:
             return {
                 "statusCode": 400,
@@ -231,45 +272,9 @@ def handler(event, context):
         general_topic_id = cur.fetchone()[0]
 
         if event_name.startswith("ObjectCreated:"):
-            if topic_id != general_topic_id:
-                s3 = boto3.resource("s3")
-                copy_source = {
-                    "Bucket": bucket_name,
-                    "Key": file_key,
-                }
-                copy_dest_key = (
-                    f"{general_topic_id}/{file_category}/{file_name}.{file_type}"
-                )
-                s3.meta.client.copy(copy_source, bucket_name, copy_dest_key)
-
-                # Insert the file into the PostgreSQL database
-                try:
-                    insert_file_into_db(
-                        topic_id=topic_id,
-                        file_name=file_name,
-                        file_type=file_type,
-                        file_path=file_key,
-                        bucket_name=bucket_name,
-                    )
-                    logger.info(f"File {file_name}.{file_type} inserted successfully.")
-                except Exception as e:
-                    logger.error(
-                        f"Error inserting file {file_name}.{file_type} into database: {e}"
-                    )
-                    return {
-                        "statusCode": 500,
-                        "body": json.dumps(
-                            f"Error inserting file {file_name}.{file_type}: {e}"
-                        ),
-                    }
+            handle_object_created(topic_id, general_topic_id, bucket_name, file_key, file_category, file_name, file_type)
         else:
-            logger.info(
-                f"File {file_name}.{file_type} is being deleted. Deleting files from database does not occur here."
-            )
-            if topic_id != general_topic_id:
-                s3 = boto3.client("s3")
-                file_key = f"{general_topic_id}/{file_category}/{file_name}.{file_type}"
-                s3.delete_object(Bucket=bucket_name, Key=file_key)
+            handle_else_branch(topic_id, general_topic_id, bucket_name, file_category, file_name, file_type)
 
         # Update embeddings for topic after the file is successfully inserted into the database
         try:

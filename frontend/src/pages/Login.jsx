@@ -69,11 +69,7 @@ export const Login = () => {
         username: username,
         password: password,
       });
-      console.log(
-        "USER SUCCESSFULLY LOGGED IN:",
-        user.isSignedIn,
-        user.nextStep.signInStep
-      );
+      
       if (!user.isSignedIn) {
         if (
           user.nextStep.signInStep ===
@@ -99,7 +95,7 @@ export const Login = () => {
         progress: undefined,
         theme: "colored",
       });
-      console.log("Error logging in:", error);
+      
       setLoading(false);
     }
   };
@@ -157,7 +153,7 @@ export const Login = () => {
     setPasswordError("");
     try {
       setLoading(true);
-      console.log("signing up");
+      
       const { isSignUpComplete, userId, nextStep } = await signUp({
         username: username,
         password: password,
@@ -165,9 +161,9 @@ export const Login = () => {
           email: username,
         },
       });
-      console.log("signed up");
+      
       setNewSignUp(false);
-      console.log("User signed up:", isSignUpComplete, userId, nextStep);
+      
       if (!isSignUpComplete) {
         if (nextStep.signUpStep === "CONFIRM_SIGN_UP") {
           setSignUpConfirmation(true);
@@ -185,7 +181,7 @@ export const Login = () => {
         progress: undefined,
         theme: "colored",
       });
-      console.log("Error signing up:", error);
+      
       setLoading(false);
       setError(error.message);
     }
@@ -216,7 +212,7 @@ export const Login = () => {
     setPasswordError("");
     try {
       setLoading(true);
-      console.log("Setting new password for user:", username);
+      
       const attributes = {};
       const user = await confirmSignIn({
         challengeResponse: newPassword,
@@ -224,7 +220,7 @@ export const Login = () => {
           userAttributes: attributes,
         },
       });
-      console.log("User logged in:", user.isSignedIn, user.nextStep.signInStep);
+      
       if (user.isSignedIn) {
         // Send user data to backend
         const session = await fetchAuthSession();
@@ -251,7 +247,7 @@ export const Login = () => {
           }
         );
         const data = await response.json();
-        console.log("Response from backend:", data);
+        
         window.location.reload();
       }
     } catch (error) {
@@ -265,7 +261,7 @@ export const Login = () => {
         progress: undefined,
         theme: "colored",
       });
-      console.log("Error setting new password:", error);
+      
       setLoading(false);
       setNewUserPassword(false);
     }
@@ -282,7 +278,7 @@ export const Login = () => {
         confirmationCode: confirmationCode,
       });
 
-      console.log("code", confirmationCode);
+      
 
       // Automatically log in the user
       const user = await signIn({
@@ -290,7 +286,7 @@ export const Login = () => {
         password: password,
       });
 
-      console.log("handle auto sign in", user.isSignedIn);
+      
 
       if (user.isSignedIn) {
         // Send user data to backend
@@ -318,7 +314,7 @@ export const Login = () => {
           }
         );
         const data = await response.json();
-        console.log("Response from backend:", data);
+        
 
         setLoading(false);
         setNewSignUp(false);
@@ -338,7 +334,7 @@ export const Login = () => {
         progress: undefined,
         theme: "colored",
       });
-      console.log("Error confirming sign-up:", error);
+      
       setLoading(false);
       setConfirmationError(error.message);
     }
@@ -361,7 +357,7 @@ export const Login = () => {
         progress: undefined,
         theme: "colored",
       });
-      console.log("Error resending confirmation code:", error);
+      
       setLoading(false);
     }
   };
@@ -388,17 +384,12 @@ export const Login = () => {
   function handleResetPasswordNextSteps(output) {
     const { nextStep } = output;
     switch (nextStep.resetPasswordStep) {
-      case "CONFIRM_RESET_PASSWORD_WITH_CODE":
-        // eslint-disable-next-line no-case-declarations
-        const codeDeliveryDetails = nextStep.codeDeliveryDetails;
-        console.log(
-          `Confirmation code was sent to ${codeDeliveryDetails.deliveryMedium}`
-        );
+      case "CONFIRM_RESET_PASSWORD_WITH_CODE":        
         setStep("confirmReset");
         break;
       case "DONE":
         setStep("done");
-        console.log("Successfully reset password.");
+        
         break;
     }
   }
@@ -411,7 +402,7 @@ export const Login = () => {
         confirmationCode,
         newPassword,
       });
-      console.log("username", username);
+      
       setStep("done");
       setError("");
     } catch (error) {
@@ -425,9 +416,9 @@ export const Login = () => {
         progress: undefined,
         theme: "colored",
       });
-      console.log(error);
-      console.log(username);
-      console.log(confirmationCode);
+      
+      
+      
       setError(error.message);
     }
   }

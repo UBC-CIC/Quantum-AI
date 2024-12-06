@@ -17,6 +17,6 @@ if package_wheel_file:
     
     os.remove(package_wheel_file)
 
-    print(f"Downloaded and zipped langchain-experimental as {zip_file_name} in {current_directory}")
+    
 else:
     print("Wheel file for langchain-experimental not found.")

@@ -8,7 +8,7 @@ import secrets
 DB_SECRET_NAME = os.environ["DB_SECRET_NAME"]
 DB_USER_SECRET_NAME = os.environ["DB_USER_SECRET_NAME"]
 DB_PROXY = os.environ["DB_PROXY"]
-print(psycopg2.__version__)
+
 
 
 def getDbSecret():
@@ -36,7 +36,7 @@ connection = createConnection()
 
 def handler(event, context):
     global connection
-    print(connection)
+    
     if connection.closed:
         connection = createConnection()
     
@@ -253,54 +253,54 @@ def handler(event, context):
         """
         
         cursor.execute(sql)
-        print(cursor.fetchall())
+        
 
         sql = """
             SELECT * FROM "Documents";
         """
         cursor.execute(sql)
-        print(cursor.fetchall())
+        
         
         sql = """
             SELECT * FROM "Topics";
         """
         cursor.execute(sql)
-        print(cursor.fetchall())
+        
 
         sql = """
             SELECT * FROM "Sessions";
         """
         cursor.execute(sql)
-        print(cursor.fetchall())
+        
 
         sql = """
             SELECT * FROM "Messages";
         """
         cursor.execute(sql)
-        print(cursor.fetchall())
+        
 
         sql = """
             SELECT * FROM "User_Engagement_Log";
         """
         cursor.execute(sql)
-        print(cursor.fetchall())
+        
 
         sql = """
             SELECT * FROM "User_Session_Engagement_Log";
         """
         cursor.execute(sql)
-        print(cursor.fetchall())
+        
 
         sql = """
             SELECT * FROM "Feedback";
         """
         cursor.execute(sql)
-        print(cursor.fetchall())
+        
 
         # Close cursor and connection
         cursor.close()
         connection.close()
 
-        print("Initialization completed")
+        
     except Exception as e:
         print(e)

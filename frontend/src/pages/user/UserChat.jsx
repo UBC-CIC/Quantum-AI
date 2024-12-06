@@ -485,9 +485,9 @@ const UserChat = ({ admin }) => {
         setCurrentSessionId(sessionData.session_id);
         setSessions((prevItems) => [...prevItems, sessionData]);
         //set previous session to second last session if there is one
-        console.log("Checking Sessions:", sessions);
+        
         if (sessions.length > 0) {
-          console.log("Setting previous session:", sessions[sessions.length - 1]);
+          
           setPreviousSession(sessions[sessions.length - 1]);
         }
         setSession(sessionData);
@@ -521,7 +521,7 @@ const UserChat = ({ admin }) => {
         }
       );
       if (response.ok) {
-        console.log("Logging deleted session end:", sessionDelete.session_id);
+        
         createUserSessionEngagementLog(sessionDelete.session_id, "session end")
         setSessions((prevSessions) =>
           prevSessions.filter(
@@ -692,7 +692,7 @@ const UserChat = ({ admin }) => {
           throw new Error(`Failed to create user session engagement logs: ${response1.statusText}`);
         }
         setPreviousSession(currentSession);
-        console.log("Switched sessions");
+        
         return response1.json();
       })
       .catch((error) => {
@@ -703,14 +703,14 @@ const UserChat = ({ admin }) => {
 
   useEffect(() => {
     if (session) {
-      console.log("Session Change:", session.session_id);
+      
       if (previousSession) {
-        console.log("Previous Session:", previousSession.session_id);
+        
         if (session.session_id !== previousSession.session_id) {
           switchingSessions(previousSession, session);
         }
       } else {
-        console.log("No previous session");
+        
         createUserSessionEngagementLog(session.session_id, "session start")
         setPreviousSession(session);
       }
@@ -723,17 +723,17 @@ const UserChat = ({ admin }) => {
 
     setIsSendingFeedback(true);
     
-    console.log("Submitting feedback:", feedbackRating, feedbackDescription);
+    
     const topicId = session.topic_id;
-    console.log("Message ID:", messageId);
-    console.log("Messages:", messages);
+    
+    
 
     const messageIndex = messages.findIndex(msg => msg.message_id === messageId);
     const AIMessage = messageIndex !== -1 ? messages[messageIndex].message_content : '';
     const userMessage = messageIndex > 0 ? messages[messageIndex - 1].message_content : '';
 
-    console.log("User Message:", userMessage);
-    console.log("AI Message:", AIMessage);
+    
+    
 
     try {
       const session = await fetchAuthSession();

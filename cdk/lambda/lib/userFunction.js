@@ -21,7 +21,7 @@ exports.handler = async (event) => {
     (attr) => attr.Name === "email"
   );
   const userEmailAttribute = emailAttr ? emailAttr.Value : null;
-  console.log(userEmailAttribute);
+  
   // Check for query string parameters
 
   const queryStringParams = event.queryStringParameters || {};
@@ -109,7 +109,7 @@ exports.handler = async (event) => {
             }
           } catch (err) {
             response.statusCode = 500;
-            console.log(err);
+            
             response.body = JSON.stringify({ error: "Internal server error" });
           }
         } else {
@@ -138,7 +138,7 @@ exports.handler = async (event) => {
             }
           } catch (err) {
             response.statusCode = 500;
-            console.log(err);
+            
             response.body = JSON.stringify({ error: "Internal server error" });
           }
         } else {
@@ -167,7 +167,7 @@ exports.handler = async (event) => {
             }
           } catch (err) {
             response.statusCode = 500;
-            console.log(err);
+            
             response.body = JSON.stringify({ error: "Internal server error" });
           }
         } else {
@@ -405,10 +405,10 @@ exports.handler = async (event) => {
           const { message_content } = JSON.parse(event.body);
           const userEmail = event.queryStringParameters.email;
           const topicId = event.queryStringParameters.topic_id;
-          console.log("message", message_content);
-          console.log("session", sessionId);
-          console.log("email", userEmail);
-          console.log("topic", topicId);
+          
+          
+          
+          
 
           try {
             // Insert the new message into the Messages table with a generated UUID for message_id
@@ -442,7 +442,7 @@ exports.handler = async (event) => {
             response.body = JSON.stringify(messageData);
           } catch (err) {
             response.statusCode = 500;
-            console.log(err);
+            
             response.body = JSON.stringify({ error: "Internal server error" });
           }
         } else {
@@ -464,10 +464,10 @@ exports.handler = async (event) => {
           const { message_content } = JSON.parse(event.body);
           const userEmail = event.queryStringParameters.email;
           const topicId = event.queryStringParameters.topic_id;
-          console.log("AI message", message_content);
-          console.log("session", sessionId);
-          console.log("email", userEmail);
-          console.log("topic", topicId);
+          
+          
+          
+          
 
           try {
             // Insert the new AI message into the Messages table with a generated UUID for message_id
@@ -501,7 +501,7 @@ exports.handler = async (event) => {
             response.body = JSON.stringify(messageData);
           } catch (err) {
             response.statusCode = 500;
-            console.log(err);
+            
             response.body = JSON.stringify({ error: "Internal server error" });
           }
         } else {
@@ -538,7 +538,7 @@ exports.handler = async (event) => {
               }
             } catch (err) {
               response.statusCode = 500;
-              console.log(err);
+              
               response.body = JSON.stringify({ error: "Internal server error" });
             }
           } else {
@@ -612,9 +612,9 @@ exports.handler = async (event) => {
             const feedbackRating = event.queryStringParameters.feedback_rating;
             const feedbackDescription = event.queryStringParameters.feedback_description;
             const { user_message, ai_message } = JSON.parse(event.body);
-            console.log("topicId", topicId);
-            console.log("feedbackRating", feedbackRating);
-            console.log("feedbackDescription", feedbackDescription);
+            
+            
+            
 
             try {
               const feedbackData = await sqlConnection`
@@ -649,10 +649,10 @@ exports.handler = async (event) => {
     }
   } catch (error) {
     response.statusCode = 400;
-    console.log(error);
+    
     response.body = JSON.stringify(error.message);
   }
-  console.log(response);
+  
 
   return response;
 };

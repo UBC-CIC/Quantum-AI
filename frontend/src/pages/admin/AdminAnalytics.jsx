@@ -84,7 +84,7 @@ const AdminAnalytics = () => {
             if (b.topic_name === "General") return 1;
             return 0;
           });
-          console.log("analytics_data", sortedAnalyticsData);
+          
           setData(sortedAnalyticsData);
           const graphDataFormatted = sortedAnalyticsData.map((topic) => ({
             module: topic.topic_name,
@@ -123,7 +123,7 @@ const AdminAnalytics = () => {
             if (b.topic_name === "General") return 1;
             return 0;
           });
-          console.log("feedback_data", sortedFeedbackData);
+          
           setFeedbackData(sortedFeedbackData);
         } else {
           console.error("Failed to fetch feedback:", response.statusText);
