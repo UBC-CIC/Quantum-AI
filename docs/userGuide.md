@@ -60,6 +60,8 @@ The following Topic Prompt is a prompt that has been tested and is suggested for
 
 ***Please note that changing the topic prompt can drastically affect the LLM's performance.***
 
+Once you've created a new topic, please wait a few minutes (depending on how large the file sizes in your topic are) so that the files are properly ingested in the backend before sending the LLM your query as it may not immediately work.
+
 On the Analytics page, you can view metrics on how users are engaging with the application including statistics on each topic as well as feedback for each topic.
 ![image](./images/admin-analytics.png)
 ![image](./images/admin-insights.png)
