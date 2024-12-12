@@ -14,12 +14,14 @@ langchain.verbose = True
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
-DB_SECRET_NAME = os.environ["SM_DB_CREDENTIALS"]
-REGION = os.environ["REGION"]
+DB_SECRET_NAME = os.environ.get("SM_DB_CREDENTIALS")
+REGION = os.environ.get("REGION")
+RDS_PROXY_ENDPOINT = os.environ.get("RDS_PROXY_ENDPOINT")
 
 def get_secret(secret_name, expect_json=True):
     try:
         # secretsmanager client to get db credentials
+         
         sm_client = boto3.client("secretsmanager")
         response = sm_client.get_secret_value(SecretId=secret_name)["SecretString"]
         
@@ -78,12 +80,13 @@ def get_topic_name(topic_id):
             'dbname': db_secret["dbname"],
             'user': db_secret["username"],
             'password': db_secret["password"],
-            'host': db_secret["host"],
+            'host': RDS_PROXY_ENDPOINT,
             'port': db_secret["port"]
         }
 
         connection_string = " ".join([f"{key}={value}" for key, value in connection_params.items()])
 
+         
         connection = psycopg2.connect(connection_string)
         cur = connection.cursor()
         logger.info("Connected to RDS instance!")
@@ -131,7 +134,7 @@ def get_system_prompt(topic_id):
             'dbname': db_secret["dbname"],
             'user': db_secret["username"],
             'password': db_secret["password"],
-            'host': db_secret["host"],
+            'host': RDS_PROXY_ENDPOINT,
             'port': db_secret["port"]
         }
 
@@ -161,6 +164,7 @@ def get_system_prompt(topic_id):
         
         return system_prompt
 
+     
     except Exception as e:
         logger.error(f"Error fetching system prompt: {e}")
         if connection:
@@ -174,76 +178,80 @@ def get_system_prompt(topic_id):
         logger.info("Connection closed.")
 
 def handler(event, context):
-    logger.info("Text Generation Lambda function is called!")
+     
+    try:
+        logger.info("Text Generation Lambda function is called!")
 
-    query_params = event.get("queryStringParameters", {})
+        query_params = event.get("queryStringParameters", {})
 
-    topic_id = query_params.get("topic_id", "")
-    topic = get_topic_name(topic_id)
-    session_id = query_params.get("session_id", "")
-    session_name = query_params.get("session_name") or f"New Chat - {topic}"
+        topic_id = query_params.get("topic_id", "")
+        topic = get_topic_name(topic_id)
+        session_id = query_params.get("session_id", "")
+        session_name = query_params.get("session_name") or f"New Chat - {topic}"
 
-    if not topic_id:
-        logger.error("Missing required parameter: topic_id")
-        return {
-            'statusCode': 400,
-            "headers": {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Headers": "*",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "*",
-            },
-            'body': json.dumps('Missing required parameter: topic_id')
-        }
+        if not topic_id:
+            logger.error("Missing required parameter: topic_id")
+            return {
+                'statusCode': 400,
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Headers": "*",
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "*",
+                },
+                'body': json.dumps('Missing required parameter: topic_id')
+            }
 
-    if not session_id:
-        logger.error("Missing required parameter: session_id")
-        return {
-            'statusCode': 400,
-            "headers": {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Headers": "*",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "*",
-            },
-            'body': json.dumps('Missing required parameter: session_id')
-        }
+        if not session_id:
+            logger.error("Missing required parameter: session_id")
+            return {
+                'statusCode': 400,
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Headers": "*",
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "*",
+                },
+                'body': json.dumps('Missing required parameter: session_id')
+            }
 
-    system_prompt = get_system_prompt(topic_id)
+        system_prompt = get_system_prompt(topic_id)
 
-    if system_prompt is None:
-        logger.error(f"Error fetching system prompt for topic_id: {topic_id}")
-        return {
-            'statusCode': 400,
-            "headers": {
-                "Content-Type": "application/json",
-                "Access-Control-Allow-Headers": "*",
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "*",
-            },
-            'body': json.dumps('Error fetching system prompt')
-        }
+        if system_prompt is None:
+            logger.error(f"Error fetching system prompt for topic_id: {topic_id}")
+            return {
+                'statusCode': 400,
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Headers": "*",
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "*",
+                },
+                'body': json.dumps('Error fetching system prompt')
+            }
 
-    if topic is None:
-        logger.error(f"Invalid topic_id: {topic_id}")
-        return {
-            'statusCode': 400,
-            'body': json.dumps('Invalid topic_id')
-        }
-    
-    body = {} if event.get("body") is None else json.loads(event.get("body"))
-    question = body.get("message_content", "")
-    
-    if not question:
-        logger.error(f"No message content found in the request body.")
-        return {
-            'statusCode': 400,
-            'body': json.dumps('No message content found in the request body')
-        }
-    else:
-        logger.info(f"Processing user question: {question}")
-        user_query = get_user_query(question)
-    
+        if topic is None:
+            logger.error(f"Invalid topic_id: {topic_id}")
+            return {
+                'statusCode': 400,
+                'body': json.dumps('Invalid topic_id')
+            }
+        
+        body = {} if event.get("body") is None else json.loads(event.get("body"))
+        question = body.get("message_content", "")
+        
+        if not question:
+            logger.error(f"No message content found in the request body.")
+            return {
+                'statusCode': 400,
+                'body': json.dumps('No message content found in the request body')
+            }
+        else:
+            logger.info(f"Processing user question: {question}")
+            user_query = get_user_query(question)  
+    except Exception as e:
+        logger.error(f"Error processing request: {e}")
+
     try:
         logger.info("Creating Bedrock LLM instance.")
         llm = get_bedrock_llm(BEDROCK_LLM_ID)
@@ -268,7 +276,7 @@ def handler(event, context):
             'dbname': db_secret["dbname"],
             'user': db_secret["username"],
             'password': db_secret["password"],
-            'host': db_secret["host"],
+            'host': RDS_PROXY_ENDPOINT,
             'port': db_secret["port"]
         }
     except Exception as e:

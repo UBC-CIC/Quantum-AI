@@ -900,7 +900,7 @@ export class ApiGatewayStack extends cdk.Stack {
         functionName: `${resourcePrefix}-DataIngestLambdaDockerFunc`,
         environment: {
           SM_DB_CREDENTIALS: db.secretPathAdminName,
-          RDS_PROXY_ENDPOINT: db.rdsProxyEndpoint,
+          RDS_PROXY_ENDPOINT: db.rdsProxyEndpointAdmin,
           BUCKET: dataIngestionBucket.bucketName,
           REGION: this.region,
           EMBEDDING_BUCKET_NAME: embeddingStorageBucket.bucketName,

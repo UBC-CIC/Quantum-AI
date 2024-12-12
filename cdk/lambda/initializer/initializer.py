@@ -232,11 +232,14 @@ def handler(event, context):
 
         # comment out to on redeployment
         dbSecret.update(authInfoTableCreator)
+         
         sm_client = boto3.client("secretsmanager")
         sm_client.put_secret_value(
             SecretId=DB_PROXY, SecretString=json.dumps(dbSecret)
         )
 
+         
+         
         #
         ## Load client username and password to SSM
         ##
@@ -304,3 +307,6 @@ def handler(event, context):
         
     except Exception as e:
         print(e)
+        cursor.close()
+        connection.close()
+        raise e
