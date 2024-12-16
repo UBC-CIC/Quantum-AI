@@ -5,89 +5,111 @@ import logging
 import psycopg2
 import langchain
 from langchain_aws import BedrockEmbeddings
+
 from helpers.vectorstore import get_vectorstore_retriever
 from helpers.chat import get_bedrock_llm, get_initial_user_query, get_user_query, create_dynamodb_history_table, get_response, update_session_name
-langchain.debug = True
-langchain.verbose = True
 
 # Set up basic logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
-DB_SECRET_NAME = os.environ.get("SM_DB_CREDENTIALS")
-REGION = os.environ.get("REGION")
-RDS_PROXY_ENDPOINT = os.environ.get("RDS_PROXY_ENDPOINT")
+# Environment variables
+DB_SECRET_NAME = os.environ["SM_DB_CREDENTIALS"]
+REGION = os.environ["REGION"]
+RDS_PROXY_ENDPOINT = os.environ["RDS_PROXY_ENDPOINT"]
+BEDROCK_LLM_PARAM = os.environ["BEDROCK_LLM_PARAM"]
+EMBEDDING_MODEL_PARAM = os.environ["EMBEDDING_MODEL_PARAM"]
+TABLE_NAME_PARAM = os.environ["TABLE_NAME_PARAM"]
+
+# AWS Clients
+secrets_manager_client = boto3.client("secretsmanager")
+ssm_client = boto3.client("ssm", region_name=REGION)
+bedrock_runtime = boto3.client("bedrock-runtime", region_name=REGION)
+
+# Cached resources
+connection = None
+db_secret = None
+BEDROCK_LLM_ID = None
+EMBEDDING_MODEL_ID = None
+TABLE_NAME = None
+
+# Cached embeddings instance
+embeddings = None
 
 def get_secret(secret_name, expect_json=True):
-    try:
-        # secretsmanager client to get db credentials
-         
-        sm_client = boto3.client("secretsmanager")
-        response = sm_client.get_secret_value(SecretId=secret_name)["SecretString"]
-        
-        if expect_json:
-            return json.loads(response)
-        else:
-            
-            return response
+    global db_secret
+    if db_secret is None:
+        try:
+            response = secrets_manager_client.get_secret_value(SecretId=secret_name)["SecretString"]
+            db_secret = json.loads(response) if expect_json else response
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to decode JSON for secret {secret_name}: {e}")
+            raise ValueError(f"Secret {secret_name} is not properly formatted as JSON.")
+        except Exception as e:
+            logger.error(f"Error fetching secret {secret_name}: {e}")
+            raise
+    return db_secret
 
-    except json.JSONDecodeError as e:
-        logger.error(f"Failed to decode JSON for secret {secret_name}: {e}")
-        raise ValueError(f"Secret {secret_name} is not properly formatted as JSON.")
-    except Exception as e:
-        logger.error(f"Error fetching secret {secret_name}: {e}")
-        raise
-
-def get_parameter(param_name):
+def get_parameter(param_name, cached_var):
     """
     Fetch a parameter value from Systems Manager Parameter Store.
     """
-    try:
-        ssm_client = boto3.client("ssm", region_name=REGION)
-        response = ssm_client.get_parameter(Name=param_name, WithDecryption=True)
-        return response["Parameter"]["Value"]
-    except Exception as e:
-        logger.error(f"Error fetching parameter {param_name}: {e}")
-        raise
+    if cached_var is None:
+        try:
+            response = ssm_client.get_parameter(Name=param_name, WithDecryption=True)
+            cached_var = response["Parameter"]["Value"]
+        except Exception as e:
+            logger.error(f"Error fetching parameter {param_name}: {e}")
+            raise
+    return cached_var
+
+def initialize_constants():
+    global BEDROCK_LLM_ID, EMBEDDING_MODEL_ID, TABLE_NAME, embeddings
+    BEDROCK_LLM_ID = get_parameter(BEDROCK_LLM_PARAM, BEDROCK_LLM_ID)
+    EMBEDDING_MODEL_ID = get_parameter(EMBEDDING_MODEL_PARAM, EMBEDDING_MODEL_ID)
+    TABLE_NAME = get_parameter(TABLE_NAME_PARAM, TABLE_NAME)
+
+    if embeddings is None:
+        embeddings = BedrockEmbeddings(
+            model_id=EMBEDDING_MODEL_ID,
+            client=bedrock_runtime,
+            region_name=REGION,
+        )
     
-## GET PARAMETER VALUES FOR CONSTANTS
-BEDROCK_LLM_ID = get_parameter(os.environ["BEDROCK_LLM_PARAM"])
-EMBEDDING_MODEL_ID = get_parameter(os.environ["EMBEDDING_MODEL_PARAM"])
-TABLE_NAME = get_parameter(os.environ["TABLE_NAME_PARAM"])
+    create_dynamodb_history_table(TABLE_NAME)
 
-## GETTING AMAZON TITAN EMBEDDINGS MODEL
-bedrock_runtime = boto3.client(
-    service_name="bedrock-runtime",
-    region_name=REGION,
-)
-
-embeddings = BedrockEmbeddings(
-    model_id=EMBEDDING_MODEL_ID, 
-    client=bedrock_runtime,
-    region_name=REGION
-)
-
-create_dynamodb_history_table(TABLE_NAME)
+def connect_to_db():
+    global connection
+    if connection is None or connection.closed:
+        try:
+            secret = get_secret(DB_SECRET_NAME)
+            connection_params = {
+                'dbname': secret["dbname"],
+                'user': secret["username"],
+                'password': secret["password"],
+                'host': RDS_PROXY_ENDPOINT,
+                'port': secret["port"]
+            }
+            connection_string = " ".join([f"{key}={value}" for key, value in connection_params.items()])
+            connection = psycopg2.connect(connection_string)
+            logger.info("Connected to the database!")
+        except Exception as e:
+            logger.error(f"Failed to connect to database: {e}")
+            if connection:
+                connection.rollback()
+                connection.close()
+            raise
+    return connection
 
 def get_topic_name(topic_id):
-    connection = None
-    cur = None
-    try:
-        logger.info(f"Fetching topic name for topic_id: {topic_id}")
-        db_secret = get_secret(DB_SECRET_NAME)
-
-        connection_params = {
-            'dbname': db_secret["dbname"],
-            'user': db_secret["username"],
-            'password': db_secret["password"],
-            'host': RDS_PROXY_ENDPOINT,
-            'port': db_secret["port"]
+    connection = connect_to_db()
+    if connection is None:
+        logger.error("No database connection available.")
+        return {
+            "statusCode": 500,
+            "body": json.dumps("Database connection failed.")
         }
-
-        connection_string = " ".join([f"{key}={value}" for key, value in connection_params.items()])
-
-         
-        connection = psycopg2.connect(connection_string)
+    try:
         cur = connection.cursor()
         logger.info("Connected to RDS instance!")
 
@@ -102,7 +124,6 @@ def get_topic_name(topic_id):
         topic_name = result[0] if result else None
         
         cur.close()
-        connection.close()
         
         if topic_name:
             logger.info(f"Topic name for topic_id {topic_id} found: {topic_name}")
@@ -113,34 +134,21 @@ def get_topic_name(topic_id):
 
     except Exception as e:
         logger.error(f"Error fetching topic name: {e}")
-        if connection:
-            connection.rollback()
-        return None
-    finally:
         if cur:
             cur.close()
-        if connection:
-            connection.close()
-        logger.info("Connection closed.")
+        connection.rollback()
+        return None
 
 def get_system_prompt(topic_id):
-    connection = None
-    cur = None
-    try:
-        logger.info(f"Fetching system prompt for topic_id: {topic_id}")
-        db_secret = get_secret(DB_SECRET_NAME)
-
-        connection_params = {
-            'dbname': db_secret["dbname"],
-            'user': db_secret["username"],
-            'password': db_secret["password"],
-            'host': RDS_PROXY_ENDPOINT,
-            'port': db_secret["port"]
+    connection = connect_to_db()
+    if connection is None:
+        logger.error("No database connection available.")
+        return {
+            "statusCode": 500,
+            "body": json.dumps("Database connection failed.")
         }
-
-        connection_string = " ".join([f"{key}={value}" for key, value in connection_params.items()])
-
-        connection = psycopg2.connect(connection_string)
+    
+    try:
         cur = connection.cursor()
         logger.info("Connected to RDS instance!")
 
@@ -155,7 +163,6 @@ def get_system_prompt(topic_id):
         system_prompt = result[0] if result else None
         
         cur.close()
-        connection.close()
         
         if system_prompt:
             logger.info(f"System prompt for topic_id {topic_id} found: {system_prompt}")
@@ -163,94 +170,85 @@ def get_system_prompt(topic_id):
             logger.warning(f"No system prompt found for topic_id {topic_id}")
         
         return system_prompt
-
      
     except Exception as e:
         logger.error(f"Error fetching system prompt: {e}")
-        if connection:
-            connection.rollback()
-        return None
-    finally:
         if cur:
             cur.close()
-        if connection:
-            connection.close()
-        logger.info("Connection closed.")
+        connection.rollback()
+        return None
 
 def handler(event, context):
-     
-    try:
-        logger.info("Text Generation Lambda function is called!")
+    logger.info("Text Generation Lambda function is called!")
+    initialize_constants()
 
-        query_params = event.get("queryStringParameters", {})
+    query_params = event.get("queryStringParameters", {})
 
-        topic_id = query_params.get("topic_id", "")
-        topic = get_topic_name(topic_id)
-        session_id = query_params.get("session_id", "")
-        session_name = query_params.get("session_name") or f"New Chat - {topic}"
+    topic_id = query_params.get("topic_id", "")
+    topic = get_topic_name(topic_id)
+    session_id = query_params.get("session_id", "")
+    session_name = query_params.get("session_name") or f"New Chat - {topic}"
 
-        if not topic_id:
-            logger.error("Missing required parameter: topic_id")
-            return {
-                'statusCode': 400,
-                "headers": {
-                    "Content-Type": "application/json",
-                    "Access-Control-Allow-Headers": "*",
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "*",
-                },
-                'body': json.dumps('Missing required parameter: topic_id')
-            }
+    if not topic_id:
+        logger.error("Missing required parameter: topic_id")
+        return {
+            'statusCode': 400,
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "*",
+            },
+            'body': json.dumps('Missing required parameter: topic_id')
+        }
 
-        if not session_id:
-            logger.error("Missing required parameter: session_id")
-            return {
-                'statusCode': 400,
-                "headers": {
-                    "Content-Type": "application/json",
-                    "Access-Control-Allow-Headers": "*",
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "*",
-                },
-                'body': json.dumps('Missing required parameter: session_id')
-            }
+    if not session_id:
+        logger.error("Missing required parameter: session_id")
+        return {
+            'statusCode': 400,
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "*",
+            },
+            'body': json.dumps('Missing required parameter: session_id')
+        }
 
-        system_prompt = get_system_prompt(topic_id)
+    system_prompt = get_system_prompt(topic_id)
 
-        if system_prompt is None:
-            logger.error(f"Error fetching system prompt for topic_id: {topic_id}")
-            return {
-                'statusCode': 400,
-                "headers": {
-                    "Content-Type": "application/json",
-                    "Access-Control-Allow-Headers": "*",
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "*",
-                },
-                'body': json.dumps('Error fetching system prompt')
-            }
+    if system_prompt is None:
+        logger.error(f"Error fetching system prompt for topic_id: {topic_id}")
+        return {
+            'statusCode': 400,
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "*",
+            },
+            'body': json.dumps('Error fetching system prompt')
+        }
 
-        if topic is None:
-            logger.error(f"Invalid topic_id: {topic_id}")
-            return {
-                'statusCode': 400,
-                'body': json.dumps('Invalid topic_id')
-            }
-        
-        body = {} if event.get("body") is None else json.loads(event.get("body"))
-        question = body.get("message_content", "")
-        
-        if not question:
-            logger.error(f"No message content found in the request body.")
-            return {
-                'statusCode': 400,
-                'body': json.dumps('No message content found in the request body')
-            }
-        else:
-            logger.info(f"Processing user question: {question}")
-            user_query = get_user_query(question)  
-    except Exception as e:
-        logger.error(f"Error processing request: {e}")
+    if topic is None:
+        logger.error(f"Invalid topic_id: {topic_id}")
+        return {
+            'statusCode': 400,
+            'body': json.dumps('Invalid topic_id')
+        }
+    
+    body = {} if event.get("body") is None else json.loads(event.get("body"))
+    question = body.get("message_content", "")
+    
+    if not question:
+        logger.error(f"No message content found in the request body.")
+        return {
+            'statusCode': 400,
+            'body': json.dumps('No message content found in the request body')
+        }
+    else:
+        logger.info(f"Processing user question: {question}")
+        user_query = get_user_query(question)  
 
     try:
         logger.info("Creating Bedrock LLM instance.")

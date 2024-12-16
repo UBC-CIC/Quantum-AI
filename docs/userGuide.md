@@ -17,12 +17,12 @@ To sign up as an administrator, you need to sign up regularly first as a user:
 You then get a confirmation email to verify your email. Once you have a user account, to become an adminstrator, you need to change your user group with Cognito through the AWS Console:
 ![image](./images/user-pool.png)
 
-After clicking the user pool of the project, you need to find your email:
+After clicking the user pool of the project, you need to find your email and click on the user:
 ![image](./images/users.png)
 
 After clicking your email, you can add the 'admin' user group:
-![image](./images/add-user-group.png)
 ![image](./images/select-admin.png)
+![image](./images/add-user-group.png)
 ![image](./images/admin-added.png)
 
 Once the 'admin' user group is added, delete the 'user' user group:

@@ -7,64 +7,69 @@ import psycopg2
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+# AWS Clients
 dynamodb_client = boto3.client('dynamodb')
+secrets_manager_client = boto3.client('secretsmanager')
+ssm_client = boto3.client("ssm")
+
+# Global variables for caching
+connection = None
+db_secret = None
+TABLE_NAME = None
 
 DB_SECRET_NAME = os.environ["SM_DB_CREDENTIALS"]
 RDS_PROXY_ENDPOINT = os.environ["RDS_PROXY_ENDPOINT"]
 
 def get_secret(secret_name, expect_json=True):
-    try:
-        # secretsmanager client to get db credentials
-        sm_client = boto3.client("secretsmanager")
-        response = sm_client.get_secret_value(SecretId=secret_name)["SecretString"]
-        
-        if expect_json:
-            return json.loads(response)
-        else:
-            return response
-
-    except json.JSONDecodeError as e:
-        logger.error(f"Failed to decode JSON for secret {secret_name}: {e}")
-        raise ValueError(f"Secret {secret_name} is not properly formatted as JSON.")
-    except Exception as e:
-        logger.error(f"Error fetching secret {secret_name}: {e}")
-        raise
+    global db_secret
+    if db_secret is None:
+        try:
+            response = secrets_manager_client.get_secret_value(SecretId=secret_name)["SecretString"]
+            db_secret = json.loads(response) if expect_json else response
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to decode JSON for secret {secret_name}: {e}")
+            raise ValueError(f"Secret {secret_name} is not properly formatted as JSON.")
+        except Exception as e:
+            logger.error(f"Error fetching secret {secret_name}: {e}")
+            raise
+    return db_secret
 
 def get_parameter(param_name):
     """
     Fetch a parameter value from Systems Manager Parameter Store.
     """
-    try:
-        ssm_client = boto3.client("ssm")
-        response = ssm_client.get_parameter(Name=param_name, WithDecryption=True)
-        return response["Parameter"]["Value"]
-    except Exception as e:
-        logger.error(f"Error fetching parameter {param_name}: {e}")
-        raise
-
-## GET PARAMETER VALUES FOR CONSTANTS
-TABLE_NAME = get_parameter(os.environ["TABLE_NAME_PARAM"])
+    global TABLE_NAME
+    if TABLE_NAME is None:
+        try:
+            response = ssm_client.get_parameter(Name=param_name, WithDecryption=True)
+            TABLE_NAME = response["Parameter"]["Value"]
+        except Exception as e:
+            logger.error(f"Error fetching parameter {param_name}: {e}")
+            raise
+    return TABLE_NAME
 
 def connect_to_db():
-    try:
-        db_secret = get_secret(DB_SECRET_NAME)
-        connection_params = {
-            'dbname': db_secret["dbname"],
-            'user': db_secret["username"],
-            'password': db_secret["password"],
-            'host': RDS_PROXY_ENDPOINT,
-            'port': db_secret["port"]
-        }
-        connection_string = " ".join([f"{key}={value}" for key, value in connection_params.items()])
-        connection = psycopg2.connect(connection_string)
-        logger.info("Connected to the database!")
-        return connection
-    except Exception as e:
-        logger.error(f"Failed to connect to database: {e}")
-        if connection:
-            connection.rollback()
-            connection.close()
-        return None
+    global connection
+    if connection is None or connection.closed:
+        try:
+            secret = get_secret(DB_SECRET_NAME)
+            connection_params = {
+                'dbname': secret["dbname"],
+                'user': secret["username"],
+                'password': secret["password"],
+                'host': RDS_PROXY_ENDPOINT,
+                'port': secret["port"]
+            }
+            connection_string = " ".join([f"{key}={value}" for key, value in connection_params.items()])
+            connection = psycopg2.connect(connection_string)
+            logger.info("Connected to the database!")
+        except Exception as e:
+            logger.error(f"Failed to connect to database: {e}")
+            if connection:
+                connection.rollback()
+                connection.close()
+            raise
+    return connection
 
 def delete_last_two_db_messages(session_id):
     connection = connect_to_db()
@@ -97,7 +102,6 @@ def delete_last_two_db_messages(session_id):
         
         connection.commit()
         cur.close()
-        connection.close()
         logger.info(f"Successfully deleted the last two messages for session_id: {session_id}")
         return True
 
@@ -105,9 +109,7 @@ def delete_last_two_db_messages(session_id):
         logger.error(f"Error deleting messages from database: {e}")
         if cur:
             cur.close()
-        if connection:
-            connection.rollback()
-            connection.close()
+        connection.rollback()
         return False
 
 def lambda_handler(event, context):
@@ -130,8 +132,9 @@ def lambda_handler(event, context):
     
     try:
         # Fetch the conversation history from DynamoDB
+        table_name = get_parameter(os.environ["TABLE_NAME_PARAM"])
         response = dynamodb_client.get_item(
-            TableName=TABLE_NAME,
+            TableName=table_name,
             Key={
                 'SessionId': {
                     'S': session_id
@@ -174,7 +177,7 @@ def lambda_handler(event, context):
 
         # Update the conversation history in DynamoDB
         dynamodb_client.update_item(
-            TableName=TABLE_NAME,
+            TableName=table_name,
             Key={
                 'SessionId': {
                     'S': session_id

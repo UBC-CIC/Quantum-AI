@@ -15,6 +15,8 @@
     - [Step 1: Build AWS Amplify App](#step-1-build-aws-amplify-app)
     - [Step 2: Change Redirects](#step-2-change-redirects)
     - [Step 3: Visit Web App](#step-3-visit-web-app)
+  - [Creating a User](#creating-a-user)
+  - [Disabling Self Sign-up](#disabling-self-sign-up)
   - [Cleanup](#cleanup)
     - [Taking down the deployed stack](#taking-down-the-deployed-stack)
 
@@ -182,10 +184,39 @@ You can now navigate to the web app URL to see your application in action.
 ### Step 4 (Optional): Change Application Logo
 In order to change the logo that appears in multiple places in the application, you can replace the `logo.png` file in the `frontend/src/assets`directory with your own file but keep the same name. This will replace the current application logo with your own.
 
+## Creating a User
+
+To set up a user account on the app, you will need to do the following steps:
+
+1. At the [AWS online console](https://console.aws.amazon.com/console/home), enter `Cognito` in the search bar.
+   ![alt text](images/cognito_search.png)
+2. Click `User Pools` from the left hand sidebar and select the user pool with QuantumAI.
+   ![alt text](images/cognito_user_pool.png)
+3. Click the `Users` tab, then click `Create User`.
+   ![alt text](images/cognito_create_user.png)
+4. For Invitation message, select `Send an email invitation`. Then fill in the user's email address in the Email address text field below and select the `Mark email address as verified`. For Temporary password, select `Generate a password`. Then click `Create User`.
+   ![alt text](images/cognito_new_user.png)
+5. Once you have an account you need to be added to either the "admin" or "user" user group. First, find your email and click on the user. Next, here is an example with a user being added to the admin user group:
+![image](./images/select-admin.png)
+![image](./images/add-user-group.png)
+
+6. The user will receive an email to the email address that was previously entered containing their temporary password.
+   ![alt text](images/signupcode.png)
+7. When the user enters their email and temporary password on the sign in page of the app, they will then be prompted to replace their temporary password by setting a new password for the account.
+8. The new user account has been created!
+
+## Disabling Self Sign-up
+**This will not allow users to create their own accounts through the application.**
+
+1. Navigate back to same user pool in the previous step on the Cognito Console, click on `Sign-up` and scroll down until `Self-service sign-up`.
+ ![alt text](images/cognito_signup.png)
+1. In order to disable self sign up, the `Self-registration` option must be disabled. If it is not, simply click the `Edit` button and disable the feature.
+ ![alt text](images/cognito_disable_signup.png)
+
 ## Cleanup
 ### Taking down the deployed stack
 To take down the deployed stack for a fresh redeployment in the future, navigate to AWS Cloudformation on the AWS Console, click on the stack and hit Delete.
 
 Please wait for the stacks in each step to be properly deleted before deleting the stack downstream.
 
-Also make sure to delete secrets in Secrets Manager.
+Also make sure to delete secrets in Secrets Manager and the S3 buckets which are not automatically deleted with the stacks.

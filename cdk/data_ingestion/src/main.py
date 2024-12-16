@@ -18,63 +18,68 @@ REGION = os.environ["REGION"]
 QUANTUMAI_DATA_INGESTION_BUCKET = os.environ["BUCKET"]
 EMBEDDING_BUCKET_NAME = os.environ["EMBEDDING_BUCKET_NAME"]
 RDS_PROXY_ENDPOINT = os.environ["RDS_PROXY_ENDPOINT"]
+EMBEDDING_MODEL_PARAM = os.environ["EMBEDDING_MODEL_PARAM"]
+
+# AWS Clients
+secrets_manager_client = boto3.client("secretsmanager")
+ssm_client = boto3.client("ssm")
+bedrock_runtime = boto3.client("bedrock-runtime", region_name=REGION)
+s3_resource = boto3.resource("s3")
+s3_client = boto3.client("s3")
+
+# Cached resources
+connection = None
+db_secret = None
+EMBEDDING_MODEL_ID = None
 
 def get_secret():
-    # secretsmanager client to get db credentials
-    try:
-        sm_client = boto3.client("secretsmanager")
-        response = sm_client.get_secret_value(SecretId=DB_SECRET_NAME)["SecretString"]
-        secret = json.loads(response)
-        return secret
-    
-     
-    except Exception as e:
-        logger.error(f"Error fetching secret: {e}")
-        raise
-
-
+    global db_secret
+    if db_secret is None:
+        try:
+            response = secrets_manager_client.get_secret_value(SecretId=DB_SECRET_NAME)["SecretString"]
+            db_secret = json.loads(response)
+        except Exception as e:
+            logger.error(f"Error fetching secret {DB_SECRET_NAME}: {e}")
+            raise
+    return db_secret
  
-def get_parameter(param_name):
+def get_parameter():
     """
     Fetch a parameter value from Systems Manager Parameter Store.
     """
-    try:
-        ssm_client = boto3.client("ssm")
-        response = ssm_client.get_parameter(Name=param_name, WithDecryption=True)
-        return response["Parameter"]["Value"]
-    except Exception as e:
-        logger.error(f"Error fetching parameter {param_name}: {e}")
-        raise
-
-
-## GET PARAMETER VALUES FOR CONSTANTS
-EMBEDDING_MODEL_ID = get_parameter(os.environ["EMBEDDING_MODEL_PARAM"])
+    global EMBEDDING_MODEL_ID
+    if EMBEDDING_MODEL_ID is None:
+        try:
+            response = ssm_client.get_parameter(Name=EMBEDDING_MODEL_PARAM, WithDecryption=True)
+            EMBEDDING_MODEL_ID = response["Parameter"]["Value"]
+        except Exception as e:
+            logger.error(f"Error fetching parameter {EMBEDDING_MODEL_PARAM}: {e}")
+            raise
+    return EMBEDDING_MODEL_ID
 
 
 def connect_to_db():
-    try:
-        db_secret = get_secret()
-        connection_params = {
-            "dbname": db_secret["dbname"],
-            "user": db_secret["username"],
-            "password": db_secret["password"],
-            "host": RDS_PROXY_ENDPOINT,
-            "port": db_secret["port"],
-        }
-         
-        connection_string = " ".join(
-            [f"{key}={value}" for key, value in connection_params.items()]
-        )
-        connection = psycopg2.connect(connection_string)
-        logger.info("Connected to the database!")
-        return connection
-    except Exception as e:
-        logger.error(f"Failed to connect to database: {e}")
-         
-        if connection:
-            connection.rollback()
-            connection.close()
-        return None
+    global connection
+    if connection is None or connection.closed:
+        try:
+            secret = get_secret()
+            connection_params = {
+                'dbname': secret["dbname"],
+                'user': secret["username"],
+                'password': secret["password"],
+                'host': RDS_PROXY_ENDPOINT,
+                'port': secret["port"]
+            }
+            connection_string = " ".join([f"{key}={value}" for key, value in connection_params.items()])
+            connection = psycopg2.connect(connection_string)
+            logger.info("Connected to the database!")
+        except Exception as e:
+            logger.error(f"Failed to connect to database: {e}")
+            if connection:
+                connection.rollback()
+                connection.close()
+            raise
+    return connection
 
 S3FilePath = namedtuple("S3FilePath", ["topic_id", "file_category", "file_name", "file_type"])
 
@@ -161,13 +166,11 @@ def insert_file_into_db(topic_id, file_name, file_type, file_path, bucket_name):
 
         connection.commit()
         cur.close()
-        connection.close()
     except Exception as e:
         if cur:
             cur.close()
         if connection:
             connection.rollback()
-            connection.close()
         logger.error(f"Error inserting file {file_name}.{file_type} into database: {e}")
         raise
 
@@ -175,10 +178,10 @@ def insert_file_into_db(topic_id, file_name, file_type, file_path, bucket_name):
  
 def update_vectorstore_from_s3(bucket, topic_id):
 
-    bedrock_runtime = boto3.client(service_name="bedrock-runtime", region_name=REGION)
-
     embeddings = BedrockEmbeddings(
-        model_id=EMBEDDING_MODEL_ID, client=bedrock_runtime, region_name=REGION
+        model_id=get_parameter(), 
+        client=bedrock_runtime,
+        region_name=REGION
     )
 
     db_secret = get_secret()
@@ -211,13 +214,12 @@ def handle_object_created(topic_id, general_topic_id, bucket_name, file_key, fil
     """
     if topic_id != general_topic_id:
         try:
-            s3 = boto3.resource("s3")
             copy_source = {
                 "Bucket": bucket_name,
                 "Key": file_key,
             }
             copy_dest_key = f"{general_topic_id}/{file_category}/{file_name}.{file_type}"
-            s3.meta.client.copy(copy_source, bucket_name, copy_dest_key)
+            s3_resource.meta.client.copy(copy_source, bucket_name, copy_dest_key)
          
          
         except Exception as e:
@@ -254,9 +256,8 @@ def handle_else_branch(topic_id, general_topic_id, bucket_name, file_category, f
     )
     if topic_id != general_topic_id:
         try:
-            s3 = boto3.client("s3")
             file_key = f"{general_topic_id}/{file_category}/{file_name}.{file_type}"
-            s3.delete_object(Bucket=bucket_name, Key=file_key)
+            s3_client.delete_object(Bucket=bucket_name, Key=file_key)
         except Exception as e:
             logger.error(f"Error deleting file {file_name}.{file_type}: {e}")
 
@@ -265,20 +266,20 @@ def fetch_general_topic_id():
     try:
         connection = connect_to_db()
         cur = connection.cursor()
+
         select_query = """
         SELECT topic_id FROM "Topics"
         WHERE topic_name = %s;
         """
+
         cur.execute(select_query, ("General",))
         general_topic_id = cur.fetchone()[0]
         connection.commit()
         cur.close()
-        connection.close()
         return general_topic_id
     except Exception as e:
         cur.close()
         connection.rollback()
-        connection.close()
         logger.error(f"Error fetching general topic id: {e}")
         raise
 
@@ -288,7 +289,6 @@ def handler(event, context):
         return {"statusCode": 400, "body": json.dumps("No valid S3 event found.")}
 
     general_topic_id = fetch_general_topic_id()
-
      
     for record in records:
         try:

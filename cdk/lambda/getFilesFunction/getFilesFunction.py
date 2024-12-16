@@ -7,7 +7,15 @@ from aws_lambda_powertools import Logger
 
 logger = Logger()
 
+# Environment variables
 REGION = os.environ["REGION"]
+BUCKET = os.environ["BUCKET"]
+DB_SECRET_NAME = os.environ["SM_DB_CREDENTIALS"]
+RDS_PROXY_ENDPOINT = os.environ["RDS_PROXY_ENDPOINT"]
+
+# AWS Clients
+secrets_manager_client = boto3.client('secretsmanager')
+
 s3 = boto3.client(
     "s3",
     endpoint_url=f"https://s3.{REGION}.amazonaws.com",
@@ -15,43 +23,53 @@ s3 = boto3.client(
         s3={"addressing_style": "virtual"}, region_name=REGION, signature_version="s3v4"
     ),
 )
-BUCKET = os.environ["BUCKET"]
-DB_SECRET_NAME = os.environ["SM_DB_CREDENTIALS"]
-RDS_PROXY_ENDPOINT = os.environ["RDS_PROXY_ENDPOINT"]
 
-def get_secret():
-    # secretsmanager client to get db credentials
-    sm_client = boto3.client("secretsmanager")
-    response = sm_client.get_secret_value(SecretId=DB_SECRET_NAME)["SecretString"]
-    secret = json.loads(response)
-    return secret
+# Global variables for caching
+connection = None
+db_secret = None
+
+def get_secret(secret_name):
+    global db_secret
+    if db_secret is None:
+        try:
+            response = secrets_manager_client.get_secret_value(SecretId=secret_name)["SecretString"]
+            db_secret = json.loads(response)
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to decode JSON for secret {secret_name}: {e}")
+            raise ValueError(f"Secret {secret_name} is not properly formatted as JSON.")
+        except Exception as e:
+            logger.error(f"Error fetching secret {secret_name}: {e}")
+            raise
+    return db_secret
 
 def connect_to_db():
-    try:
-        db_secret = get_secret()
-        connection_params = {
-            'dbname': db_secret["dbname"],
-            'user': db_secret["username"],
-            'password': db_secret["password"],
-            'host': RDS_PROXY_ENDPOINT,
-            'port': db_secret["port"]
-        }
-        connection_string = " ".join([f"{key}={value}" for key, value in connection_params.items()])
-        connection = psycopg2.connect(connection_string)
-        logger.info("Connected to the database!")
-        return connection
-    except Exception as e:
-        logger.error(f"Failed to connect to database: {e}")
-        if connection:
-            connection.rollback()
-            connection.close()
-        return None
+    global connection
+    if connection is None or connection.closed:
+        try:
+            secret = get_secret(DB_SECRET_NAME)
+            connection_params = {
+                'dbname': secret["dbname"],
+                'user': secret["username"],
+                'password': secret["password"],
+                'host': RDS_PROXY_ENDPOINT,
+                'port': secret["port"]
+            }
+            connection_string = " ".join([f"{key}={value}" for key, value in connection_params.items()])
+            connection = psycopg2.connect(connection_string)
+            logger.info("Connected to the database!")
+        except Exception as e:
+            logger.error(f"Failed to connect to database: {e}")
+            if connection:
+                connection.rollback()
+                connection.close()
+            raise
+    return connection
 
 def list_files_in_s3_prefix(bucket, prefix):
     files = []
     continuation_token = None
 
-    # Fetch all objects in the topic directory, handling pagination
+    # Fetch all objects in the module directory, handling pagination
     while True:
         if continuation_token:
             result = s3.list_objects_v2(
@@ -103,7 +121,6 @@ def get_file_metadata_from_db(topic_id, file_name, file_type):
         cur.execute(query, (topic_id, file_name, file_type))
         result = cur.fetchone()
         cur.close()
-        connection.close()
 
         if result:
             return result[0]
@@ -117,7 +134,6 @@ def get_file_metadata_from_db(topic_id, file_name, file_type):
             cur.close()
         if connection:
             connection.rollback()
-            connection.close()
         return None
 
 @logger.inject_lambda_context
