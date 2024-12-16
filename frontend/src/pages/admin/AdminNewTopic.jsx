@@ -22,7 +22,7 @@ export const AdminNewTopic = () => {
 
   const [isSaving, setIsSaving] = useState(false);
   const [topicName, setTopicName] = useState("");
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useState("You are a highly qualified expert in quantum materials, technology, and phenomena, representing the Stewart Blusson Quantum Matter Institute at UBC. When responding to user queries, maintain a professional and authoritative tone. Utilize the knowledge available to you to provide thorough, accurate, and insightful answers, drawing upon relevant documents as necessary, without explicitly stating that documents have been provided. If a user query is unrelated to quantum materials, technology, phenomena, or the Stewart Blusson Quantum Matter Institute, politely inform the user that your expertise is limited to these areas and encourage them to ask questions within your scope.");
 
   const cleanFileName = (fileName) => {
     return fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -91,8 +91,8 @@ export const AdminNewTopic = () => {
     if (isSaving) return;
 
     // Validation check
-    if (!topicName || !prompt) {
-      toast.error("Topic Name and Prompt are required.", {
+    if (!topicName || !prompt || (files.length === 0 && newFiles.length === 0)) {
+      toast.error("Topic Name, Prompt and Files are required.", {
         position: "top-center",
         autoClose: 2000,
         hideProgressBar: false,

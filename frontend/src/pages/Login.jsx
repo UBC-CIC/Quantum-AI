@@ -136,9 +136,41 @@ export const Login = () => {
         theme: "colored",
       });
       return;
-    } else if (password.length < 8) {
+    } 
+
+    if (password.length < 8) {
       setPasswordError("Password must be at least 8 characters long");
       toast.error("Password must be at least 8 characters long", {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });      
+      return;
+    }
+
+    if (!/[a-z]/.test(password)) {
+      setPasswordError("Password must contain at least one lowercase letter");
+      toast.error("Password must contain at least one lowercase letter", {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });      
+      return;
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      setPasswordError("Password must contain at least one uppercase letter");
+      toast.error("Password must contain at least one uppercase letter", {
         position: "top-center",
         autoClose: 3000,
         hideProgressBar: false,
@@ -150,7 +182,24 @@ export const Login = () => {
       });
       return;
     }
+
+    if (!/[0-9]/.test(password)) {
+      setPasswordError("Password must contain at least one number");
+      toast.error("Password must contain at least one number", {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
+      return;
+    }
+
     setPasswordError("");
+    
     try {
       setLoading(true);
       

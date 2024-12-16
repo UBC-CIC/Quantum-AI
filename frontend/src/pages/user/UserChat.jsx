@@ -286,6 +286,20 @@ const UserChat = ({ admin }) => {
 
   const handleSubmit = () => {
     if (isSubmitting || isAItyping || creatingSession) return;
+    if (topics.length === 1) {
+      toast.error("Please create a topic to get started.", {
+        position: "top-center",
+        autoClose: 1000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     let newSession;
     let authToken;
@@ -719,7 +733,33 @@ const UserChat = ({ admin }) => {
   }, [session]);
 
   const handleFeedbackSubmit = async (feedbackRating, feedbackDescription, messageId) => {
-    if (!feedbackRating|| isSendingFeedback) return;
+    if (!feedbackRating) {
+      toast.error("Please provide a feedback rating.", {
+        position: "top-center",
+        autoClose: 1000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
+      return;
+    }
+
+    if (isSendingFeedback) {
+      toast.error("Failed to send feedback. Please try again in a few seconds.", {
+        position: "top-center",
+        autoClose: 1000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
+      return;
+    }
 
     setIsSendingFeedback(true);
     
@@ -732,9 +772,6 @@ const UserChat = ({ admin }) => {
     const AIMessage = messageIndex !== -1 ? messages[messageIndex].message_content : '';
     const userMessage = messageIndex > 0 ? messages[messageIndex - 1].message_content : '';
 
-    
-    
-
     try {
       const session = await fetchAuthSession();
       const token = session.tokens.idToken
@@ -743,7 +780,7 @@ const UserChat = ({ admin }) => {
           topicId
         )}
         &feedback_rating=${encodeURIComponent(feedbackRating)}
-        &feedback_description=${encodeURIComponent(feedbackDescription || '')}`,
+        &feedback_description=${encodeURIComponent(feedbackDescription || 'None')}`,
         {
           method: "POST",
           headers: {

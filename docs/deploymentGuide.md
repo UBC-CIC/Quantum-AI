@@ -50,7 +50,7 @@ Then click on "Modify model access":
 ![](./images/modifymodels.png)
 
 Finally, enable the relevant models, click next and on the next page click submit. Amazon Titan Embeddings V2 and Meta Llama 3 70B Instruct are required for this project.
-![](./images/enablemodels.png)
+![](./images/enable-models.png)
 
 The relevant models are now enabled in Bedrock.
 
@@ -162,14 +162,14 @@ cdk deploy --all --context prefix=QuantumAI-production --profile <your-profile-n
 ### Step 1: Build AWS Amplify App
 
 1. Log in to AWS console, and navigate to **AWS Amplify**. You can do so by typing `Amplify` in the search bar at the top.
-2. From `All apps`, click `quantumAI-amplify`.
+2. From `All apps`, click the app with the prefix you specified in deployment. For example`QuantumAI-production-amplify`.
 3. Then click `main` under `branches`
 4. Click `run job` and wait for the build to complete.
 5. You now have access to the `Amplify App ID` and the public domain name to use the web app.
 
 ### Step 2: Change Redirects
 
-1. Click back to navigate to `quamtumAI-amplify/Overview`
+1. Click back to navigate to `QuantumAI-production-amplify/Overview`
 2. In the left side bar click   `Rewrites and Redirects` under `Hosting`
 3. Click `manage redirects` on the top right
 4. Click `add rewrite`

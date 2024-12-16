@@ -32,11 +32,15 @@ const AIMessage = ({ message, handleFeedbackSubmit, messageId }) => {
   };
 
   const handleSubmit = () => {
-    handleFeedbackSubmit(rating, description, messageId);
-    setFeedbackSubmitted(true);
-    setShowFeedbackForm(false);
-    setRating(0);
-    setDescription("");
+    if (rating === 0) {
+      handleFeedbackSubmit(rating, description, messageId);
+    } else{
+      handleFeedbackSubmit(rating, description, messageId);
+      setFeedbackSubmitted(true);
+      setShowFeedbackForm(false);
+      setRating(0);
+      setDescription("");
+    }
   };
 
   return (

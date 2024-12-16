@@ -217,10 +217,6 @@ const AdminEditTopic = () => {
 
   const updateTopic = async () => {
     const { token } = await getAuthSessionAndEmail();
-    
-    
-    
-    
 
     const editTopicResponse = await fetch(
       `${
@@ -336,8 +332,13 @@ const AdminEditTopic = () => {
     if (isSaving) return;
     setIsSaving(true);
 
-    if (!topicName || !prompt) {
-      toast.error("Topic Name and Prompt are required.", {
+    console.log("files", files);
+    console.log("newFiles", newFiles);
+    console.log("deletedFiles", deletedFiles);
+    console.log("savedFiles", savedFiles);
+
+    if (!topicName || !prompt || (files.length === 0 && newFiles.length === 0)) {
+      toast.error("Topic Name, Prompt and Files are required.", {
         position: "top-center",
         autoClose: 1000,
         hideProgressBar: false,
@@ -347,6 +348,7 @@ const AdminEditTopic = () => {
         progress: undefined,
         theme: "colored",
       });
+      setIsSaving(false);
       return;
     }
     try {
