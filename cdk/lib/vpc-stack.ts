@@ -10,13 +10,13 @@ export class VpcStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const existingVpcId: string = 'vpc-091c2fda659df9666'; //CHANGE IF DEPLOYING WITH EXISTING VPC
+    const existingVpcId: string = ''; //CHANGE IF DEPLOYING WITH EXISTING VPC
 
     if (existingVpcId != '') {
       //const publicSubnetCIDR = cdk.aws_ssm.StringParameter.valueFromLookup(this, 'public-subnet-cidr');
       //const AWSControlTowerStackSet = cdk.aws_ssm.StringParameter.valueFromLookup(this, 'ControlTowerStackSet');
       
-      const AWSControlTowerStackSet = "StackSet-AWSControlTowerBP-VPC-ACCOUNT-FACTORY-V1-9a00eda6-9eff-480d-b625-563b19086b40"; //CHANGE TO YOUR CONTROL TOWER STACK SET
+      const AWSControlTowerStackSet = ""; //CHANGE TO YOUR CONTROL TOWER STACK SET
       const prefix = "QuantumAI-production";
 
       this.vpcCidrString = "172.31.96.0/20";

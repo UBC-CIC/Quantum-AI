@@ -10,7 +10,7 @@
   - [Deployment](#deployment)
     - [Step 1: Fork \& Clone The Repository](#step-1-fork--clone-the-repository)
     - [Step 2: Upload Secrets and Parameters](#step-2-upload-secrets-and-parameters)
-    - [Step 3a: CDK Deployment in Hybrid Cloud Environment](#step-3a-cdk-deployment-in-hybrid-cloud-environment)
+    - [Step 3a: CDK Deployment with an Existing VPC](#step-3a-cdk-deployment-with-an-existing-vpc)
      - [Step 3b: CDK Deployment](#step-3b-cdk-deployment)
   - [Post-Deployment](#post-deployment)
     - [Step 1: Build AWS Amplify App](#step-1-build-aws-amplify-app)
@@ -132,11 +132,11 @@ aws ssm put-parameter \
     --profile <YOUR-PROFILE-NAME>
 ```
 
-### Step 3a: CDK Deployment in Hybrid Cloud Environment
+### Step 3a: CDK Deployment with an Existing VPC
 
-The following set of instructions are only if you want to deploy this application in a **hybrid cloud environment**. If you do not want to do this you can skip this section.
+The following set of instructions are only if you want to deploy this application with an **existing VPC**. If you do not want to do this you can skip this section.
 
-In order to deploy in a hybrid cloud environment, you will need to have access to the **aws-controltower-VPC** and the name of your **AWSControlTowerStackSet**.
+In order to deploy, you will need to have access to the **aws-controltower-VPC** and the name of your **AWSControlTowerStackSet**.
 
 1. **Modify the VPC Stack:**
    - Navigate to the `vpc-stack.ts` file located at `cdk/lib/vpc-stack.ts`.
