@@ -10,7 +10,8 @@
   - [Deployment](#deployment)
     - [Step 1: Fork \& Clone The Repository](#step-1-fork--clone-the-repository)
     - [Step 2: Upload Secrets and Parameters](#step-2-upload-secrets-and-parameters)
-    - [Step 3: CDK Deployment](#step-3-cdk-deployment)
+    - [Step 3a: CDK Deployment in Hybrid Cloud Environment](#step-3a-cdk-deployment-in-hybrid-cloud-environment)
+     - [Step 3b: CDK Deployment](#step-3b-cdk-deployment)
   - [Post-Deployment](#post-deployment)
     - [Step 1: Build AWS Amplify App](#step-1-build-aws-amplify-app)
     - [Step 2: Change Redirects](#step-2-change-redirects)
@@ -29,7 +30,7 @@ Before you deploy, you must have the following installed on your device:
 - [AWS CDK](https://docs.aws.amazon.com/cdk/v2/guide/cli.html) *(v2.122.0 > required)*
 - [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
 - [node](https://nodejs.org/en/learn/getting-started/how-to-install-nodejs) *(v20.0.0 > required)*
-- [docker](https://www.docker.com/products/docker-desktop/)
+- [docker](https://www.docker.com/products/docker-desktop/) *(v26.0.0)*
 
 ## Pre-Deployment
 ### Create GitHub Personal Access Token
@@ -131,8 +132,35 @@ aws ssm put-parameter \
     --profile <YOUR-PROFILE-NAME>
 ```
 
-### Step 3: CDK Deployment
-It's time to set up everything that goes on behind the scenes! For more information on how the backend works, feel free to refer to the Architecture Deep Dive, but an understanding of the backend is not necessary for deployment.
+### Step 3a: CDK Deployment in Hybrid Cloud Environment
+
+The following set of instructions are only if you want to deploy this application in a **hybrid cloud environment**. If you do not want to do this you can skip this section.
+
+In order to deploy in a hybrid cloud environment, you will need to have access to the **aws-controltower-VPC** and the name of your **AWSControlTowerStackSet**.
+
+1. **Modify the VPC Stack:**
+   - Navigate to the `vpc-stack.ts` file located at `cdk/lib/vpc-stack.ts`.
+   - Replace **line 13** with your existing VPC ID:
+     ```typescript
+     const existingVpcId: string = 'your-vpc-id'; //CHANGE IF DEPLOYING WITH EXISTING VPC
+     ```
+     You can find your VPC ID by navigating to the **VPC dashboard** in the AWS Management Console and locating the VPC in the `Your VPCs` section.
+
+     ![VPC ID Image](images/ExistingVPCId.png)
+
+2. **Update the AWS Control Tower Stack Set:**
+   - Replace **line 19** with your AWS Control Tower Stack Set name:
+     ```typescript
+     const AWSControlTowerStackSet = "your-stackset-name"; //CHANGE TO YOUR CONTROL TOWER STACK SET
+     ```
+     You can find this name by navigating to the **CloudFormation dashboard** in AWS, under `Stacks`. Look for a stack name that starts with `StackSet-AWSControlTowerBP-VPC-ACCOUNT-FACTORY`.
+
+     ![AWS Control Tower Stack Image](images/AWSControlTowerStack.png)
+
+
+You can proceed with the rest of the deployment instructions and the Vpc Stack will automatically use your existing VPC instead of creating a new one.
+
+### Step 3b: CDK Deployment
 
 Open a terminal in the `/cdk` directory.
 
