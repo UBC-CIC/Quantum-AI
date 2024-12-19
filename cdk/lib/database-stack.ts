@@ -79,8 +79,8 @@ export class DatabaseStack extends Stack {
                 version: rds.PostgresEngineVersion.VER_16_3,
             }),
             instanceType: ec2.InstanceType.of(
-                ec2.InstanceClass.BURSTABLE3,
-                ec2.InstanceSize.MICRO
+                ec2.InstanceClass.BURSTABLE4_GRAVITON,
+                ec2.InstanceSize.MEDIUM
             ),
             credentials: rds.Credentials.fromUsername(secret.secretValueFromJson("DB_Username").unsafeUnwrap(), {
                 secretName: this.secretPathAdminName,
