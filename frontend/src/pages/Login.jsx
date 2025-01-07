@@ -1,8 +1,6 @@
 import { useState } from "react";
-
 // amplify
 import {
-  signOut,
   signIn,
   signUp,
   confirmSignIn,
@@ -67,8 +65,6 @@ export const Login = () => {
     event.preventDefault();
     try {
       setLoading(true);
-      await signOut(); // Sign out any existing user session
-
       const user = await signIn({
         username: username,
         password: password,
