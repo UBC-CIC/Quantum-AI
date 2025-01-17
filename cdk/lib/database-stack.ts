@@ -15,10 +15,10 @@ export class DatabaseStack extends Stack {
     public readonly secretPathAdminName: string;
     public readonly secretPathUser: secretsmanager.Secret;
     public readonly secretPathTableCreator: secretsmanager.Secret;
-    public readonly rdsProxyEndpoint: string; 
+    public readonly rdsProxyEndpoint: string;
     public readonly rdsProxyEndpointTableCreator: string;
-    public readonly rdsProxyEndpointAdmin: string;  
-    constructor(scope: Construct, id: string, vpcStack: VpcStack, props?: StackProps){
+    public readonly rdsProxyEndpointAdmin: string;
+    constructor(scope: Construct, id: string, vpcStack: VpcStack, props?: StackProps) {
         super(scope, id, props);
 
         const resourcePrefix = this.node.tryGetContext('prefix');
@@ -34,8 +34,8 @@ export class DatabaseStack extends Stack {
          * Create Empty Secret Manager
          * Secrets will be populate at initalization of data
          */
-        this.secretPathAdminName = "QuantumAI/credentials/rdsDbCredential"; // Name in the Secret Manager to store DB credentials        
-        const secretPathUserName = "QuantumAI/userCredentials/rdsDbCredential";
+        this.secretPathAdminName = `${id}-QuantumAI/credentials/rdsDbCredential`; // Name in the Secret Manager to store DB credentials        
+        const secretPathUserName = `${id}-QuantumAI/userCredentials/rdsDbCredential`;
         this.secretPathUser = new secretsmanager.Secret(this, secretPathUserName, {
             secretName: secretPathUserName,
             description: "Secrets for clients to connect to RDS",
@@ -47,7 +47,7 @@ export class DatabaseStack extends Stack {
         })
 
         const secretPathTableCreator = "QuantumAI/userCredentials/TableCreator";
-        this.secretPathTableCreator= new secretsmanager.Secret(this, secretPathTableCreator, {
+        this.secretPathTableCreator = new secretsmanager.Secret(this, secretPathTableCreator, {
             secretName: secretPathTableCreator,
             description: "Secrets for TableCreator to connect to RDS",
             removalPolicy: RemovalPolicy.DESTROY,
@@ -58,13 +58,13 @@ export class DatabaseStack extends Stack {
         })
         const parameterGroup = new rds.ParameterGroup(this, "rdsParameterGroup2", {
             engine: rds.DatabaseInstanceEngine.postgres({
-              version: rds.PostgresEngineVersion.VER_16_3,
+                version: rds.PostgresEngineVersion.VER_16_3,
             }),
             description: "Empty parameter group", // Might need to change this later
             parameters: {
-              'rds.force_ssl': '0'
+                'rds.force_ssl': '0'
             }
-          });
+        });
 
         /**
          * 
@@ -101,15 +101,26 @@ export class DatabaseStack extends Stack {
             parameterGroup: parameterGroup
         });
 
-        this.dbInstance.connections.securityGroups.forEach(function (securityGroup) {
-            // 10.0.0.0/16 match the cidr range in vpc stack
-            securityGroup.addIngressRule(
-              ec2.Peer.ipv4(vpcStack.vpcCidrString),
-              ec2.Port.tcp(5432),
-              "Postgres Ingress"
+        // Add CIDR ranges of private subnets to inbound rules of RDS
+        const dbSecurityGroup = this.dbInstance.connections.securityGroups[0];
+        vpcStack.privateSubnetsCidrStrings.forEach((cidr) => {
+            dbSecurityGroup.addIngressRule(
+                ec2.Peer.ipv4(cidr),
+                ec2.Port.tcp(5432),
+                `Allow PostgreSQL traffic from private subnet CIDR range ${cidr}`
             );
         });
-         
+
+        // Add CIDR ranges of public subnets to inbound rules of RDS
+        this.dbInstance.connections.securityGroups.forEach(function (securityGroup) {
+            // Allow Postgres access in VPC
+            securityGroup.addIngressRule(
+                ec2.Peer.ipv4(vpcStack.vpcCidrString),
+                ec2.Port.tcp(5432),
+                "Allow PostgreSQL traffic from public subnets"
+            );
+        });
+
 
         const rdsProxyRole = new iam.Role(this, "RDSProxyRole", {
             assumedBy: new iam.ServicePrincipal('rds.amazonaws.com'),
@@ -119,15 +130,15 @@ export class DatabaseStack extends Stack {
         rdsProxyRole.addToPolicy(new iam.PolicyStatement({
             resources: ['*'],
             actions: [
-              'rds-db:connect',
+                'rds-db:connect',
             ],
-          }));
+        }));
 
-          // /**
+        // /**
         //  * 
         //  * Create an RDS proxy that sit between lambda and RDS
         //  */
-        const rdsProxy = this.dbInstance.addProxy(id+'-proxy', {
+        const rdsProxy = this.dbInstance.addProxy(id + '-proxy', {
             secrets: [this.secretPathUser!],
             vpc: vpcStack.vpc,
             role: rdsProxyRole,
@@ -135,7 +146,7 @@ export class DatabaseStack extends Stack {
             requireTLS: false,
             dbProxyName: `${resourcePrefix}-${id}-proxy`
         });
-        const rdsProxyTableCreator = this.dbInstance.addProxy(id+'+proxy', {
+        const rdsProxyTableCreator = this.dbInstance.addProxy(id + '+proxy', {
             secrets: [this.secretPathTableCreator!],
             vpc: vpcStack.vpc,
             role: rdsProxyRole,
@@ -144,7 +155,7 @@ export class DatabaseStack extends Stack {
         });
 
         const secretPathAdmin = secretmanager.Secret.fromSecretNameV2(this, 'AdminSecret', this.secretPathAdminName);
-        
+
         const rdsProxyAdmin = this.dbInstance.addProxy(id + '-proxy-admin', {
             secrets: [secretPathAdmin],
             vpc: vpcStack.vpc,
@@ -154,20 +165,20 @@ export class DatabaseStack extends Stack {
         });
 
         // Workaround for bug where TargetGroupName is not set but required
-        let targetGroup = rdsProxy.node.children.find((child:any) => {
+        let targetGroup = rdsProxy.node.children.find((child: any) => {
             return child instanceof rds.CfnDBProxyTargetGroup
         }) as rds.CfnDBProxyTargetGroup
 
-        targetGroup.addPropertyOverride('TargetGroupName', 'default');   
+        targetGroup.addPropertyOverride('TargetGroupName', 'default');
 
-        let targetGroupTableCreator = rdsProxyTableCreator.node.children.find((child:any) => {
+        let targetGroupTableCreator = rdsProxyTableCreator.node.children.find((child: any) => {
             return child instanceof rds.CfnDBProxyTargetGroup
         }) as rds.CfnDBProxyTargetGroup
 
-        targetGroup.addPropertyOverride('TargetGroupName', 'default');  
-        targetGroupTableCreator.addPropertyOverride('TargetGroupName', 'default');   
- 
-        this.dbInstance.grantConnect(rdsProxyRole);      
+        targetGroup.addPropertyOverride('TargetGroupName', 'default');
+        targetGroupTableCreator.addPropertyOverride('TargetGroupName', 'default');
+
+        this.dbInstance.grantConnect(rdsProxyRole);
         this.rdsProxyEndpoint = rdsProxy.endpoint;
         this.rdsProxyEndpointTableCreator = rdsProxyTableCreator.endpoint;
         this.rdsProxyEndpointAdmin = rdsProxyAdmin.endpoint;

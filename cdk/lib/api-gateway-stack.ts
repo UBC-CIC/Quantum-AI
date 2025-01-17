@@ -536,14 +536,14 @@ export class ApiGatewayStack extends cdk.Stack {
           "secretsmanager:PutSecretValue",
         ],
         resources: [
-          `arn:aws:secretsmanager:${this.region}:${this.account}:secret:QuantumAI/*`,
+          `arn:aws:secretsmanager:${this.region}:${this.account}:secret:*`,
         ],
       })
     );
 
     coglambdaRole.addToPolicy(new iam.PolicyStatement({
-        actions: ['ssm:GetParameter'],
-        resources: [`arn:aws:ssm:${this.region}:${this.account}:parameter/*`]
+      actions: ['ssm:GetParameter'],
+      resources: [`arn:aws:ssm:${this.region}:${this.account}:parameter/*`]
     }));
 
     const AutoSignupLambda = new lambda.Function(this, "addUserOnSignUp", {
@@ -584,19 +584,19 @@ export class ApiGatewayStack extends cdk.Stack {
       handler: "preSignup.handler",
       timeout: Duration.seconds(300),
       environment: {
-          ALLOWED_EMAIL_DOMAINS: '/QuantumAI/AllowedEmailDomains',
+        ALLOWED_EMAIL_DOMAINS: '/QuantumAI/AllowedEmailDomains',
       },
       vpc: vpcStack.vpc,
       functionName: `${resourcePrefix}-preSignupLambda`,
       memorySize: 128,
       role: coglambdaRole,
     });
-    
+
     this.userPool.addTrigger(
-        cognito.UserPoolOperation.PRE_SIGN_UP,
-        preSignupLambda
+      cognito.UserPoolOperation.PRE_SIGN_UP,
+      preSignupLambda
     );
-  
+
 
     this.userPool.addTrigger(
       cognito.UserPoolOperation.POST_AUTHENTICATION,
@@ -699,7 +699,7 @@ export class ApiGatewayStack extends cdk.Stack {
       description: "Parameter containing the DynamoDB table name",
       stringValue: "DynamoDB-Conversation-Table",
     });
-    
+
 
     /**
      *
@@ -743,11 +743,11 @@ export class ApiGatewayStack extends cdk.Stack {
       actions: ["bedrock:InvokeModel", "bedrock:InvokeEndpoint"],
       resources: [
         "arn:aws:bedrock:" +
-          this.region +
-          "::foundation-model/meta.llama3-70b-instruct-v1:0",
+        this.region +
+        "::foundation-model/meta.llama3-70b-instruct-v1:0",
         "arn:aws:bedrock:" +
-          this.region +
-          "::foundation-model/amazon.titan-embed-text-v2:0",
+        this.region +
+        "::foundation-model/amazon.titan-embed-text-v2:0",
       ],
     });
 
@@ -778,6 +778,7 @@ export class ApiGatewayStack extends cdk.Stack {
           "dynamodb:DescribeTable",
           "dynamodb:PutItem",
           "dynamodb:GetItem",
+          "dynamodb:UpdateItem",
         ],
         resources: [`arn:aws:dynamodb:${this.region}:${this.account}:table/*`],
       })

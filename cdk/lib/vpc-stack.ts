@@ -7,6 +7,8 @@ import { Fn } from 'aws-cdk-lib';
 export class VpcStack extends Stack {
   public readonly vpc: ec2.Vpc;
   public readonly vpcCidrString: string;
+  public readonly privateSubnetsCidrStrings: string[];
+
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
@@ -15,7 +17,7 @@ export class VpcStack extends Stack {
     if (existingVpcId != '') {
       //const publicSubnetCIDR = cdk.aws_ssm.StringParameter.valueFromLookup(this, 'public-subnet-cidr');
       //const AWSControlTowerStackSet = cdk.aws_ssm.StringParameter.valueFromLookup(this, 'ControlTowerStackSet');
-      
+
       const AWSControlTowerStackSet = ""; //CHANGE TO YOUR CONTROL TOWER STACK SET
       const prefix = "QuantumAI-production";
 
@@ -26,84 +28,82 @@ export class VpcStack extends Stack {
         vpcId: existingVpcId,
         availabilityZones: ["ca-central-1a", "ca-central-1b", "ca-central-1d"],
         privateSubnetIds: [
-            Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet1AID`), 
-            Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet2AID`), 
-            Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet3AID`)
+          Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet1AID`),
+          Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet2AID`),
+          Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet3AID`)
         ],
         privateSubnetRouteTableIds: [
-            Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet1ARouteTable`), 
-            Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet2ARouteTable`), 
-            Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet3ARouteTable`)
+          Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet1ARouteTable`),
+          Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet2ARouteTable`),
+          Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet3ARouteTable`)
         ],
         isolatedSubnetIds: [
-            Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet1AID`), 
-            Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet2AID`), 
-            Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet3AID`)
+          Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet1AID`),
+          Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet2AID`),
+          Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet3AID`)
         ],
         isolatedSubnetRouteTableIds: [
-            Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet1ARouteTable`), 
-            Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet2ARouteTable`), 
-            Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet3ARouteTable`)
+          Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet1ARouteTable`),
+          Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet2ARouteTable`),
+          Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet3ARouteTable`)
         ],
         vpcCidrBlock: Fn.importValue(`${AWSControlTowerStackSet}-VPCCIDR`),
       }) as ec2.Vpc;
 
+      // Extract CIDR ranges from the private subnets
+      this.privateSubnetsCidrStrings = [
+        Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet1ACIDR`),
+        Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet2ACIDR`),
+        Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet3ACIDR`),
+      ];
+
       // Create a public subnet
       const publicSubnet = new ec2.Subnet(this, `PublicSubnet`, {
-          vpcId: this.vpc.vpcId,
-          availabilityZone: this.vpc.availabilityZones[0],
-          cidrBlock: this.vpcCidrString,
-          mapPublicIpOnLaunch: true,
+        vpcId: this.vpc.vpcId,
+        availabilityZone: this.vpc.availabilityZones[0],
+        cidrBlock: this.vpcCidrString,
+        mapPublicIpOnLaunch: true,
       });
 
       // Create an Internet Gateway and attach it to the VPC
       const internetGateway = new ec2.CfnInternetGateway(this, `InternetGateway`, {});
       new ec2.CfnVPCGatewayAttachment(this, 'VPCGatewayAttachment', {
-          vpcId: this.vpc.vpcId,
-          internetGatewayId: internetGateway.ref,
-      });
-
-      // Create a route table for the public subnet
-      const publicRouteTable = new ec2.CfnRouteTable(this, `PublicRouteTable`, {
-          vpcId: this.vpc.vpcId,
-      });
-
-      // Associate the public subnet with the new route table
-      new ec2.CfnSubnetRouteTableAssociation(this, `PublicSubnetAssociation`, {
-          subnetId: publicSubnet.subnetId,
-          routeTableId: publicRouteTable.ref,
+        vpcId: this.vpc.vpcId,
+        internetGatewayId: internetGateway.ref,
       });
 
       // Add a NAT Gateway in the public subnet
       const natGateway = new ec2.CfnNatGateway(this, `NatGateway`, {
-          subnetId: publicSubnet.subnetId,
-          allocationId: new ec2.CfnEIP(this, 'EIP', {}).attrAllocationId,
+        subnetId: publicSubnet.subnetId,
+        allocationId: new ec2.CfnEIP(this, 'EIP', {}).attrAllocationId,
       });
 
-      // Create a route to the Internet Gateway
+      const publicRouteTableId = publicSubnet.routeTable.routeTableId;
+
+      // Add a route to the Internet Gateway in the existing public route table
       new ec2.CfnRoute(this, `PublicRoute`, {
-          routeTableId: publicRouteTable.ref,
-          destinationCidrBlock: '0.0.0.0/0',
-          gatewayId: internetGateway.ref,
+        routeTableId: publicRouteTableId,
+        destinationCidrBlock: '0.0.0.0/0',
+        gatewayId: internetGateway.ref,
       });
 
       // Update route table for private subnets
       new ec2.CfnRoute(this, `${prefix}PrivateSubnetRoute1`, {
-          routeTableId: this.vpc.privateSubnets[0].routeTable.routeTableId,
-          destinationCidrBlock: '0.0.0.0/0',
-          natGatewayId: natGateway.ref,
+        routeTableId: this.vpc.privateSubnets[0].routeTable.routeTableId,
+        destinationCidrBlock: '0.0.0.0/0',
+        natGatewayId: natGateway.ref,
       });
 
       new ec2.CfnRoute(this, `${prefix}PrivateSubnetRoute2`, {
-          routeTableId: this.vpc.privateSubnets[1].routeTable.routeTableId,
-          destinationCidrBlock: '0.0.0.0/0',
-          natGatewayId: natGateway.ref,
+        routeTableId: this.vpc.privateSubnets[1].routeTable.routeTableId,
+        destinationCidrBlock: '0.0.0.0/0',
+        natGatewayId: natGateway.ref,
       });
 
       new ec2.CfnRoute(this, `${prefix}PrivateSubnetRoute3`, {
-          routeTableId: this.vpc.privateSubnets[2].routeTable.routeTableId,
-          destinationCidrBlock: '0.0.0.0/0',
-          natGatewayId: natGateway.ref,
+        routeTableId: this.vpc.privateSubnets[2].routeTable.routeTableId,
+        destinationCidrBlock: '0.0.0.0/0',
+        natGatewayId: natGateway.ref,
       });
 
       // Add interface endpoints for private isolated subnets
@@ -113,18 +113,18 @@ export class VpcStack extends Stack {
       });
 
       this.vpc.addInterfaceEndpoint('Secrets Manager Endpoint', {
-          service: ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
-          subnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
+        service: ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
+        subnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
       });
 
       this.vpc.addInterfaceEndpoint('RDS Endpoint', {
-          service: ec2.InterfaceVpcEndpointAwsService.RDS,
-          subnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
+        service: ec2.InterfaceVpcEndpointAwsService.RDS,
+        subnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
       });
 
       this.vpc.addInterfaceEndpoint('Glue Endpoint', {
-          service: ec2.InterfaceVpcEndpointAwsService.GLUE,
-          subnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
+        service: ec2.InterfaceVpcEndpointAwsService.GLUE,
+        subnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
       });
 
       this.vpc.addFlowLog(`${id}-vpcFlowLog`);
@@ -161,8 +161,8 @@ export class VpcStack extends Stack {
             subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
           },
           {
-              name: "isolated-subnet-1",
-              subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
+            name: "isolated-subnet-1",
+            subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
           },
         ]
       });
