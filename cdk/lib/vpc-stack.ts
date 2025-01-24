@@ -1,8 +1,8 @@
 import { Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
-import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
-import { Fn } from 'aws-cdk-lib';
+import { Fn } from "aws-cdk-lib";
+import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from "aws-cdk-lib/custom-resources";
 
 export class VpcStack extends Stack {
   public readonly vpc: ec2.Vpc;
@@ -12,16 +12,15 @@ export class VpcStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const existingVpcId: string = ''; //CHANGE IF DEPLOYING WITH EXISTING VPC
+    const existingVpcId: string = ""; // CHANGE IF DEPLOYING WITH EXISTING VPC
 
-    if (existingVpcId != '') {
-      //const publicSubnetCIDR = cdk.aws_ssm.StringParameter.valueFromLookup(this, 'public-subnet-cidr');
-      //const AWSControlTowerStackSet = cdk.aws_ssm.StringParameter.valueFromLookup(this, 'ControlTowerStackSet');
+    if (existingVpcId !== "") {
+      const AWSControlTowerStackSet = ""; // CHANGE TO YOUR CONTROL TOWER STACK SET
+      const existingPublicSubnetID: string = ""; // CHANGE IF DEPLOYING WITH EXISTING PUBLIC SUBNET
 
-      const AWSControlTowerStackSet = ""; //CHANGE TO YOUR CONTROL TOWER STACK SET
       const prefix = "QuantumAI-production";
 
-      this.vpcCidrString = "172.31.96.0/20";
+      this.vpcCidrString = "172.31.96.0/20"; // MAY NEED TO CHANGE IF CIDR IS USED FOR EXISTING DEPLOYMENT
 
       // VPC for application
       this.vpc = ec2.Vpc.fromVpcAttributes(this, `${id}-Vpc`, {
@@ -30,22 +29,22 @@ export class VpcStack extends Stack {
         privateSubnetIds: [
           Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet1AID`),
           Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet2AID`),
-          Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet3AID`)
+          Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet3AID`),
         ],
         privateSubnetRouteTableIds: [
           Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet1ARouteTable`),
           Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet2ARouteTable`),
-          Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet3ARouteTable`)
+          Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet3ARouteTable`),
         ],
         isolatedSubnetIds: [
           Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet1AID`),
           Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet2AID`),
-          Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet3AID`)
+          Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet3AID`),
         ],
         isolatedSubnetRouteTableIds: [
           Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet1ARouteTable`),
           Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet2ARouteTable`),
-          Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet3ARouteTable`)
+          Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet3ARouteTable`),
         ],
         vpcCidrBlock: Fn.importValue(`${AWSControlTowerStackSet}-VPCCIDR`),
       }) as ec2.Vpc;
@@ -57,74 +56,85 @@ export class VpcStack extends Stack {
         Fn.importValue(`${AWSControlTowerStackSet}-PrivateSubnet3ACIDR`),
       ];
 
-      // Create a public subnet
-      const publicSubnet = new ec2.Subnet(this, `PublicSubnet`, {
-        vpcId: this.vpc.vpcId,
-        availabilityZone: this.vpc.availabilityZones[0],
-        cidrBlock: this.vpcCidrString,
-        mapPublicIpOnLaunch: true,
-      });
+      if (existingPublicSubnetID === "") {
+        console.log("No public subnet exists. Creating new public subnet, IGW, and NAT GW.");
 
-      // Create an Internet Gateway and attach it to the VPC
-      const internetGateway = new ec2.CfnInternetGateway(this, `InternetGateway`, {});
-      new ec2.CfnVPCGatewayAttachment(this, 'VPCGatewayAttachment', {
-        vpcId: this.vpc.vpcId,
-        internetGatewayId: internetGateway.ref,
-      });
+        // Create a public subnet
+        const publicSubnet = new ec2.Subnet(this, `PublicSubnet`, {
+          vpcId: this.vpc.vpcId,
+          availabilityZone: this.vpc.availabilityZones[0],
+          cidrBlock: this.vpcCidrString,
+          mapPublicIpOnLaunch: true,
+        });
 
-      // Add a NAT Gateway in the public subnet
-      const natGateway = new ec2.CfnNatGateway(this, `NatGateway`, {
-        subnetId: publicSubnet.subnetId,
-        allocationId: new ec2.CfnEIP(this, 'EIP', {}).attrAllocationId,
-      });
+        // Create an Internet Gateway and attach it to the VPC
+        const internetGateway = new ec2.CfnInternetGateway(this, `InternetGateway`, {});
+        new ec2.CfnVPCGatewayAttachment(this, "VPCGatewayAttachment", {
+          vpcId: this.vpc.vpcId,
+          internetGatewayId: internetGateway.ref,
+        });
 
-      const publicRouteTableId = publicSubnet.routeTable.routeTableId;
+        // Add a NAT Gateway in the public subnet
+        const natGateway = new ec2.CfnNatGateway(this, `NatGateway`, {
+          subnetId: publicSubnet.subnetId,
+          allocationId: new ec2.CfnEIP(this, "EIP", {}).attrAllocationId,
+        });
 
-      // Add a route to the Internet Gateway in the existing public route table
-      new ec2.CfnRoute(this, `PublicRoute`, {
-        routeTableId: publicRouteTableId,
-        destinationCidrBlock: '0.0.0.0/0',
-        gatewayId: internetGateway.ref,
-      });
+        // Use the route table associated with the public subnet
+        const publicRouteTableId = publicSubnet.routeTable.routeTableId;
 
-      // Update route table for private subnets
-      new ec2.CfnRoute(this, `${prefix}PrivateSubnetRoute1`, {
-        routeTableId: this.vpc.privateSubnets[0].routeTable.routeTableId,
-        destinationCidrBlock: '0.0.0.0/0',
-        natGatewayId: natGateway.ref,
-      });
+        // Add a route to the Internet Gateway in the existing public route table
+        new ec2.CfnRoute(this, `PublicRoute`, {
+          routeTableId: publicRouteTableId,
+          destinationCidrBlock: "0.0.0.0/0",
+          gatewayId: internetGateway.ref,
+        });
 
-      new ec2.CfnRoute(this, `${prefix}PrivateSubnetRoute2`, {
-        routeTableId: this.vpc.privateSubnets[1].routeTable.routeTableId,
-        destinationCidrBlock: '0.0.0.0/0',
-        natGatewayId: natGateway.ref,
-      });
+        // Update route table for private subnets
+        new ec2.CfnRoute(this, `${prefix}PrivateSubnetRoute1`, {
+          routeTableId: this.vpc.privateSubnets[0].routeTable.routeTableId,
+          destinationCidrBlock: "0.0.0.0/0",
+          natGatewayId: natGateway.ref,
+        });
 
-      new ec2.CfnRoute(this, `${prefix}PrivateSubnetRoute3`, {
-        routeTableId: this.vpc.privateSubnets[2].routeTable.routeTableId,
-        destinationCidrBlock: '0.0.0.0/0',
-        natGatewayId: natGateway.ref,
-      });
+        new ec2.CfnRoute(this, `${prefix}PrivateSubnetRoute2`, {
+          routeTableId: this.vpc.privateSubnets[1].routeTable.routeTableId,
+          destinationCidrBlock: "0.0.0.0/0",
+          natGatewayId: natGateway.ref,
+        });
+
+        new ec2.CfnRoute(this, `${prefix}PrivateSubnetRoute3`, {
+          routeTableId: this.vpc.privateSubnets[2].routeTable.routeTableId,
+          destinationCidrBlock: "0.0.0.0/0",
+          natGatewayId: natGateway.ref,
+        });
+      } else {
+        console.log(`Public subnet already exists. Skipping creation of public resources.`);
+      }
 
       // Add interface endpoints for private isolated subnets
-      this.vpc.addInterfaceEndpoint('SSM Endpoint', {
+      this.vpc.addInterfaceEndpoint("SSM Endpoint", {
         service: ec2.InterfaceVpcEndpointAwsService.SSM,
         subnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
+        privateDnsEnabled: false, // Disable private DNS to avoid conflicts
       });
 
-      this.vpc.addInterfaceEndpoint('Secrets Manager Endpoint', {
+      this.vpc.addInterfaceEndpoint("Secrets Manager Endpoint", {
         service: ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
         subnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
+        privateDnsEnabled: false, // Disable private DNS to avoid conflicts
       });
 
-      this.vpc.addInterfaceEndpoint('RDS Endpoint', {
+      this.vpc.addInterfaceEndpoint("RDS Endpoint", {
         service: ec2.InterfaceVpcEndpointAwsService.RDS,
         subnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
+        privateDnsEnabled: false, // Disable private DNS to avoid conflicts
       });
 
-      this.vpc.addInterfaceEndpoint('Glue Endpoint', {
+      this.vpc.addInterfaceEndpoint("Glue Endpoint", {
         service: ec2.InterfaceVpcEndpointAwsService.GLUE,
         subnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
+        privateDnsEnabled: false, // Disable private DNS to avoid conflicts
       });
 
       this.vpc.addFlowLog(`${id}-vpcFlowLog`);
@@ -135,19 +145,14 @@ export class VpcStack extends Stack {
         id,
         this.vpc.vpcDefaultSecurityGroup
       );
-
     } else {
-
-      this.vpcCidrString = '10.0.0.0/16';
-
-      const resourcePrefix = this.node.tryGetContext('prefix');
+      this.vpcCidrString = "10.0.0.0/16";
 
       const natGatewayProvider = ec2.NatProvider.gateway();
 
       // VPC for application
-      this.vpc = new ec2.Vpc(this, `${resourcePrefix}-VPC`, {
-        //cidr: "10.0.0.0/16",
-        ipAddresses: ec2.IpAddresses.cidr('10.0.0.0/16'),
+      this.vpc = new ec2.Vpc(this, "quantumAI-VPC", {
+        ipAddresses: ec2.IpAddresses.cidr(this.vpcCidrString),
         natGatewayProvider: natGatewayProvider,
         natGateways: 1,
         maxAzs: 2,
@@ -164,17 +169,10 @@ export class VpcStack extends Stack {
             name: "isolated-subnet-1",
             subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
           },
-        ]
+        ],
       });
 
       this.vpc.addFlowLog("quantumAI-vpcFlowLog");
-
-      // Get default security group for VPC
-      const defaultSecurityGroup = ec2.SecurityGroup.fromSecurityGroupId(
-        this,
-        id,
-        this.vpc.vpcDefaultSecurityGroup
-      );
 
       // Add secrets manager endpoint to VPC
       this.vpc.addInterfaceEndpoint("Secrets Manager Endpoint", {
