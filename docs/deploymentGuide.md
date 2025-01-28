@@ -140,7 +140,7 @@ In order to deploy, you will need to have access to the **aws-controltower-VPC**
 
 1. **Modify the VPC Stack:**
    - Navigate to the `vpc-stack.ts` file located at `cdk/lib/vpc-stack.ts`.
-   - Replace **line 13** with your existing VPC ID:
+   - Replace **line 15** with your existing VPC ID:
      ```typescript
      const existingVpcId: string = 'your-vpc-id'; //CHANGE IF DEPLOYING WITH EXISTING VPC
      ```
@@ -149,7 +149,7 @@ In order to deploy, you will need to have access to the **aws-controltower-VPC**
      ![VPC ID Image](images/ExistingVPCId.png)
 
 2. **Update the AWS Control Tower Stack Set:**
-   - Replace **line 19** with your AWS Control Tower Stack Set name:
+   - Replace **line 18** with your AWS Control Tower Stack Set name:
      ```typescript
      const AWSControlTowerStackSet = "your-stackset-name"; //CHANGE TO YOUR CONTROL TOWER STACK SET
      ```
@@ -157,6 +157,31 @@ In order to deploy, you will need to have access to the **aws-controltower-VPC**
 
      ![AWS Control Tower Stack Image](images/AWSControlTowerStack.png)
 
+#### Second deployment in the Hybrid Cloud Environment:
+
+The following set of instructions are only if this is the second project you are deploying in a **hybrid cloud environment**. If you do not want to do this you can skip this section.
+
+In order to deploy a second project in a hybrid cloud environment, you will need to have access to the **Public Subnet ID**.
+
+#### 
+
+3. **Update the Public Subnet ID and CIDR Range:**
+   - Replace **line 19** with your Public Subnet ID:
+     ```typescript
+      const existingPublicSubnetID: string = "" // CHANGE IF DEPLOYING WITH EXISTING PUBLIC SUBNET
+     ```
+     You can find this ID by navigating to the **VPC dashboard** in AWS, under `Public Subnets`. Look for the Public Subnet which already exists that was created when deploying the first project.
+
+     ![VPC Dashboard](images/VPCStack.png)
+
+    - Update **line 23** CIDR Range:
+     ```typescript
+      this.vpcCidrString = "172.31.96.0/20";
+     ```
+     Change the third number to its own value plus 32, in this case "96" to "128":
+     ```typescript
+      this.vpcCidrString = "172.31.128.0/20";
+     ```
 
 You can proceed with the rest of the deployment instructions and the Vpc Stack will automatically use your existing VPC instead of creating a new one.
 
