@@ -103,13 +103,17 @@ export class DatabaseStack extends Stack {
 
         // Add CIDR ranges of private subnets to inbound rules of RDS
         const dbSecurityGroup = this.dbInstance.connections.securityGroups[0];
-        vpcStack.privateSubnetsCidrStrings.forEach((cidr) => {
-            dbSecurityGroup.addIngressRule(
-                ec2.Peer.ipv4(cidr),
-                ec2.Port.tcp(5432),
-                `Allow PostgreSQL traffic from private subnet CIDR range ${cidr}`
-            );
-        });
+        if (vpcStack.privateSubnetsCidrStrings && vpcStack.privateSubnetsCidrStrings.length > 0) {
+            vpcStack.privateSubnetsCidrStrings.forEach((cidr) => {
+                dbSecurityGroup.addIngressRule(
+                    ec2.Peer.ipv4(cidr),
+                    ec2.Port.tcp(5432),
+                    `Allow PostgreSQL traffic from private subnet CIDR range ${cidr}`
+                );
+            });
+        } else {
+            console.log("Deploying with new VPC. No need to add private subnet CIDR ranges to inbound rules of RDS.");
+        }
 
         // Add CIDR ranges of public subnets to inbound rules of RDS
         this.dbInstance.connections.securityGroups.forEach(function (securityGroup) {
