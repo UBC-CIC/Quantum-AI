@@ -282,17 +282,17 @@ In order to deploy, you will need to have access to the **aws-controltower-VPC**
 
      ![AWS Control Tower Stack Image](images/AWSControlTowerStack.png)
 
-#### Second deployment in the Hybrid Cloud Environment:
+#### Second deployment in the Environment with an Existing VPC:
 
-The following set of instructions are only if this is the second project you are deploying in a **hybrid cloud environment**. If you do not want to do this you can skip this section.
+The following set of instructions are only if this is the second project you are deploying with an **Existing VPC**. If you do not want to do this you can skip this section.
 
-In order to deploy a second project in a hybrid cloud environment, you will need to have access to the **Public Subnet ID**.
+In order to deploy a second project with a pre-existing vpc, you will need to have access to the **Public Subnet ID**.
 
 #### 
 
 ### **3. Update the Public Subnet ID and CIDR Range**
 
-To deploy a second project in a hybrid cloud environment, you need to obtain an available **Public Subnet ID** and an unused **CIDR range** within the VPC.
+To deploy a second project with a pre-existing vpc, you need to obtain an available **Public Subnet ID** and an unused **CIDR range** within the VPC.
 
 #### **Finding the Public Subnet ID**
 1. **Navigate to the AWS VPC Console**:  
@@ -338,7 +338,7 @@ By following these steps, you ensure that the new subnet does not overlap with e
 
 
 
-You can proceed with the rest of the deployment instructions and the Vpc Stack will automatically use your existing VPC instead of creating a new one. For more detailed information about the hybrid cloud deployment you checkout the [Hybrid Cloud Deployment Guide](/docs/HybridCloudDeploymentGuide.md)
+You can proceed with the rest of the deployment instructions and the Vpc Stack will automatically use your existing VPC instead of creating a new one. For more detailed information about the deployment with an Existing VPC checkout the [Existing VPC Deployment Guide](/docs/ExistingVPCDeployment.md)
 
 
 ### Step 3b: CDK Deployment
