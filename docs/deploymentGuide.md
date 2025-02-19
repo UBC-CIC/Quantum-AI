@@ -77,31 +77,124 @@ cd Quantum-AI
 
 ### Step 2: Upload Secrets and Parameters
 You would have to supply your GitHub personal access token you created eariler when dpeloying the solution. Run the following command and ensure you replace `<YOUR-GITHUB-TOKEN>` and `<YOUR-PROFILE-NAME>` with your actual GitHub token and the appropriate AWS profile name.
-```
+<details>
+<summary>macOS</summary>
+
+```bash
 aws secretsmanager create-secret \
-    --name github-quantumAI-personal-access-token \
-    --secret-string '{\"my-github-token\":\"<YOUR-GITHUB-TOKEN>\"}'\
+    --name github-personal-access-token \
+    --secret-string '{"my-github-token": "<YOUR-GITHUB-TOKEN>"}' \
     --profile <YOUR-PROFILE-NAME>
 ```
 
+</details>
+
+<details>
+<summary>Windows CMD</summary>
+
+```cmd
+aws secretsmanager create-secret ^
+    --name github-personal-access-token ^
+    --secret-string "{\"my-github-token\": \"<YOUR-GITHUB-TOKEN>\"}" ^
+    --profile <YOUR-PROFILE-NAME>
+```
+
+</details>
+
+<details>
+<summary>PowerShell</summary>
+
+```powershell
+aws secretsmanager create-secret `
+    --name github-personal-access-token `
+    --secret-string '{"my-github-token": "<YOUR-GITHUB-TOKEN>"}' `
+    --profile <YOUR-PROFILE-NAME>
+```
+</details>
+
+&nbsp;
+
 Moreover, you will need to upload your github username to Amazon SSM Parameter Store. You can do so by running the following command. Make sure you replace `<YOUR-GITHUB-USERNAME>` and `<YOUR-PROFILE-NAME>` with your actual username and the appropriate AWS profile name.
 
-```
+<details>
+<summary>macOS</summary>
+
+```bash
 aws ssm put-parameter \
     --name "quantumAI-owner-name" \
     --value "<YOUR-GITHUB-USERNAME>" \
     --type String \
     --profile <YOUR-PROFILE-NAME>
 ```
+</details>
+
+<details>
+<summary>Windows CMD</summary>
+
+```cmd
+aws ssm put-parameter ^
+    --name "quantumAI-owner-name" ^
+    --value "<YOUR-GITHUB-USERNAME>" ^
+    --type String ^
+    --profile <YOUR-PROFILE-NAME>
+```
+
+</details>
+
+<details>
+<summary>PowerShell</summary>
+
+```powershell
+aws ssm put-parameter `
+    --name "quantumAI-owner-name" `
+    --value "<YOUR-GITHUB-USERNAME>" `
+    --type String `
+    --profile <YOUR-PROFILE-NAME>
+```
+</details>
+
+&nbsp;
+
 
 You would have to supply a custom database username when deploying the solution to increase security. Run the following command and ensure you replace `<YOUR-DB-USERNAME>` with the custom name of your choice.
 
-```
+
+<details>
+<summary>macOS</summary>
+
+```bash
 aws secretsmanager create-secret \
     --name QuantumAISecrets \
-    --secret-string '{\"DB_Username\":\"<YOUR-DB-USERNAME>\"}'\
+    --secret-string "{\"DB_Username\":\"<YOUR-DB-USERNAME>\"}"\
     --profile <your-profile-name>
 ```
+</details>
+
+<details>
+<summary>Windows CMD</summary>
+
+```cmd
+aws secretsmanager create-secret ^
+    --name QuantumAISecrets ^
+    --secret-string "{\"DB_Username\":\"<YOUR-DB-USERNAME>\"}"^
+    --profile <your-profile-name>
+```
+
+</details>
+
+<details>
+<summary>PowerShell</summary>
+
+```powershell
+aws secretsmanager create-secret `
+    --name QuantumAISecrets `
+    --secret-string "{\"DB_Username\":\"<YOUR-DB-USERNAME>\"}"`
+    --profile <your-profile-name>
+```
+</details>
+
+&nbsp;
+
 
 For example,
 
@@ -114,13 +207,45 @@ aws secretsmanager create-secret \
 
 Finally, in order to restrict user sign up to specific email domains, you will need to upload a comma separated list of allowed email domains to Amazon SSM Parameter Store. You can do so by running the following command. Make sure you replace `<YOUR-ALLOWED-EMAIL-DOMAIN-LIST>` and `<YOUR-PROFILE-NAME>` with your actual list and the appropriate AWS profile name.
 
-```
+
+<details>
+<summary>macOS</summary>
+
+```bash
 aws ssm put-parameter \
     --name "/QuantumAI/AllowedEmailDomains" \
     --value "<YOUR-ALLOWED-EMAIL-DOMAIN-LIST>" \
     --type SecureString \
     --profile <YOUR-PROFILE-NAME>
 ```
+</details>
+
+<details>
+<summary>Windows CMD</summary>
+
+```cmd
+aws ssm put-parameter ^
+    --name "/QuantumAI/AllowedEmailDomains" ^
+    --value "<YOUR-ALLOWED-EMAIL-DOMAIN-LIST>" ^
+    --type SecureString ^
+    --profile <YOUR-PROFILE-NAME>
+```
+
+</details>
+
+<details>
+<summary>PowerShell</summary>
+
+```powershell
+aws ssm put-parameter `
+    --name "/QuantumAI/AllowedEmailDomains" `
+    --value "<YOUR-ALLOWED-EMAIL-DOMAIN-LIST>" `
+    --type SecureString `
+    --profile <YOUR-PROFILE-NAME>
+```
+</details>
+
+&nbsp;
 
 For example,
 
