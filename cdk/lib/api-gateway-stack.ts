@@ -5,6 +5,7 @@ import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import * as iam from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 import { Duration } from "aws-cdk-lib";
+import * as wafv2 from "aws-cdk-lib/aws-wafv2";
 import {
   Architecture,
   Code,
@@ -1185,5 +1186,62 @@ export class ApiGatewayStack extends cdk.Stack {
         ],
       })
     );
+
+    // Waf Firewall
+    const waf = new wafv2.CfnWebACL(this, `${id}-waf`, {
+      description: "AILA waf",
+      scope: "REGIONAL",
+      defaultAction: { allow: {} },
+      visibilityConfig: {
+        sampledRequestsEnabled: true,
+        cloudWatchMetricsEnabled: true,
+        metricName: "digitalstrategyassistant-firewall",
+      },
+      rules: [
+        {
+          name: "AWS-AWSManagedRulesCommonRuleSet",
+          priority: 1,
+          statement: {
+            managedRuleGroupStatement: {
+              vendorName: "AWS",
+              name: "AWSManagedRulesCommonRuleSet",
+            },
+          },
+          overrideAction: { none: {} },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: "AWS-AWSManagedRulesCommonRuleSet",
+          },
+        },
+        {
+          name: "LimitRequests1000",
+          priority: 2,
+          action: {
+            block: {},
+          },
+          statement: {
+            rateBasedStatement: {
+              limit: 1000,
+              aggregateKeyType: "IP",
+            },
+          },
+          visibilityConfig: {
+            sampledRequestsEnabled: true,
+            cloudWatchMetricsEnabled: true,
+            metricName: "LimitRequests1000",
+          },
+        },
+      ],
+    });
+    const wafAssociation = new wafv2.CfnWebACLAssociation(
+      this,
+      `${id}-waf-association`,
+      {
+        resourceArn: `arn:aws:apigateway:${this.region}::/restapis/${this.api.restApiId}/stages/${this.api.deploymentStage.stageName}`,
+        webAclArn: waf.attrArn,
+      }
+    );
+
   }
 }
