@@ -1189,13 +1189,13 @@ export class ApiGatewayStack extends cdk.Stack {
 
     // Waf Firewall
     const waf = new wafv2.CfnWebACL(this, `${id}-waf`, {
-      description: "AILA waf",
+      description: "QMI waf",
       scope: "REGIONAL",
       defaultAction: { allow: {} },
       visibilityConfig: {
         sampledRequestsEnabled: true,
         cloudWatchMetricsEnabled: true,
-        metricName: "digitalstrategyassistant-firewall",
+        metricName: "quantumai-firewall",
       },
       rules: [
         {
