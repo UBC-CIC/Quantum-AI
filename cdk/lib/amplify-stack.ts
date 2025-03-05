@@ -2,6 +2,7 @@ import {
   App,
   BasicAuth,
   GitHubSourceCodeProvider,
+  RedirectStatus, 
 } from "@aws-cdk/aws-amplify-alpha";
 import * as cdk from "aws-cdk-lib";
 import { BuildSpec } from "aws-cdk-lib/aws-codebuild";
@@ -40,10 +41,6 @@ export class AmplifyStack extends cdk.Stack {
             cache:
               paths:
                 - 'node_modules/**/*'
-            redirects:
-              - source: </^[^.]+$|.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|webp)$)([^.]+$)/>
-                target: /
-                status: 404
     `);
 
     const username = cdk.aws_ssm.StringParameter.valueForStringParameter(
@@ -71,6 +68,12 @@ export class AmplifyStack extends cdk.Stack {
         VITE_IDENTITY_POOL_ID: apiStack.getIdentityPoolId(),
       },
       buildSpec: BuildSpec.fromObjectToYaml(amplifyYaml),
+    });
+
+    amplifyApp.addCustomRule({
+      source: "</^[^.]+$|.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|webp)$)([^.]+$)/>",
+      target: "/",
+      status: RedirectStatus.NOT_FOUND_REWRITE,
     });
 
     amplifyApp.addBranch("main");
